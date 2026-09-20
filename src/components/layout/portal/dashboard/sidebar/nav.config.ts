@@ -14,6 +14,7 @@ import {
   ShieldCheck,
   UserCog,
   Users,
+  UsersRound,
   Building,
   ScrollText,
   BarChart3,
@@ -155,6 +156,12 @@ export const navGroups: NavGroup[] = [
         href: `/${entryPortal?.slug}/users`,
         icon: UserCog,
         permission: { action: "VIEW", subject: "USER" },
+      },
+      {
+        label: "Nhóm",
+        href: `/${entryPortal?.slug}/teams`,
+        icon: UsersRound,
+        permission: { action: "VIEW", subject: "TEAM" },
       },
       {
         label: "Audit logs",

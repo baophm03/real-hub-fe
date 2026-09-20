@@ -26,11 +26,11 @@ import {
 import {
   typeLabel,
   statusConfig,
-  formatDate,
   type Tenant,
   type TenantDetail,
   type TenantFeature,
 } from "./types";
+import { formatDate } from "@/utils";
 
 interface Props {
   tenant: Tenant | null;

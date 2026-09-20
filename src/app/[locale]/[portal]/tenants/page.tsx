@@ -34,9 +34,9 @@ import {
   typeOptions,
   statusConfig,
   statusFilters,
-  formatDate,
   type Tenant,
 } from "./_components/types";
+import { formatDate } from "@/utils";
 import { TenantFormDialog } from "./_components/tenant-form-dialog";
 import { TenantDetailDialog } from "./_components/tenant-detail-dialog";
 

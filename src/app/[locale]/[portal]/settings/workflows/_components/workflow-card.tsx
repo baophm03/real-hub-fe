@@ -5,7 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useGetApiWorkflowEntityStatusFields } from "@/lib/api/endpoints/workflow";
-import { entityTypeConfig, formatDate, statusConfig, type WorkflowDefinition } from "./types";
+import { entityTypeConfig, statusConfig, type WorkflowDefinition } from "./types";
+import { formatDate } from "@/utils";
 
 interface StatusFieldValue {
   code: string;

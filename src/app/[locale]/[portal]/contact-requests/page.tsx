@@ -16,10 +16,10 @@ import type { GetApiContactRequestsStatus } from "@/lib/api/models/getApiContact
 import {
   statusConfig,
   filterTabs,
-  formatDateTime,
   type ContactRequest,
   type ContactRequestsResponse,
 } from "./_components/types";
+import { formatDateTime } from "@/utils";
 import { ContactRequestDetailDialog } from "./_components/contact-request-detail-dialog";
 
 export default function ContactRequestsPage() {
@@ -132,19 +132,17 @@ export default function ContactRequestsPage() {
             <button
               key={tab.value}
               onClick={() => setStatusFilter(tab.value)}
-              className={`inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm transition-colors ${
-                active
+              className={`inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm transition-colors ${active
                   ? "border-primary bg-primary/10 text-primary"
                   : "border-border bg-surface text-foreground-muted hover:bg-surface-muted"
-              }`}
+                }`}
             >
               {tab.label}
               <span
-                className={`rounded-full px-1.5 text-xs tabular-nums ${
-                  active
+                className={`rounded-full px-1.5 text-xs tabular-nums ${active
                     ? "bg-primary/20 text-primary"
                     : "bg-surface-muted text-foreground-muted"
-                }`}
+                  }`}
               >
                 {count}
               </span>

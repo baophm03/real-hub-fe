@@ -22,13 +22,13 @@ import {
 } from "@/lib/api/endpoints/contact-requests";
 import {
   statusConfig,
-  formatDateTime,
   User,
   Mail,
   Phone,
   MessageCircle,
   type ContactRequest,
 } from "./types";
+import { formatDateTime } from "@/utils";
 
 interface Props {
   request: ContactRequest | null;

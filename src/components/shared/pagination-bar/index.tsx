@@ -19,7 +19,7 @@ export function PaginationBar({
   totalPages,
 }: PaginationBarProps) {
   return (
-    <div className="px-4 py-3 mt-2 flex items-center justify-between bg-surface rounded-md border border-border">
+    <div className="px-4 py-3 -mt-3 flex items-center justify-between bg-surface rounded-md border border-border">
       <div className="flex items-center gap-2">
         <span className="text-sm text-foreground-muted">Hiển thị</span>
         <Select

@@ -6,6 +6,7 @@
  * OpenAPI spec version: v1
  */
 
+export * from './addTeamMemberDto';
 export * from './addVisibilityRuleDto';
 export * from './addVisibilityRuleDtoConditionJson';
 export * from './addVisibilityRuleDtoMaskType';
@@ -101,6 +102,7 @@ export * from './createRoleDto';
 export * from './createSeoTemplateDto';
 export * from './createSeoTemplateDtoCanonicalRuleJson';
 export * from './createSeoTemplateDtoPageType';
+export * from './createTeamDto';
 export * from './createTenantDto';
 export * from './createTenantDtoType';
 export * from './createUserDto';
@@ -202,6 +204,8 @@ export * from './getApiSalesReportParams';
 export * from './getApiSeoTemplatesPageType';
 export * from './getApiSeoTemplatesParams';
 export * from './getApiTeamPerformanceReportParams';
+export * from './getApiTeamsParams';
+export * from './getApiTeamsStatus';
 export * from './getApiTenantsParams';
 export * from './getApiUsersParams';
 export * from './getApiUsersStatus';
@@ -313,6 +317,10 @@ export * from './updateRoleDto';
 export * from './updateSeoTemplateDto';
 export * from './updateSeoTemplateDtoCanonicalRuleJson';
 export * from './updateSeoTemplateDtoPageType';
+export * from './updateTeamDto';
+export * from './updateTeamDtoStatus';
+export * from './updateTeamMemberDto';
+export * from './updateTeamMemberDtoStatus';
 export * from './updateUserDto';
 export * from './updateUserDtoDateOfBirth';
 export * from './updateUserDtoGender';

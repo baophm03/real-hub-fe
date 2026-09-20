@@ -40,7 +40,8 @@ import type { UpdateCommissionPlanDto } from "@/lib/api/models/updateCommissionP
 import { PlanFormDialog } from "./_components/plan-form-dialog";
 import { StatusConfirmDialog, type StatusConfirmData } from "./_components/status-confirm-dialog";
 import { DeletePlanDialog } from "./_components/delete-plan-dialog";
-import { statusConfig, statusFilters, statusOrder, formatDate, type Plan } from "./_components/types";
+import { statusConfig, statusFilters, statusOrder, type Plan } from "./_components/types";
+import { formatDate } from "@/utils";
 
 export default function CommissionsSettingsPage() {
   const canCreate = ability.can("CREATE", "COMMISSION");

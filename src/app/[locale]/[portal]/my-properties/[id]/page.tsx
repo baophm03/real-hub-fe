@@ -28,6 +28,7 @@ import { PropertyDescription } from "./_components/property-description";
 import { PropertyMap } from "./_components/property-map";
 import { OwnerContactSidebar } from "./_components/owner-contact-sidebar";
 import { customInstance } from "@/lib/api/mutator/custom-instance";
+import { formatDate } from "@/utils";
 
 interface MyAssignment {
   id: string;
@@ -53,9 +54,6 @@ function daysLeft(expiresAt: string): number {
   return Math.ceil((exp.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 }
 
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" });
-}
 
 export default function MyPropertyDetailPage() {
   const params = useParams();

@@ -23,11 +23,11 @@ import {
   actionOptions,
   entityTypeLabel,
   entityTypeOptions,
-  formatDateTime,
   getActionBadgeVariant,
   type AuditLog,
   type AuditLogsResponse,
 } from "./_components/types";
+import { formatDateTimeSeconds } from "@/utils";
 import { AuditLogDetailDialog } from "./_components/audit-log-detail-dialog";
 
 export default function AuditLogsPage() {
@@ -67,7 +67,7 @@ export default function AuditLogsPage() {
       header: "Thời gian",
       cell: ({ row }) => (
         <span className="text-xs text-foreground-muted">
-          {formatDateTime(row.original.createdAt)}
+          {formatDateTimeSeconds(row.original.createdAt)}
         </span>
       ),
     },

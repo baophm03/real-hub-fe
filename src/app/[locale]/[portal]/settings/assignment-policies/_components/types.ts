@@ -77,18 +77,6 @@ export const expireBehaviorOptions: { value: string; label: string; hint: string
   { value: "NOTIFY_OWNER", label: "Thông báo chủ sở hữu", hint: "Chủ sở hữu/admin quyết định" },
 ];
 
-export function formatDate(iso?: string | null) {
-  if (!iso) return "—";
-  try {
-    return new Date(iso).toLocaleDateString("vi-VN", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    });
-  } catch {
-    return iso;
-  }
-}
 
 export function emptyPolicy(): CreatePolicyDto {
   return {

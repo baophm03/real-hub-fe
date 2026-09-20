@@ -71,17 +71,5 @@ export const statusFilters: { value: string; label: string }[] = [
   { value: "SUSPENDED", label: "Tạm khóa" },
 ];
 
-export function formatDate(iso?: string | null): string {
-  if (!iso) return "—";
-  try {
-    return new Date(iso).toLocaleDateString("vi-VN", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    });
-  } catch {
-    return iso;
-  }
-}
 
 export { Building2 };

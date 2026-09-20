@@ -15,7 +15,8 @@ export type Actions =
     | 'EXPORT'
     | 'ASSIGN'
     | 'APPROVE'
-    | 'APPROVE_VIEW';
+    | 'APPROVE_VIEW'
+    | 'MANAGE_MEMBERS';
 
 export type Features = string;
 

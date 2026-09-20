@@ -25,19 +25,9 @@ import {
   useDeleteApiNewsCategory,
 } from "@/lib/api/endpoints/news-categories";
 import type { GetNewsCategoriesResponse, NewsCategory } from "@/lib/api/types/news";
+import { formatDate } from "@/utils";
 
-function formatDate(iso: string): string {
-  if (!iso) return "";
-  try {
-    return new Date(iso).toLocaleDateString("vi-VN", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    });
-  } catch {
-    return iso;
-  }
-}
+
 
 export function CategoriesList() {
   const router = useRouter();

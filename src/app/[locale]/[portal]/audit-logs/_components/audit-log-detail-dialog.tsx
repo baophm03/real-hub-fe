@@ -13,10 +13,10 @@ import { Badge } from "@/components/ui/badge";
 import {
   actionLabel,
   entityTypeLabel,
-  formatDateTime,
   getActionBadgeVariant,
   type AuditLog,
 } from "./types";
+import { formatDateTimeSeconds } from "@/utils";
 
 interface Props {
   log: AuditLog | null;
@@ -72,7 +72,7 @@ export function AuditLogDetailDialog({ log, open, onOpenChange }: Props) {
                   <span className="text-xs font-semibold tracking-wide text-foreground-muted">
                     Thời gian
                   </span>
-                  <span className="text-sm">{formatDateTime(log.createdAt)}</span>
+                  <span className="text-sm">{formatDateTimeSeconds(log.createdAt)}</span>
                 </div>
                 <div className="flex flex-col gap-1">
                   <span className="text-xs font-semibold tracking-wide text-foreground-muted">

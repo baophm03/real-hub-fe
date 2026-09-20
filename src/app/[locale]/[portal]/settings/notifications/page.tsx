@@ -41,10 +41,10 @@ import {
   receiverTypeLabel,
   channelLabel,
   channelIcon,
-  formatDate,
   type NotificationRule,
   type NotificationTemplate,
 } from "./_components/types";
+import { formatDate } from "@/utils";
 import { NotificationRuleFormDialog } from "./_components/notification-rule-form-dialog";
 import { NotificationTemplateFormDialog } from "./_components/notification-template-form-dialog";
 import { DeleteConfirmDialog } from "./_components/delete-confirm-dialog";

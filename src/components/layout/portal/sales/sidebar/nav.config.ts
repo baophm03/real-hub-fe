@@ -13,6 +13,7 @@ import {
   ShieldCheck,
   UserCog,
   Users,
+  UsersRound,
 } from "lucide-react";
 import type { Actions, Features } from "@/config/casl/ability";
 import { portalEntries } from "@/config/portal-entry";
@@ -139,6 +140,12 @@ export const navGroups: NavGroup[] = [
         href: `/${entryPortal?.slug}/users`,
         icon: UserCog,
         permission: { action: "VIEW", subject: "USER" },
+      },
+      {
+        label: "Nhóm",
+        href: `/${entryPortal?.slug}/teams`,
+        icon: UsersRound,
+        permission: { action: "VIEW", subject: "TEAM" },
       },
     ],
   },

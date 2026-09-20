@@ -86,17 +86,5 @@ export function eventCodeLabel(code: string): string {
   return eventCodeOptions.find((o) => o.value === code)?.label ?? code;
 }
 
-export function formatDate(iso?: string | null): string {
-  if (!iso) return "—";
-  try {
-    return new Date(iso).toLocaleDateString("vi-VN", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    });
-  } catch {
-    return iso;
-  }
-}
 
 export { Bell, CheckCircle2, Circle, Monitor };

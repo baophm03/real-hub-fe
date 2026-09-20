@@ -8,6 +8,7 @@ import {
   Video,
 } from "lucide-react";
 import type { FileItem, FileVisibility } from "@/lib/api/types/files";
+import { formatDate } from "@/utils";
 import { Button } from "@/components/ui/button";
 
 const visibilityLabel: Record<string, string> = {
@@ -40,17 +41,7 @@ function formatSize(bytes: number): string {
   return `${bytes} B`;
 }
 
-function formatDate(iso: string): string {
-  try {
-    return new Date(iso).toLocaleDateString("vi-VN", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    });
-  } catch {
-    return iso;
-  }
-}
+
 
 interface FileCardProps {
   file: FileItem;

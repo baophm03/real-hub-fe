@@ -25,19 +25,9 @@ import {
   useDeleteApiNews,
 } from "@/lib/api/endpoints/news";
 import type { GetNewsResponse, News } from "@/lib/api/types/news";
+import { formatDate } from "@/utils";
 
-function formatDate(iso: string): string {
-  if (!iso) return "";
-  try {
-    return new Date(iso).toLocaleDateString("vi-VN", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    });
-  } catch {
-    return iso;
-  }
-}
+
 
 export function NewsList() {
   const router = useRouter();
