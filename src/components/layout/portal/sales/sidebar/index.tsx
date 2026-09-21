@@ -24,10 +24,10 @@ export function Sidebar() {
             </span>
             {!collapsed && (
               <div className="flex flex-col leading-none">
-                <span className="font-serif text-lg font-semibold tracking-tight text-[#092909]">
+                <span className="font-serif text-lg font-semibold tracking-tight text-foreground">
                   RealHub
                 </span>
-                <span className="mt-0.5 text-[9px] font-medium uppercase tracking-[0.2em] text-black/60">
+                <span className="mt-0.5 text-[9px] font-medium uppercase tracking-[0.2em] text-foreground-muted">
                   Real Estate Platform
                 </span>
               </div>

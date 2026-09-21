@@ -149,16 +149,16 @@
   --ring: rgba(74, 139, 95, 0.4);
   --radius: 0.375rem;
 
-  --accent-red: rgba(253, 235, 236, 0.10);
-  --accent-red-text: #D9A89E;
-  --accent-blue: rgba(225, 243, 254, 0.10);
-  --accent-blue-text: #A3BDD4;
-  --accent-green: rgba(237, 243, 236, 0.10);
-  --accent-green-text: #ADBE9E;
-  --accent-yellow: rgba(251, 243, 219, 0.10);
-  --accent-yellow-text: #D9C49A;
-  --accent-purple: rgba(240, 233, 247, 0.10);
-  --accent-purple-text: #BBA3C4;
+  --accent-red: rgba(239, 68, 68, 0.15);
+  --accent-red-text: #F08C88;
+  --accent-blue: rgba(96, 165, 250, 0.15);
+  --accent-blue-text: #8FB8EC;
+  --accent-green: rgba(74, 139, 95, 0.20);
+  --accent-green-text: #8CC498;
+  --accent-yellow: rgba(217, 164, 65, 0.15);
+  --accent-yellow-text: #E0BC62;
+  --accent-purple: rgba(192, 132, 252, 0.15);
+  --accent-purple-text: #C99FE0;
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
