@@ -37,9 +37,9 @@ export function PropertiesReportTab() {
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <StatCard label="Tổng BĐS" value={report ? String(report.total) : "—"} icon={Building2} />
-        <StatCard label="Tổng giá trị" value={report ? formatCompact(report.totalValue) : "—"} sub={report ? formatVnd(report.totalValue) : ""} icon={Wallet} />
-        <StatCard label="Đã duyệt" value={report ? String(report.byVerification?.VERIFIED ?? 0) : "—"} icon={TrendingUp} />
+        <StatCard label="Tổng BĐS" value={report ? String(report.total) : "—"} icon={Building2} accent="green" />
+        <StatCard label="Tổng giá trị" value={report ? formatCompact(report.totalValue) : "—"} sub={report ? formatVnd(report.totalValue) : ""} icon={Wallet} accent="yellow" />
+        <StatCard label="Đã duyệt" value={report ? String(report.byVerification?.VERIFIED ?? 0) : "—"} icon={TrendingUp} accent="blue" />
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">

@@ -41,6 +41,7 @@ export interface Role {
 export interface User {
   id: string;
   email: string;
+  username?: string | null;
   fullName: string;
   phone?: string | null;
   avatarFile?: Avatar | null;

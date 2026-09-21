@@ -246,22 +246,13 @@ function ForgotPasswordContent() {
           : "Nhập email đăng ký, chúng tôi sẽ gửi hướng dẫn đặt lại mật khẩu"
       }
       className="max-w-md"
+      backHref="/login"
     >
       {isResetMode ? (
         <ResetPasswordForm codeFromQuery={code} />
       ) : (
         <RequestResetForm />
       )}
-
-      <div className="mt-8 text-center">
-        <Link
-          href="/login"
-          className="group inline-flex items-center gap-2 text-sm text-foreground-muted transition-colors hover:text-foreground"
-        >
-          <ArrowLeft size={14} />
-          <span>Quay lại đăng nhập</span>
-        </Link>
-      </div>
     </AuthCard>
   );
 }

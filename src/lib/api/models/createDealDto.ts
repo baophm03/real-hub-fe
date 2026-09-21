@@ -6,6 +6,7 @@
  * OpenAPI spec version: v1
  */
 import type { CreateDealDtoTransactionType } from './createDealDtoTransactionType';
+import type { CreateDealDtoDynamicValuesJson } from './createDealDtoDynamicValuesJson';
 
 export interface CreateDealDto {
   /** Auto-generated as GD-DDMMyy-NNN if omitted */
@@ -19,4 +20,5 @@ export interface CreateDealDto {
   transactionType: CreateDealDtoTransactionType;
   expectedValue?: string;
   currentWorkflowState?: string;
+  dynamicValuesJson?: CreateDealDtoDynamicValuesJson;
 }

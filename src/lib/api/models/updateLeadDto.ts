@@ -7,6 +7,7 @@
  */
 import type { UpdateLeadDtoStatus } from './updateLeadDtoStatus';
 import type { UpdateLeadDtoDuplicateStatus } from './updateLeadDtoDuplicateStatus';
+import type { UpdateLeadDtoDynamicValuesJson } from './updateLeadDtoDynamicValuesJson';
 
 export interface UpdateLeadDto {
   status?: UpdateLeadDtoStatus;
@@ -15,5 +16,6 @@ export interface UpdateLeadDto {
   phoneNormalized?: string;
   protectionUntil?: string;
   duplicateStatus?: UpdateLeadDtoDuplicateStatus;
+  dynamicValuesJson?: UpdateLeadDtoDynamicValuesJson;
   metadata?: string;
 }

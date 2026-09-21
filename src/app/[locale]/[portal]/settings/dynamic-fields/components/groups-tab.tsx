@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
@@ -21,6 +21,8 @@ import {
 } from "@/components/ui/table";
 import { GroupFormDialog } from "./group-form-dialog";
 import { AssignDefinitionDialog } from "./assign-definition-dialog";
+import { ConfirmDeleteDialog } from "./confirm-delete-dialog";
+import { PaginationBar } from "@/components/shared/pagination-bar";
 import {
   Select,
   SelectTrigger,
@@ -73,6 +75,9 @@ export function GroupsTab({ canCreate = true, canUpdate = true, canDelete = true
   const [editingId, setEditingId] = useState<string | null>(null);
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
   const [assignTargetGroup, setAssignTargetGroup] = useState<FieldGroup | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<FieldGroup | null>(null);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [form, setForm] = useState({
     name: "",
     code: "",
@@ -84,6 +89,13 @@ export function GroupsTab({ canCreate = true, canUpdate = true, canDelete = true
     entityType ? { entityType: entityType as GetApiFieldGroupsEntityType } : undefined,
   );
   const groups = ((data as any)?.data as FieldGroup[]) || [];
+
+  const totalPages = Math.max(1, Math.ceil(groups.length / pageSize));
+  const pagedGroups = groups.slice((page - 1) * pageSize, page * pageSize);
+
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages);
+  }, [page, totalPages]);
 
   const { data: defsData, refetch: refetchDefs } = useGetApiFieldDefinitions(
     entityType ? { entityType: entityType as GetApiFieldGroupsEntityType } : undefined,
@@ -130,10 +142,11 @@ export function GroupsTab({ canCreate = true, canUpdate = true, canDelete = true
     },
   });
 
-  const { mutateAsync: deleteGroup } = useDeleteApiFieldGroup({
+  const { mutateAsync: deleteGroup, isPending: isDeleting } = useDeleteApiFieldGroup({
     mutation: {
       onSuccess: () => {
         toast.success("Xóa nhóm thành công");
+        setDeleteTarget(null);
         refetch();
       },
       onError: (err: any) => {
@@ -167,9 +180,9 @@ export function GroupsTab({ canCreate = true, canUpdate = true, canDelete = true
     setForm({ name: "", code: "", entityType: entityType || "PROPERTY", sortOrder: 0 });
   };
 
-  const handleDelete = (group: FieldGroup) => {
-    if (!confirm(`Xóa nhóm "${group.name}"?`)) return;
-    deleteGroup({ id: group.id });
+  const handleDelete = () => {
+    if (!deleteTarget) return;
+    deleteGroup({ id: deleteTarget.id });
   };
 
   const openAssignDialog = (group: FieldGroup) => {
@@ -221,6 +234,7 @@ export function GroupsTab({ canCreate = true, canUpdate = true, canDelete = true
             value={entityType}
             onValueChange={(v) => {
               setEntityType(v as string);
+              setPage(1);
             }}
           >
             <SelectTrigger className="w-48">
@@ -279,7 +293,7 @@ export function GroupsTab({ canCreate = true, canUpdate = true, canDelete = true
               </TableRow>
             </TableHeader>
             <TableBody>
-              {groups.map((group) => {
+              {pagedGroups.map((group) => {
                 const fieldCount = group.groupItems?.length ?? 0;
                 return (
                   <TableRow key={group.id}>
@@ -322,7 +336,7 @@ export function GroupsTab({ canCreate = true, canUpdate = true, canDelete = true
                           </Button>
                         )}
                         {canDelete && (
-                          <Button variant="ghost" size="icon-sm" onClick={() => handleDelete(group)}>
+                          <Button variant="ghost" size="icon-sm" onClick={() => setDeleteTarget(group)}>
                             <Trash2 size={14} />
                           </Button>
                         )}
@@ -336,6 +350,25 @@ export function GroupsTab({ canCreate = true, canUpdate = true, canDelete = true
         </div>
       )
       }
+
+      {!isLoading && groups.length > 0 && (
+        <PaginationBar
+          pageSize={pageSize}
+          setPageSize={setPageSize}
+          currentPage={page}
+          setCurrentPage={setPage}
+          totalPages={totalPages}
+        />
+      )}
+
+      <ConfirmDeleteDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+        title="Xóa nhóm"
+        itemName={deleteTarget?.name}
+        isPending={isDeleting}
+        onConfirm={handleDelete}
+      />
 
       <GroupFormDialog
         open={dialogOpen}

@@ -18,6 +18,7 @@ import {
   usePostApiPropertyTransition,
   getGetApiPropertiesQueryKey,
   getGetApiPropertiesAdminQueryKey,
+  getGetApiPropertyTransitionsQueryKey,
 } from "@/lib/api/endpoints/properties";
 import { Property } from "@/lib/api/types/properties";
 import type { UpdatePropertyDtoVerificationStatus } from "@/lib/api/models";
@@ -88,6 +89,9 @@ export function VerificationActionDialog({
       });
       await queryClient.invalidateQueries({
         queryKey: getGetApiPropertiesAdminQueryKey(),
+      });
+      await queryClient.invalidateQueries({
+        queryKey: getGetApiPropertyTransitionsQueryKey(property.id),
       });
       router.refresh();
       toast.success(

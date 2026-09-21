@@ -56,7 +56,7 @@ export function DashboardCharts({ charts, isLoading, isOwnerPortal, isSalesPorta
             <TrendChart data={charts?.dealsTrend ?? []} label="deals" />
           </ChartCard>
           <ChartCard title="Xu hướng nguồn khách (6 tháng)">
-            <TrendChart data={charts?.leadsTrend ?? []} color="#5b8c6e" label="leads" />
+            <TrendChart data={charts?.leadsTrend ?? []} color="#1F6C9F" label="leads" />
           </ChartCard>
           <ChartCard title="BĐS theo trạng thái duyệt">
             <BreakdownChart data={charts?.propertiesByVerification ?? []} labels={verificationLabels} />

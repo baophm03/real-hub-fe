@@ -19,6 +19,7 @@ import { useGetApiPropertiesAdmin } from "@/lib/api/endpoints/properties";
 import { useUserStore } from "@/lib/stores/user-store";
 import type { UpdateDealDtoStatus } from "@/lib/api/models/updateDealDtoStatus";
 import type { GetPropertiesResponse } from "@/lib/api/types/properties";
+import { DynamicFieldsSection } from "@/components/shared/dynamic-fields-section";
 
 interface Deal {
   id: string;
@@ -29,6 +30,7 @@ interface Deal {
   currentWorkflowState?: string | null;
   property?: { id: string; title: string; propertyCode: string } | null;
   salesUser?: { id: string; fullName: string } | null;
+  dynamicValuesJson?: Record<string, unknown> | null;
 }
 
 const statusOptions = [
@@ -59,6 +61,7 @@ export default function DealEditPage() {
   const id = params.id as string;
   const [loading, setLoading] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState("SOFT_RESERVED");
+  const [dynamicValues, setDynamicValues] = useState<Record<string, unknown>>({});
 
   const currentUser = useUserStore((s) => s.user);
 
@@ -93,6 +96,7 @@ export default function DealEditPage() {
         finalValue: deal.finalValue || "",
       });
       setSelectedStatus(deal.status || "SOFT_RESERVED");
+      setDynamicValues(deal.dynamicValuesJson || {});
     }
   }, [deal, reset, currentUser]);
 
@@ -106,6 +110,7 @@ export default function DealEditPage() {
           salesUserId: data.salesUserId || undefined,
           expectedValue: data.expectedValue || undefined,
           finalValue: data.finalValue || undefined,
+          dynamicValuesJson: Object.keys(dynamicValues).length > 0 ? dynamicValues : undefined,
         },
       });
       toast.success("Đã cập nhật giao dịch");
@@ -207,6 +212,12 @@ export default function DealEditPage() {
             </FormField>
           </div>
         </FormSection>
+
+        <DynamicFieldsSection
+          entityType="DEAL"
+          initialValues={dynamicValues}
+          onChange={setDynamicValues}
+        />
 
         <div className="flex items-center justify-end gap-2">
           <Button type="button" variant="secondary" onClick={() => router.push(portalPath(`/deals/${id}`))}>

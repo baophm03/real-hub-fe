@@ -183,12 +183,12 @@ export const navGroups: NavGroup[] = [
         icon: ScrollText,
         permission: { action: "READ", subject: "AUDIT" },
       },
-      {
-        label: "Tenants",
-        href: `/${entryPortal?.slug}/tenants`,
-        icon: Building,
-        permission: { action: "READ", subject: "TENANT" },
-      },
+      // {
+      //   label: "Tenants",
+      //   href: `/${entryPortal?.slug}/tenants`,
+      //   icon: Building,
+      //   permission: { action: "READ", subject: "TENANT" },
+      // },
     ],
   },
   {

@@ -10,5 +10,11 @@
   "villa": "Villa",
   "townhouse": "Townhouse",
   "land": "Land",
-  "commercial": "Commercial"
+  "commercial": "Commercial",
+  "newsletterTitle": "Subscribe to news from RealHub",
+  "newsletterPlaceholder": "Your email",
+  "newsletterButton": "Subscribe",
+  "newsletterSuccess": "Subscribed successfully!",
+  "newsletterError": "Subscription failed. Please try again.",
+  "newsletterInvalid": "Please enter a valid email."
 }

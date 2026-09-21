@@ -34,6 +34,7 @@ import {
 import type { UpdateLeadDtoStatus } from "@/lib/api/models/updateLeadDtoStatus";
 import { DeleteLeadDialog } from "./_components/delete-lead-dialog";
 import { LeadWorkflowActions } from "./_components/lead-workflow-actions";
+import { DynamicValuesDisplay } from "@/components/shared/dynamic-values-display";
 
 interface LeadCustomer {
   id: string;
@@ -74,6 +75,7 @@ interface Lead {
   phoneNormalized: string | null;
   status: string;
   createdAt: string;
+  dynamicValuesJson?: Record<string, unknown> | null;
   customer: LeadCustomer | null;
   property: LeadProperty | null;
   assignedSales: LeadSales | null;
@@ -338,6 +340,11 @@ export default function LeadDetailPage() {
               )}
             </div>
           </div>
+
+          <DynamicValuesDisplay
+            entityType="LEAD"
+            values={lead.dynamicValuesJson}
+          />
 
           {/* Status update */}
           <Can I="UPDATE_OWN" a="LEAD">

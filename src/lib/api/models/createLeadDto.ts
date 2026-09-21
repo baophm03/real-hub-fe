@@ -7,6 +7,7 @@
  */
 import type { CreateLeadDtoSource } from './createLeadDtoSource';
 import type { CreateLeadDtoStatus } from './createLeadDtoStatus';
+import type { CreateLeadDtoDynamicValuesJson } from './createLeadDtoDynamicValuesJson';
 import type { CreateLeadDtoMetadata } from './createLeadDtoMetadata';
 
 export interface CreateLeadDto {
@@ -20,5 +21,6 @@ export interface CreateLeadDto {
   assignedSalesId?: string;
   phoneNormalized?: string;
   status?: CreateLeadDtoStatus;
+  dynamicValuesJson?: CreateLeadDtoDynamicValuesJson;
   metadata?: CreateLeadDtoMetadata;
 }

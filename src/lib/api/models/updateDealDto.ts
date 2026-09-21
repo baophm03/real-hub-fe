@@ -6,6 +6,7 @@
  * OpenAPI spec version: v1
  */
 import type { UpdateDealDtoStatus } from './updateDealDtoStatus';
+import type { UpdateDealDtoDynamicValuesJson } from './updateDealDtoDynamicValuesJson';
 
 export interface UpdateDealDto {
   status?: UpdateDealDtoStatus;
@@ -14,5 +15,6 @@ export interface UpdateDealDto {
   ownerUserId?: string;
   expectedValue?: string;
   finalValue?: string;
+  dynamicValuesJson?: UpdateDealDtoDynamicValuesJson;
   metadata?: string;
 }
