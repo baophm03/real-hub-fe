@@ -1,7 +1,10 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Loader2, Pencil, UserCog, UserPlus } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
+import { Loader2, Pencil, UserCog, UserPlus, UserX } from "lucide-react";
+import { toast } from "sonner";
 import { Can } from "@casl/react";
 import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
@@ -19,7 +22,11 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { PaginationBar } from "@/components/shared/pagination-bar";
 import { usePagination } from "@/lib/hooks/use-pagination";
 import type { ColumnDef } from "@tanstack/react-table";
-import { useGetApiMemberships } from "@/lib/api/endpoints/memberships";
+import {
+  useGetApiMemberships,
+  usePatchApiMembershipsId,
+  getGetApiMembershipsQueryKey,
+} from "@/lib/api/endpoints/memberships";
 import type { GetApiMembershipsStatus } from "@/lib/api/models/getApiMembershipsStatus";
 import { CreateUserDialog } from "./_components/create-user-dialog";
 import {
@@ -40,24 +47,38 @@ const statusLabel: Record<string, { label: string; variant: "green" | "default" 
   INACTIVE: { label: "Tắt", variant: "default" },
 };
 
-const statusFilters: { value: GetApiMembershipsStatus | "ALL"; label: string }[] = [
-  { value: "ALL", label: "Tất cả trạng thái" },
+const statusFilters: { value: GetApiMembershipsStatus; label: string }[] = [
   { value: "ACTIVE", label: "Hoạt động" },
   { value: "INACTIVE", label: "Tắt" },
 ];
 
 export default function UsersPage() {
+  const queryClient = useQueryClient();
+  const router = useRouter();
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<GetApiMembershipsStatus | "ALL">("ALL");
+  const [statusFilter, setStatusFilter] = useState<GetApiMembershipsStatus>("ACTIVE");
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<MembershipRow | null>(null);
 
   const pagination = usePagination(10);
   const { data: membershipsData, isLoading } = useGetApiMemberships({
     search: search.trim() || undefined,
-    status: statusFilter === "ALL" ? undefined : (statusFilter as GetApiMembershipsStatus),
+    status: statusFilter,
     limit: pagination.limit,
     offset: pagination.offset,
+  });
+
+  const { mutate: patchMembership, isPending: isDisabling } = usePatchApiMembershipsId({
+    mutation: {
+      onSuccess: async () => {
+        await queryClient.invalidateQueries({ queryKey: getGetApiMembershipsQueryKey() });
+        router.refresh();
+        toast.success("Đã vô hiệu hóa người dùng");
+      },
+      onError: (err: any) => {
+        toast.error(err?.response?.data?.error?.message?.[0] ?? "Vô hiệu hóa thất bại");
+      },
+    },
   });
   const memberships: MembershipRow[] =
     (membershipsData as unknown as MembershipsListResponse)?.data ?? [];
@@ -82,6 +103,11 @@ export default function UsersPage() {
               <span className="text-xs text-foreground-muted truncate max-w-[220px]">
                 {u.email}
               </span>
+              {u.username && (
+                <span className="text-xs font-mono text-foreground-muted/80 truncate max-w-[220px]">
+                  @{u.username}
+                </span>
+              )}
             </div>
           );
         },
@@ -162,6 +188,21 @@ export default function UsersPage() {
               >
                 <Pencil size={14} />
               </Button>
+              {row.original.status === "ACTIVE" && (
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label="Vô hiệu hóa"
+                  disabled={isDisabling}
+                  onClick={() =>
+                    patchMembership({ id: row.original.id, data: { status: "INACTIVE" } })
+                  }
+                  title="Vô hiệu hóa người dùng"
+                  className="text-accent-red-text hover:text-accent-red-text"
+                >
+                  <UserX size={14} />
+                </Button>
+              )}
             </Can>
           </div>
         ),
@@ -198,7 +239,7 @@ export default function UsersPage() {
           value={statusFilter}
           items={statusFilters}
           onValueChange={(value) =>
-            setStatusFilter(value as GetApiMembershipsStatus | "ALL")
+            setStatusFilter(value as GetApiMembershipsStatus)
           }
         >
           <SelectTrigger className="w-[180px]">

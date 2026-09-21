@@ -6,8 +6,7 @@
  * OpenAPI spec version: v1
  */
 
-export interface LoginDto {
-  /** Email hoặc username */
-  identifier: string;
-  password: string;
-}
+/**
+ * Username đăng nhập — null để xóa
+ */
+export type UpdateUserDtoUsername = { [key: string]: unknown };

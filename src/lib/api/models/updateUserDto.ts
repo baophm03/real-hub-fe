@@ -5,6 +5,7 @@
  * Multi-tenant Real Estate Platform API
  * OpenAPI spec version: v1
  */
+import type { UpdateUserDtoUsername } from './updateUserDtoUsername';
 import type { UpdateUserDtoDateOfBirth } from './updateUserDtoDateOfBirth';
 import type { UpdateUserDtoGender } from './updateUserDtoGender';
 import type { UpdateUserDtoStatus } from './updateUserDtoStatus';
@@ -12,6 +13,8 @@ import type { UpdateUserDtoStatus } from './updateUserDtoStatus';
 export interface UpdateUserDto {
   fullName?: string;
   email?: string;
+  /** Username đăng nhập — null để xóa */
+  username?: UpdateUserDtoUsername;
   /** @minLength 8 */
   password?: string;
   phone?: string;

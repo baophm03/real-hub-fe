@@ -30,10 +30,12 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  AssignLeadDto,
   CreateLeadActivityDto,
   CreateLeadDto,
   GetApiLeadsAdminParams,
   GetApiLeadsParams,
+  GetApiLeadsPoolParams,
   TransitionLeadDto,
   UpdateLeadDto
 } from '../models';
@@ -497,6 +499,327 @@ export const prefetchGetApiLeadsAdminQuery = async <TData = Awaited<ReturnType<t
 
 
 /**
+ * @summary List unassigned leads (lead pool)
+ */
+export const getApiLeadsPool = (
+    params?: GetApiLeadsPoolParams,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<void>(
+      {url: `/api/leads/pool`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+  
+
+
+
+export const getGetApiLeadsPoolInfiniteQueryKey = (params?: GetApiLeadsPoolParams,) => {
+    return [
+    'infinite', `/api/leads/pool`, ...(params ? [params]: [])
+    ] as const;
+    }
+
+export const getGetApiLeadsPoolQueryKey = (params?: GetApiLeadsPoolParams,) => {
+    return [
+    `/api/leads/pool`, ...(params ? [params]: [])
+    ] as const;
+    }
+
+    
+export const getGetApiLeadsPoolInfiniteQueryOptions = <TData = InfiniteData<Awaited<ReturnType<typeof getApiLeadsPool>>>, TError = unknown>(params?: GetApiLeadsPoolParams, options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiLeadsPool>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiLeadsPoolInfiniteQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiLeadsPool>>> = ({ signal }) => getApiLeadsPool(params, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiLeadsPool>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiLeadsPoolInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getApiLeadsPool>>>
+export type GetApiLeadsPoolInfiniteQueryError = unknown
+
+
+export function useGetApiLeadsPoolInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getApiLeadsPool>>>, TError = unknown>(
+ params: undefined |  GetApiLeadsPoolParams, options: { query:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiLeadsPool>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiLeadsPool>>,
+          TError,
+          Awaited<ReturnType<typeof getApiLeadsPool>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiLeadsPoolInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getApiLeadsPool>>>, TError = unknown>(
+ params?: GetApiLeadsPoolParams, options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiLeadsPool>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiLeadsPool>>,
+          TError,
+          Awaited<ReturnType<typeof getApiLeadsPool>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiLeadsPoolInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getApiLeadsPool>>>, TError = unknown>(
+ params?: GetApiLeadsPoolParams, options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiLeadsPool>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List unassigned leads (lead pool)
+ */
+
+export function useGetApiLeadsPoolInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getApiLeadsPool>>>, TError = unknown>(
+ params?: GetApiLeadsPoolParams, options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiLeadsPool>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiLeadsPoolInfiniteQueryOptions(params,options)
+
+  const query = useInfiniteQuery(queryOptions, queryClient) as  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+/**
+ * @summary List unassigned leads (lead pool)
+ */
+export const prefetchGetApiLeadsPoolInfiniteQuery = async <TData = Awaited<ReturnType<typeof getApiLeadsPool>>, TError = unknown>(
+ queryClient: QueryClient, params?: GetApiLeadsPoolParams, options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiLeadsPool>>, TError, TData>>, }
+
+  ): Promise<QueryClient> => {
+
+  const queryOptions = getGetApiLeadsPoolInfiniteQueryOptions(params,options)
+
+  await queryClient.prefetchInfiniteQuery(queryOptions);
+
+  return queryClient;
+}
+
+
+
+export const getGetApiLeadsPoolQueryOptions = <TData = Awaited<ReturnType<typeof getApiLeadsPool>>, TError = unknown>(params?: GetApiLeadsPoolParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiLeadsPool>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiLeadsPoolQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiLeadsPool>>> = ({ signal }) => getApiLeadsPool(params, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiLeadsPool>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiLeadsPoolQueryResult = NonNullable<Awaited<ReturnType<typeof getApiLeadsPool>>>
+export type GetApiLeadsPoolQueryError = unknown
+
+
+export function useGetApiLeadsPool<TData = Awaited<ReturnType<typeof getApiLeadsPool>>, TError = unknown>(
+ params: undefined |  GetApiLeadsPoolParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiLeadsPool>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiLeadsPool>>,
+          TError,
+          Awaited<ReturnType<typeof getApiLeadsPool>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiLeadsPool<TData = Awaited<ReturnType<typeof getApiLeadsPool>>, TError = unknown>(
+ params?: GetApiLeadsPoolParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiLeadsPool>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiLeadsPool>>,
+          TError,
+          Awaited<ReturnType<typeof getApiLeadsPool>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiLeadsPool<TData = Awaited<ReturnType<typeof getApiLeadsPool>>, TError = unknown>(
+ params?: GetApiLeadsPoolParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiLeadsPool>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List unassigned leads (lead pool)
+ */
+
+export function useGetApiLeadsPool<TData = Awaited<ReturnType<typeof getApiLeadsPool>>, TError = unknown>(
+ params?: GetApiLeadsPoolParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiLeadsPool>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiLeadsPoolQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+/**
+ * @summary List unassigned leads (lead pool)
+ */
+export const prefetchGetApiLeadsPoolQuery = async <TData = Awaited<ReturnType<typeof getApiLeadsPool>>, TError = unknown>(
+ queryClient: QueryClient, params?: GetApiLeadsPoolParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiLeadsPool>>, TError, TData>>, }
+
+  ): Promise<QueryClient> => {
+
+  const queryOptions = getGetApiLeadsPoolQueryOptions(params,options)
+
+  await queryClient.prefetchQuery(queryOptions);
+
+  return queryClient;
+}
+
+
+
+/**
+ * @summary Sales claims a lead from the pool
+ */
+export const postApiLeadClaim = (
+    id: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<void>(
+      {url: `/api/leads/${id}/claim`, method: 'POST', signal
+    },
+      );
+    }
+  
+
+
+export const getPostApiLeadClaimMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiLeadClaim>>, TError,{id: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof postApiLeadClaim>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['postApiLeadClaim'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiLeadClaim>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  postApiLeadClaim(id,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostApiLeadClaimMutationResult = NonNullable<Awaited<ReturnType<typeof postApiLeadClaim>>>
+    
+    export type PostApiLeadClaimMutationError = unknown
+
+    /**
+ * @summary Sales claims a lead from the pool
+ */
+export const usePostApiLeadClaim = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiLeadClaim>>, TError,{id: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postApiLeadClaim>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+
+      const mutationOptions = getPostApiLeadClaimMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * @summary Assign a pool lead to a sales or team
+ */
+export const postApiLeadAssign = (
+    id: string,
+    assignLeadDto: AssignLeadDto,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<void>(
+      {url: `/api/leads/${id}/assign`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: assignLeadDto, signal
+    },
+      );
+    }
+  
+
+
+export const getPostApiLeadAssignMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiLeadAssign>>, TError,{id: string;data: AssignLeadDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof postApiLeadAssign>>, TError,{id: string;data: AssignLeadDto}, TContext> => {
+
+const mutationKey = ['postApiLeadAssign'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiLeadAssign>>, {id: string;data: AssignLeadDto}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  postApiLeadAssign(id,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostApiLeadAssignMutationResult = NonNullable<Awaited<ReturnType<typeof postApiLeadAssign>>>
+    export type PostApiLeadAssignMutationBody = AssignLeadDto
+    export type PostApiLeadAssignMutationError = unknown
+
+    /**
+ * @summary Assign a pool lead to a sales or team
+ */
+export const usePostApiLeadAssign = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiLeadAssign>>, TError,{id: string;data: AssignLeadDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postApiLeadAssign>>,
+        TError,
+        {id: string;data: AssignLeadDto},
+        TContext
+      > => {
+
+      const mutationOptions = getPostApiLeadAssignMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
  * @summary Get lead by ID
  */
 export const getApiLeadId = (

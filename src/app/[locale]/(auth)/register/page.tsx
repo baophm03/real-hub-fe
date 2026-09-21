@@ -37,6 +37,7 @@ const registerSchema = z.object({
   roleCode: z.enum(["CUSTOMER", "OWNER", "SALES"]),
   fullName: z.string().min(2, "Họ tên phải có ít nhất 2 ký tự"),
   email: z.string().email("Email không hợp lệ"),
+  username: z.string().regex(/^[a-zA-Z0-9_.-]{3,30}$/, "Username 3-30 ký tự (chữ, số, _, ., -)").optional().or(z.literal("")),
   password: z.string().min(8, "Mật khẩu phải có ít nhất 8 ký tự"),
   confirmPassword: z.string().min(8, "Mật khẩu phải có ít nhất 8 ký tự"),
   phone: z.string().min(10, "Số điện thoại không hợp lệ"),
@@ -93,6 +94,7 @@ export default function RegisterPage() {
         fullName: formData.fullName,
         email: formData.email,
         password: formData.password,
+        ...(formData.username ? { username: formData.username } : {}),
         phone: formData.phone,
         dateOfBirth: formData.dateOfBirth,
         ...(formData.gender ? { gender: formData.gender } : {}),
@@ -190,6 +192,24 @@ export default function RegisterPage() {
             {errors.email && (
               <p id="email-error" className="text-xs text-accent-red-text">
                 {errors.email.message}
+              </p>
+            )}
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="username" className="text-[13px] font-medium">Username</Label>
+            <Input
+              id="username"
+              type="text"
+              placeholder="nguyen.van.a (không bắt buộc)"
+              autoComplete="username"
+              {...register("username")}
+              aria-invalid={!!errors.username}
+              aria-describedby={errors.username ? "username-error" : undefined}
+            />
+            {errors.username && (
+              <p id="username-error" className="text-xs text-accent-red-text">
+                {errors.username.message}
               </p>
             )}
           </div>

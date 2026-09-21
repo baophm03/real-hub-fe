@@ -10,6 +10,8 @@ import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/shared/empty-state";
+import { PaginationBar } from "@/components/shared/pagination-bar";
+import { usePagination } from "@/lib/hooks/use-pagination";
 import { KanbanBoard, type KanbanColumn } from "@/components/shared/kanban-board";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import {
@@ -121,16 +123,21 @@ export default function LeadsPage() {
   const [sourceFilter, setSourceFilter] = useState<GetApiLeadsSource | "ALL">("ALL");
   const [search, setSearch] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<Lead | null>(null);
+  const pagination = usePagination(10);
 
+  const isList = view === "list";
   const { data: leadsData, isLoading, refetch } = useGetApiLeadsAdmin({
     status: statusFilter === "ALL" ? undefined : (statusFilter as GetApiLeadsStatus),
     source: sourceFilter === "ALL" ? undefined : (sourceFilter as GetApiLeadsSource),
     search: search.trim() || undefined,
-    limit: "50",
-    offset: "0",
+    limit: isList ? pagination.limit : "200",
+    offset: isList ? pagination.offset : "0",
   });
   const leads = ((leadsData as unknown as LeadsResponse)?.data) || [];
   const totalCount = (leadsData as unknown as LeadsResponse)?.meta?.total ?? leads.length;
+  const totalPages =
+    (leadsData as unknown as LeadsResponse)?.meta?.totalPages ??
+    Math.max(1, Math.ceil(totalCount / pagination.pageSize));
 
   const { mutateAsync: updateLead } = usePatchApiLead();
 
@@ -279,64 +286,73 @@ export default function LeadsPage() {
               renderCard={renderLeadInfo}
             />
           ) : (
-            <div className="overflow-x-auto rounded-lg border border-border">
-              <table className="w-full text-sm min-w-[700px]">
-                <thead>
-                  <tr className="border-b border-border bg-surface-muted/50">
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-foreground-muted">Mã KHTN</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-foreground-muted">Khách hàng</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-foreground-muted">Điện thoại</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-foreground-muted">BĐS</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-foreground-muted">Nguồn</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-foreground-muted">Trạng thái</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-foreground-muted"></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {leads.map((lead) => {
-                    const status = statusConfig.find((s) => s.id === lead.status);
-                    return (
-                      <tr
-                        key={lead.id}
-                        onClick={() => router.push(portalPath(`/leads/${lead.id}`))}
-                        className="cursor-pointer border-b border-border hover:bg-surface-muted/30"
-                      >
-                        <td className="px-4 py-3 font-medium tabular-nums">{lead.leadCode}</td>
-                        <td className="px-4 py-3 font-medium">{lead.customer?.fullName ?? "—"}</td>
-                        <td className="px-4 py-3 tabular-nums text-foreground-muted">
-                          {lead.phoneNormalized ?? lead.customer?.phone ?? "—"}
-                        </td>
-                        <td className="px-4 py-3 text-foreground-muted truncate max-w-[180px]">
-                          {lead.property?.title ?? "—"}
-                        </td>
-                        <td className="px-4 py-3">
-                          <Badge variant="default" className="text-[10px]">
-                            {sourceLabel[lead.source] ?? lead.source}
-                          </Badge>
-                        </td>
-                        <td className="px-4 py-3">
-                          <Badge variant={status?.variant ?? "default"}>
-                            {status?.title ?? lead.status}
-                          </Badge>
-                        </td>
-                        <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
-                          <Can I="DELETE_OWN" a="LEAD">
-                            <Button
-                              variant="ghost"
-                              size="icon-sm"
-                              aria-label="Xóa"
-                              onClick={() => setDeleteTarget(lead)}
-                            >
-                              <Trash2 size={14} />
-                            </Button>
-                          </Can>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+            <>
+              <div className="overflow-x-auto rounded-lg border border-border">
+                <table className="w-full text-sm min-w-[700px]">
+                  <thead>
+                    <tr className="border-b border-border bg-surface-muted/50">
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-foreground-muted">Mã KHTN</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-foreground-muted">Khách hàng</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-foreground-muted">Điện thoại</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-foreground-muted">BĐS</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-foreground-muted">Nguồn</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-foreground-muted">Trạng thái</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-foreground-muted"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {leads.map((lead) => {
+                      const status = statusConfig.find((s) => s.id === lead.status);
+                      return (
+                        <tr
+                          key={lead.id}
+                          onClick={() => router.push(portalPath(`/leads/${lead.id}`))}
+                          className="cursor-pointer border-b border-border hover:bg-surface-muted/30"
+                        >
+                          <td className="px-4 py-3 font-medium tabular-nums">{lead.leadCode}</td>
+                          <td className="px-4 py-3 font-medium">{lead.customer?.fullName ?? "—"}</td>
+                          <td className="px-4 py-3 tabular-nums text-foreground-muted">
+                            {lead.phoneNormalized ?? lead.customer?.phone ?? "—"}
+                          </td>
+                          <td className="px-4 py-3 text-foreground-muted truncate max-w-[180px]">
+                            {lead.property?.title ?? "—"}
+                          </td>
+                          <td className="px-4 py-3">
+                            <Badge variant="default" className="text-[10px]">
+                              {sourceLabel[lead.source] ?? lead.source}
+                            </Badge>
+                          </td>
+                          <td className="px-4 py-3">
+                            <Badge variant={status?.variant ?? "default"}>
+                              {status?.title ?? lead.status}
+                            </Badge>
+                          </td>
+                          <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                            <Can I="DELETE_OWN" a="LEAD">
+                              <Button
+                                variant="ghost"
+                                size="icon-sm"
+                                aria-label="Xóa"
+                                onClick={() => setDeleteTarget(lead)}
+                              >
+                                <Trash2 size={14} />
+                              </Button>
+                            </Can>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+              <PaginationBar
+                pageSize={pagination.pageSize}
+                setPageSize={pagination.setPageSize}
+                currentPage={pagination.currentPage}
+                setCurrentPage={pagination.setCurrentPage}
+                totalPages={totalPages}
+              />
+            </>
           )}
         </>
       )}

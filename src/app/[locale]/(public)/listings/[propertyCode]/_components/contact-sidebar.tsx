@@ -51,11 +51,13 @@ function ContactSidebarInner({
   const refAssignment = (assignmentData as any)?.data ?? assignmentData;
   const refAssignedUser = refAssignment?.assignedUser;
 
-  const activeAssignment = property?.assignments?.find((a: any) => a.status === "ACTIVE");
-  const assignedUser = refAssignedUser ?? activeAssignment?.assignedUser;
-  const owner = property?.owner;
+  const sellingMode: string | undefined = property?.sellingMode;
+  // Chỉ SELF_SELL mới liên hệ trực tiếp owner. Sales chỉ hiện khi khách đi qua
+  // ref link của sales đó; mọi trường hợp còn lại → RealHub support (pool).
+  const assignedUser = refAssignedUser ?? null;
+  const owner = sellingMode === "SELF_SELL" ? property?.owner : null;
 
-  // Fallback chain: ref assignment → active assigned sales → owner → RealHub support
+  // Fallback chain: ref sales → owner (SELF_SELL) → RealHub support (pool)
   const contacts: ContactInfo[] = assignedUser && (assignedUser.fullName || assignedUser.phone)
     ? [{
       id: assignedUser.id ?? null,

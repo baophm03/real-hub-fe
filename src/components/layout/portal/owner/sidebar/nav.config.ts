@@ -3,6 +3,7 @@ import {
   Calendar,
   CircleUser,
   Folder,
+  Inbox,
   Handshake,
   Headset,
   House,
@@ -12,6 +13,7 @@ import {
   Settings,
   ShieldCheck,
   UserCog,
+  UserPlus,
   Users,
   UsersRound,
 } from "lucide-react";
@@ -105,6 +107,18 @@ export const navGroups: NavGroup[] = [
         href: `/${entryPortal?.slug}/leads`,
         icon: CircleUser,
         permission: { action: "VIEW", subject: "LEAD" },
+      },
+      {
+        label: "Lead Pool",
+        href: `/${entryPortal?.slug}/pool`,
+        icon: Inbox,
+        permission: { action: "VIEW", subject: "POOL" },
+      },
+      {
+        label: "Phân bổ lead",
+        href: `/${entryPortal?.slug}/pool-assign`,
+        icon: UserPlus,
+        permission: { action: "ASSIGN", subject: "POOL" },
       },
       {
         label: "Giao dịch",
