@@ -13,6 +13,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/shared/empty-state";
 import { KanbanBoard, type KanbanColumn } from "@/components/shared/kanban-board";
+import { PaginationBar } from "@/components/shared/pagination-bar";
+import { usePagination } from "@/lib/hooks/use-pagination";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import {
   useGetApiDeals,
@@ -102,14 +104,19 @@ export default function DealsPage() {
   const [view, setView] = useState<"kanban" | "list">("kanban");
   const [statusFilter, setStatusFilter] = useState<GetApiDealsStatus | "ALL">("ALL");
   const [deleteTarget, setDeleteTarget] = useState<Deal | null>(null);
+  const pagination = usePagination(10);
 
+  const isList = view === "list";
   const { data: dealsData, isLoading } = useGetApiDeals({
     status: statusFilter === "ALL" ? undefined : (statusFilter as GetApiDealsStatus),
-    limit: "50",
-    offset: "0",
+    limit: isList ? pagination.limit : "200",
+    offset: isList ? pagination.offset : "0",
   });
   const deals = ((dealsData as unknown as DealsResponse)?.data) || [];
   const totalCount = (dealsData as unknown as DealsResponse)?.meta?.total ?? deals.length;
+  const totalPages =
+    (dealsData as unknown as DealsResponse)?.meta?.totalPages ??
+    Math.max(1, Math.ceil(totalCount / pagination.pageSize));
 
   const { mutateAsync: updateDeal } = usePatchApiDeal();
   const { mutateAsync: deleteDeal, isPending: isDeleting } = useDeleteApiDeal();
@@ -252,64 +259,73 @@ export default function DealsPage() {
               renderCard={renderDealInfo}
             />
           ) : (
-            <div className="overflow-x-auto rounded-lg border border-border">
-              <table className="w-full text-sm min-w-[700px]">
-                <thead>
-                  <tr className="border-b border-border bg-surface-muted/50">
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-foreground-muted">Mã GD</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-foreground-muted">Khách hàng</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-foreground-muted">BĐS</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-foreground-muted">Loại</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-foreground-muted">Giá trị</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-foreground-muted">Trạng thái</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-foreground-muted"></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {deals.map((deal) => {
-                    const status = statusConfig.find((s) => s.id === deal.status);
-                    return (
-                      <tr
-                        key={deal.id}
-                        onClick={() => router.push(portalPath(`/deals/${deal.id}`))}
-                        className="cursor-pointer border-b border-border hover:bg-surface-muted/30"
-                      >
-                        <td className="px-4 py-3 font-medium tabular-nums">{deal.dealCode}</td>
-                        <td className="px-4 py-3">{deal.customer?.fullName ?? "—"}</td>
-                        <td className="px-4 py-3 text-foreground-muted truncate max-w-[180px]">
-                          {deal.property?.title ?? "—"}
-                        </td>
-                        <td className="px-4 py-3">
-                          <Badge variant="default" className="text-[10px]">
-                            {txLabel[deal.transactionType] ?? deal.transactionType}
-                          </Badge>
-                        </td>
-                        <td className="px-4 py-3 tabular-nums font-medium">
-                          {formatPrice(deal.finalValue ?? deal.expectedValue ?? "0")}
-                        </td>
-                        <td className="px-4 py-3">
-                          <Badge variant={status?.variant ?? "default"}>
-                            {status?.title ?? deal.status}
-                          </Badge>
-                        </td>
-                        <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
-                          <Can I="DELETE_OWN" a="DEAL">
-                            <Button
-                              variant="ghost"
-                              size="icon-sm"
-                              aria-label="Xóa"
-                              onClick={() => setDeleteTarget(deal)}
-                            >
-                              <Trash2 size={14} />
-                            </Button>
-                          </Can>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+            <>
+              <div className="overflow-x-auto rounded-lg border border-border">
+                <table className="w-full text-sm min-w-[700px]">
+                  <thead>
+                    <tr className="border-b border-border bg-surface-muted/50">
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-foreground-muted">Mã GD</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-foreground-muted">Khách hàng</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-foreground-muted">BĐS</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-foreground-muted">Loại</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-foreground-muted">Giá trị</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-foreground-muted">Trạng thái</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-foreground-muted"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {deals.map((deal) => {
+                      const status = statusConfig.find((s) => s.id === deal.status);
+                      return (
+                        <tr
+                          key={deal.id}
+                          onClick={() => router.push(portalPath(`/deals/${deal.id}`))}
+                          className="cursor-pointer border-b border-border hover:bg-surface-muted/30"
+                        >
+                          <td className="px-4 py-3 font-medium tabular-nums">{deal.dealCode}</td>
+                          <td className="px-4 py-3">{deal.customer?.fullName ?? "—"}</td>
+                          <td className="px-4 py-3 text-foreground-muted truncate max-w-[180px]">
+                            {deal.property?.title ?? "—"}
+                          </td>
+                          <td className="px-4 py-3">
+                            <Badge variant="default" className="text-[10px]">
+                              {txLabel[deal.transactionType] ?? deal.transactionType}
+                            </Badge>
+                          </td>
+                          <td className="px-4 py-3 tabular-nums font-medium">
+                            {formatPrice(deal.finalValue ?? deal.expectedValue ?? "0")}
+                          </td>
+                          <td className="px-4 py-3">
+                            <Badge variant={status?.variant ?? "default"}>
+                              {status?.title ?? deal.status}
+                            </Badge>
+                          </td>
+                          <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                            <Can I="DELETE_OWN" a="DEAL">
+                              <Button
+                                variant="ghost"
+                                size="icon-sm"
+                                aria-label="Xóa"
+                                onClick={() => setDeleteTarget(deal)}
+                              >
+                                <Trash2 size={14} />
+                              </Button>
+                            </Can>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+              <PaginationBar
+                pageSize={pagination.pageSize}
+                setPageSize={pagination.setPageSize}
+                currentPage={pagination.currentPage}
+                setCurrentPage={pagination.setCurrentPage}
+                totalPages={totalPages}
+              />
+            </>
           )}
         </>
       )}

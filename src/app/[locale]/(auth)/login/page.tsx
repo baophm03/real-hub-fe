@@ -15,7 +15,7 @@ import { GetAuthMeResponse } from "@/lib/api/types/auth-me";
 import { AuthCard } from "../_components/auth-card";
 
 interface LoginFormData {
-  email: string;
+  identifier: string;
   password: string;
 }
 
@@ -103,7 +103,7 @@ export default function LoginPage() {
 
     login({
       data: {
-        email: formData.email,
+        identifier: formData.identifier,
         password: formData.password,
       },
     });
@@ -170,19 +170,19 @@ export default function LoginPage() {
           >
             <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
               <div className="flex flex-col gap-2">
-                <Label htmlFor="email" className="text-[13px] font-medium">Email</Label>
+                <Label htmlFor="identifier" className="text-[13px] font-medium">Email hoặc username</Label>
                 <Input
-                  id="email"
-                  type="email"
-                  placeholder="Nhập email của bạn"
-                  autoComplete="email"
-                  {...register("email")}
-                  aria-invalid={!!errors.email}
-                  aria-describedby={errors.email ? "email-error" : undefined}
+                  id="identifier"
+                  type="text"
+                  placeholder="Email hoặc username của bạn"
+                  autoComplete="username"
+                  {...register("identifier")}
+                  aria-invalid={!!errors.identifier}
+                  aria-describedby={errors.identifier ? "identifier-error" : undefined}
                 />
-                {errors.email && (
-                  <p id="email-error" className="text-xs text-accent-red-text">
-                    {errors.email.message}
+                {errors.identifier && (
+                  <p id="identifier-error" className="text-xs text-accent-red-text">
+                    {errors.identifier.message}
                   </p>
                 )}
               </div>
@@ -238,7 +238,9 @@ export default function LoginPage() {
 
               {needsVerification && (
                 <Link
-                  href={`/verify-otp?email=${encodeURIComponent(watch("email"))}`}
+                  href={watch("identifier")?.includes("@")
+                    ? `/verify-otp?email=${encodeURIComponent(watch("identifier"))}`
+                    : "/verify-otp"}
                   className="flex items-center justify-center gap-2 rounded-lg border border-primary/30 bg-primary/5 px-4 py-3 text-sm font-medium text-primary transition-colors hover:bg-primary/10"
                 >
                   <MailCheck size={16} />

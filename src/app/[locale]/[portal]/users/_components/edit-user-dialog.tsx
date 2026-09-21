@@ -35,6 +35,7 @@ export interface MembershipUser {
   id: string;
   fullName: string;
   email: string;
+  username?: string | null;
   phone?: string | null;
   avatar?: { id: string; name: string; url: string } | null;
   status: string;
