@@ -1,6 +1,7 @@
 import { Link } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { Building2, Mail, MapPin, Phone } from "lucide-react";
+import { NewsletterForm } from "@/components/layout/public/newsletter-form";
 
 export function PublicFooter() {
   const t = useTranslations("public");
@@ -19,6 +20,7 @@ export function PublicFooter() {
             <p className="mt-3 max-w-[40ch] text-sm leading-relaxed text-foreground-muted">
               {t("tagline")}
             </p>
+            <NewsletterForm />
           </div>
 
           <div className="col-span-6 md:col-span-2 flex flex-col gap-3">

@@ -146,7 +146,7 @@ export default function CustomerEditPage() {
           </div>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <FormField label="Email" htmlFor="email" error={errors.email?.message}>
-              <Input id="email" type="email" placeholder="an.nguyen@email.com" {...register("email")} />
+              <Input id="email" type="email" placeholder="an.nguyen@realhub.vn" {...register("email")} />
             </FormField>
             <FormField label="Loại khách hàng">
               <Select

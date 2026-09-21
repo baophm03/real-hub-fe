@@ -1,5 +1,5 @@
 {
-  "rights": "© {year} RealHub. Mọi quyền được bảo lưu.",
+  "rights": "© {year} RealHub. All rights reserved.",
   "terms": "Điều khoản",
   "privacy": "Bảo mật",
   "sale": "Mua bán",
@@ -10,5 +10,11 @@
   "villa": "Biệt thự",
   "townhouse": "Nhà phố",
   "land": "Đất nền",
-  "commercial": "Mặt bằng"
+  "commercial": "Mặt bằng",
+  "newsletterTitle": "Đăng ký nhận tin từ RealHub",
+  "newsletterPlaceholder": "Email của bạn",
+  "newsletterButton": "Đăng ký",
+  "newsletterSuccess": "Đăng ký nhận tin thành công!",
+  "newsletterError": "Đăng ký thất bại. Vui lòng thử lại.",
+  "newsletterInvalid": "Vui lòng nhập email hợp lệ."
 }

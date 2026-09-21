@@ -50,6 +50,7 @@ export interface Lead {
   protectionUntil: string | null;
   status: string;
   duplicateStatus: string | null;
+  dynamicValuesJson?: Record<string, unknown> | null;
   metadata: Record<string, unknown> | null;
   createdAt: string;
   updatedAt: string;

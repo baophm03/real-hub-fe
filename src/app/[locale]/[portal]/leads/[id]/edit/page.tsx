@@ -15,12 +15,14 @@ import { FormSection, FormField } from "@/components/shared/form-section";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { useGetApiLeadId, usePatchApiLead } from "@/lib/api/endpoints/leads";
 import type { UpdateLeadDtoStatus } from "@/lib/api/models/updateLeadDtoStatus";
+import { DynamicFieldsSection } from "@/components/shared/dynamic-fields-section";
 
 interface Lead {
   id: string;
   leadCode: string;
   status: string;
   phoneNormalized: string | null;
+  dynamicValuesJson?: Record<string, unknown> | null;
 }
 
 const statusOptions = [
@@ -47,6 +49,7 @@ export default function LeadEditPage() {
   const id = params.id as string;
   const [loading, setLoading] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState("NEW");
+  const [dynamicValues, setDynamicValues] = useState<Record<string, unknown>>({});
 
   const { data: leadData, isLoading } = useGetApiLeadId(id);
   const lead = (leadData as unknown as { data: Lead })?.data;
@@ -65,6 +68,7 @@ export default function LeadEditPage() {
         phoneNormalized: lead.phoneNormalized || "",
       });
       setSelectedStatus(lead.status || "NEW");
+      setDynamicValues(lead.dynamicValuesJson || {});
     }
   }, [lead, reset]);
 
@@ -76,6 +80,7 @@ export default function LeadEditPage() {
         data: {
           status: data.status as UpdateLeadDtoStatus,
           phoneNormalized: data.phoneNormalized || undefined,
+          dynamicValuesJson: Object.keys(dynamicValues).length > 0 ? dynamicValues : undefined,
         },
       });
       toast.success("Đã cập nhật nguồn khách hàng");
@@ -150,6 +155,12 @@ export default function LeadEditPage() {
             />
           </FormField>
         </FormSection>
+
+        <DynamicFieldsSection
+          entityType="LEAD"
+          initialValues={dynamicValues}
+          onChange={setDynamicValues}
+        />
 
         <div className="flex items-center justify-end gap-2">
           <Button type="button" variant="secondary" onClick={() => router.push(portalPath(`/leads/${id}`))}>

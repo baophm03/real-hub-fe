@@ -237,6 +237,199 @@ export const prefetchGetApiMembershipsQuery = async <TData = Awaited<ReturnType<
 
 
 /**
+ * @summary Membership stats for current tenant
+ */
+export const getApiMembershipsStats = (
+    
+ signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<unknown>(
+      {url: `/api/memberships/stats`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getGetApiMembershipsStatsInfiniteQueryKey = () => {
+    return [
+    'infinite', `/api/memberships/stats`
+    ] as const;
+    }
+
+export const getGetApiMembershipsStatsQueryKey = () => {
+    return [
+    `/api/memberships/stats`
+    ] as const;
+    }
+
+    
+export const getGetApiMembershipsStatsInfiniteQueryOptions = <TData = InfiniteData<Awaited<ReturnType<typeof getApiMembershipsStats>>>, TError = unknown>( options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiMembershipsStats>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiMembershipsStatsInfiniteQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiMembershipsStats>>> = ({ signal }) => getApiMembershipsStats(signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiMembershipsStats>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiMembershipsStatsInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getApiMembershipsStats>>>
+export type GetApiMembershipsStatsInfiniteQueryError = unknown
+
+
+export function useGetApiMembershipsStatsInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getApiMembershipsStats>>>, TError = unknown>(
+  options: { query:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiMembershipsStats>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiMembershipsStats>>,
+          TError,
+          Awaited<ReturnType<typeof getApiMembershipsStats>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiMembershipsStatsInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getApiMembershipsStats>>>, TError = unknown>(
+  options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiMembershipsStats>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiMembershipsStats>>,
+          TError,
+          Awaited<ReturnType<typeof getApiMembershipsStats>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiMembershipsStatsInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getApiMembershipsStats>>>, TError = unknown>(
+  options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiMembershipsStats>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Membership stats for current tenant
+ */
+
+export function useGetApiMembershipsStatsInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getApiMembershipsStats>>>, TError = unknown>(
+  options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiMembershipsStats>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiMembershipsStatsInfiniteQueryOptions(options)
+
+  const query = useInfiniteQuery(queryOptions, queryClient) as  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+/**
+ * @summary Membership stats for current tenant
+ */
+export const prefetchGetApiMembershipsStatsInfiniteQuery = async <TData = Awaited<ReturnType<typeof getApiMembershipsStats>>, TError = unknown>(
+ queryClient: QueryClient,  options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiMembershipsStats>>, TError, TData>>, }
+
+  ): Promise<QueryClient> => {
+
+  const queryOptions = getGetApiMembershipsStatsInfiniteQueryOptions(options)
+
+  await queryClient.prefetchInfiniteQuery(queryOptions);
+
+  return queryClient;
+}
+
+
+
+export const getGetApiMembershipsStatsQueryOptions = <TData = Awaited<ReturnType<typeof getApiMembershipsStats>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiMembershipsStats>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiMembershipsStatsQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiMembershipsStats>>> = ({ signal }) => getApiMembershipsStats(signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiMembershipsStats>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiMembershipsStatsQueryResult = NonNullable<Awaited<ReturnType<typeof getApiMembershipsStats>>>
+export type GetApiMembershipsStatsQueryError = unknown
+
+
+export function useGetApiMembershipsStats<TData = Awaited<ReturnType<typeof getApiMembershipsStats>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiMembershipsStats>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiMembershipsStats>>,
+          TError,
+          Awaited<ReturnType<typeof getApiMembershipsStats>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiMembershipsStats<TData = Awaited<ReturnType<typeof getApiMembershipsStats>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiMembershipsStats>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiMembershipsStats>>,
+          TError,
+          Awaited<ReturnType<typeof getApiMembershipsStats>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiMembershipsStats<TData = Awaited<ReturnType<typeof getApiMembershipsStats>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiMembershipsStats>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Membership stats for current tenant
+ */
+
+export function useGetApiMembershipsStats<TData = Awaited<ReturnType<typeof getApiMembershipsStats>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiMembershipsStats>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiMembershipsStatsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+/**
+ * @summary Membership stats for current tenant
+ */
+export const prefetchGetApiMembershipsStatsQuery = async <TData = Awaited<ReturnType<typeof getApiMembershipsStats>>, TError = unknown>(
+ queryClient: QueryClient,  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiMembershipsStats>>, TError, TData>>, }
+
+  ): Promise<QueryClient> => {
+
+  const queryOptions = getGetApiMembershipsStatsQueryOptions(options)
+
+  await queryClient.prefetchQuery(queryOptions);
+
+  return queryClient;
+}
+
+
+
+/**
  * @summary Get all roles assigned to a user in current tenant
  */
 export const getApiMembershipsUserRoles = (

@@ -5,6 +5,7 @@
  * Multi-tenant Real Estate Platform API
  * OpenAPI spec version: v1
  */
+import type { UpdateProfileDtoUsername } from './updateProfileDtoUsername';
 import type { UpdateProfileDtoGender } from './updateProfileDtoGender';
 
 export interface UpdateProfileDto {
@@ -13,6 +14,8 @@ export interface UpdateProfileDto {
    * @maxLength 100
    */
   fullName: string;
+  /** Username đăng nhập — null để xóa */
+  username?: UpdateProfileDtoUsername;
   /**
    * @minLength 10
    * @maxLength 20

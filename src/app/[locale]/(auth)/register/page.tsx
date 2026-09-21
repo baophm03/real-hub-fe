@@ -109,6 +109,7 @@ export default function RegisterPage() {
       title="Đăng ký"
       subtitle="Chọn vai trò và điền thông tin để tạo tài khoản"
       className="max-w-5xl"
+      backHref="/login"
     >
       <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 gap-8 lg:grid-cols-5">
         {/* ── Cột trái: Chọn vai trò (dọc, có chỗ cho vai trò tương lai) ── */}
@@ -201,7 +202,7 @@ export default function RegisterPage() {
             <Input
               id="username"
               type="text"
-              placeholder="nguyen.van.a (không bắt buộc)"
+              placeholder="realhubvn (không bắt buộc)"
               autoComplete="username"
               {...register("username")}
               aria-invalid={!!errors.username}
@@ -272,7 +273,20 @@ export default function RegisterPage() {
             )}
           </div>
 
-          <div className="flex flex-col gap-2">
+          {/* Địa chỉ: chiếm trọn 1 hàng, tỉnh + phường nằm ngang */}
+          <div className="flex flex-col gap-2 sm:col-span-2">
+            <Label className="text-[13px] font-medium">Địa chỉ</Label>
+            <LocationSelectWithLabel
+              provinceId={selectedProvinceId || null}
+              wardId={selectedWardId || null}
+              onProvinceChange={(id) => setValue("provinceId", id ?? "")}
+              onWardChange={(id) => setValue("wardId", id ?? "")}
+              wardPlaceholder="Chọn phường/xã"
+              horizontal
+            />
+          </div>
+
+          <div className="flex flex-col gap-2 sm:col-span-2">
             <Label htmlFor="password" className="text-[13px] font-medium">Mật khẩu</Label>
             <div className="relative">
               <Input
@@ -299,19 +313,6 @@ export default function RegisterPage() {
                 {errors.password.message}
               </p>
             )}
-          </div>
-
-          {/* Địa chỉ: chiếm trọn 1 hàng, tỉnh + phường nằm ngang */}
-          <div className="flex flex-col gap-2 sm:col-span-2">
-            <Label className="text-[13px] font-medium">Địa chỉ</Label>
-            <LocationSelectWithLabel
-              provinceId={selectedProvinceId || null}
-              wardId={selectedWardId || null}
-              onProvinceChange={(id) => setValue("provinceId", id ?? "")}
-              onWardChange={(id) => setValue("wardId", id ?? "")}
-              wardPlaceholder="Chọn phường/xã"
-              horizontal
-            />
           </div>
 
           <div className="flex flex-col gap-2 sm:col-span-2">
@@ -356,20 +357,20 @@ export default function RegisterPage() {
           <Button type="submit" disabled={isPending} className="mt-1 w-full sm:col-span-2" size="lg">
             {isPending ? "Đang đăng ký..." : "Đăng ký"}
           </Button>
+
+          <div className="text-center sm:col-span-2">
+            <Link
+              href="/login"
+              className="group inline-flex items-center gap-2 text-sm text-foreground-muted transition-colors hover:text-foreground"
+            >
+              <span>Đã có tài khoản? Đăng nhập</span>
+              <span className="inline-flex size-6 items-center justify-center rounded-lg bg-surface-muted transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:translate-x-0.5 group-hover:-translate-y-0.5">
+                <ArrowUpRight size={12} />
+              </span>
+            </Link>
+          </div>
         </div>
       </form>
-
-      <div className="mt-8 text-center">
-        <Link
-          href="/login"
-          className="group inline-flex items-center gap-2 text-sm text-foreground-muted transition-colors hover:text-foreground"
-        >
-          <span>Đã có tài khoản? Đăng nhập</span>
-          <span className="inline-flex size-6 items-center justify-center rounded-lg bg-surface-muted transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:translate-x-0.5 group-hover:-translate-y-0.5">
-            <ArrowUpRight size={12} />
-          </span>
-        </Link>
-      </div>
     </AuthCard>
   );
 }

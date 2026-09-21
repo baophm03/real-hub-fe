@@ -1,10 +1,13 @@
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
-import { CHART_COLORS, tooltipStyle } from "./constants";
+import { CHART_COLORS, STATUS_COLORS, tooltipStyle } from "./constants";
 
 interface BreakdownPieProps {
-  data: { name: string; value: number }[];
+  data: { key?: string; name: string; value: number }[];
   total: number;
 }
+
+const colorFor = (key: string | undefined, i: number) =>
+  (key && STATUS_COLORS[key]) || CHART_COLORS[i % CHART_COLORS.length];
 
 export function BreakdownPie({ data, total }: BreakdownPieProps) {
   if (!data || data.length === 0) {
@@ -15,8 +18,8 @@ export function BreakdownPie({ data, total }: BreakdownPieProps) {
       <ResponsiveContainer width="100%" height={260} className="sm:!w-[240px]">
         <PieChart>
           <Pie data={data} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={50} outerRadius={90} paddingAngle={2}>
-            {data.map((_, i) => (
-              <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+            {data.map((entry, i) => (
+              <Cell key={i} fill={colorFor(entry.key, i)} />
             ))}
           </Pie>
           <Tooltip contentStyle={tooltipStyle} />
@@ -26,7 +29,7 @@ export function BreakdownPie({ data, total }: BreakdownPieProps) {
         {data.map((entry, i) => (
           <div key={entry.name} className="flex items-center justify-between gap-2 text-sm">
             <div className="flex items-center gap-2">
-              <span className="size-2.5 rounded-full" style={{ backgroundColor: CHART_COLORS[i % CHART_COLORS.length] }} />
+              <span className="size-2.5 rounded-full" style={{ backgroundColor: colorFor(entry.key, i) }} />
               <span className="text-foreground-muted">{entry.name}</span>
             </div>
             <div className="flex items-center gap-2">

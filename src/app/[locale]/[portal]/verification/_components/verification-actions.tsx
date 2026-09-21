@@ -13,7 +13,11 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { useGetApiPropertyTransitions } from "@/lib/api/endpoints/properties";
+import { useQueryClient } from "@tanstack/react-query";
+import {
+  useGetApiPropertyTransitions,
+  getGetApiPropertyTransitionsQueryOptions,
+} from "@/lib/api/endpoints/properties";
 import { Property } from "@/lib/api/types/properties";
 import type { UpdatePropertyDtoVerificationStatus } from "@/lib/api/models";
 
@@ -40,15 +44,30 @@ interface Props {
 
 export function VerificationActions({ property, onPick }: Props) {
   const [open, setOpen] = useState(false);
+  const queryClient = useQueryClient();
 
-  const { data: transitionsRaw } = useGetApiPropertyTransitions(property.id, {
-    query: { enabled: open },
-  });
+  const { data: transitionsRaw, isLoading } = useGetApiPropertyTransitions(
+    property.id,
+    {
+      query: { enabled: open },
+    },
+  );
   const transitions: any[] = (transitionsRaw as any)?.data ?? [];
+
+  const prefetchTransitions = () => {
+    void queryClient.prefetchQuery(
+      getGetApiPropertyTransitionsQueryOptions(property.id),
+    );
+  };
 
   return (
     <Can I="APPROVE" a="PROPERTY">
-      <div onClick={(e) => e.stopPropagation()} className="flex justify-start">
+      <div
+        onClick={(e) => e.stopPropagation()}
+        onMouseEnter={prefetchTransitions}
+        onFocus={prefetchTransitions}
+        className="flex justify-start"
+      >
         <DropdownMenu open={open} onOpenChange={setOpen}>
           <DropdownMenuTrigger
             render={
@@ -69,7 +88,11 @@ export function VerificationActions({ property, onPick }: Props) {
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              {(() => {
+              {isLoading ? (
+                <div className="px-2 py-1.5 text-xs text-foreground-muted">
+                  Đang tải...
+                </div>
+              ) : (() => {
                 const eligible = transitions.filter(
                   (t) => t.actionCode === "APPROVE" || t.actionCode === "REJECT",
                 );

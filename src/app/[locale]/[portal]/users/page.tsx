@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { Loader2, Pencil, UserCog, UserPlus, UserX } from "lucide-react";
+import { Loader2, Pencil, UserCheck, UserCog, UserPlus, Users, UserX } from "lucide-react";
 import { toast } from "sonner";
 import { Can } from "@casl/react";
 import { PageHeader } from "@/components/shared/page-header";
@@ -24,8 +24,10 @@ import { usePagination } from "@/lib/hooks/use-pagination";
 import type { ColumnDef } from "@tanstack/react-table";
 import {
   useGetApiMemberships,
+  useGetApiMembershipsStats,
   usePatchApiMembershipsId,
   getGetApiMembershipsQueryKey,
+  getGetApiMembershipsStatsQueryKey,
 } from "@/lib/api/endpoints/memberships";
 import type { GetApiMembershipsStatus } from "@/lib/api/models/getApiMembershipsStatus";
 import { CreateUserDialog } from "./_components/create-user-dialog";
@@ -41,6 +43,26 @@ interface MembershipsListResponse {
   offset: number;
   meta?: { total: number; totalPages: number };
 }
+
+interface MembershipStats {
+  total: number;
+  active: number;
+  inactive: number;
+  newThisMonth: number;
+}
+
+const statCards: {
+  key: keyof MembershipStats;
+  label: string;
+  icon: typeof Users;
+  tile: string;
+  glow: string;
+}[] = [
+    { key: "total", label: "Tổng người dùng", icon: Users, tile: "bg-accent-blue text-accent-blue-text", glow: "from-accent-blue/70" },
+    { key: "active", label: "Đang hoạt động", icon: UserCheck, tile: "bg-accent-green text-accent-green-text", glow: "from-accent-green/70" },
+    { key: "inactive", label: "Vô hiệu hóa", icon: UserX, tile: "bg-accent-red text-accent-red-text", glow: "from-accent-red/70" },
+    { key: "newThisMonth", label: "Mới tháng này", icon: UserPlus, tile: "bg-accent-purple text-accent-purple-text", glow: "from-accent-purple/70" },
+  ];
 
 const statusLabel: Record<string, { label: string; variant: "green" | "default" }> = {
   ACTIVE: { label: "Hoạt động", variant: "green" },
@@ -61,6 +83,9 @@ export default function UsersPage() {
   const [editTarget, setEditTarget] = useState<MembershipRow | null>(null);
 
   const pagination = usePagination(10);
+  const { data: statsData } = useGetApiMembershipsStats();
+  const stats = (statsData as unknown as { data?: MembershipStats })?.data;
+
   const { data: membershipsData, isLoading } = useGetApiMemberships({
     search: search.trim() || undefined,
     status: statusFilter,
@@ -72,6 +97,7 @@ export default function UsersPage() {
     mutation: {
       onSuccess: async () => {
         await queryClient.invalidateQueries({ queryKey: getGetApiMembershipsQueryKey() });
+        await queryClient.invalidateQueries({ queryKey: getGetApiMembershipsStatsQueryKey() });
         router.refresh();
         toast.success("Đã vô hiệu hóa người dùng");
       },
@@ -226,6 +252,28 @@ export default function UsersPage() {
           </Can>
         }
       />
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {statCards.map((stat) => {
+          const Icon = stat.icon;
+          return (
+            <div
+              key={stat.key}
+              className={`flex flex-col gap-3 rounded-xl border border-border bg-surface bg-gradient-to-br ${stat.glow} via-surface to-surface p-4 shadow-[0_1px_3px_rgba(42,37,32,0.02),0_8px_24px_-12px_rgba(45,95,63,0.06)] md:p-6 md:rounded-[1.25rem]`}
+            >
+              <div className={`flex size-9 items-center justify-center rounded-lg md:size-11 ${stat.tile}`}>
+                <Icon size={18} className="md:size-5" />
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="text-2xl font-semibold tabular-nums tracking-tight md:text-3xl">
+                  {stats ? stats[stat.key] : "—"}
+                </span>
+                <span className="text-xs text-foreground-muted">{stat.label}</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <Input

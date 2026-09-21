@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Pencil, Plus, Trash2 } from "lucide-react";
@@ -31,6 +31,8 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { FieldDefinitionDialog } from "./field-definition-dialog";
+import { ConfirmDeleteDialog } from "./confirm-delete-dialog";
+import { PaginationBar } from "@/components/shared/pagination-bar";
 import { entityTypeOptions, getEntityTypeLabel } from "./entity-type.constants";
 
 const fieldTypeLabels: Record<string, string> = {
@@ -86,11 +88,21 @@ export function DefinitionsTab({ canCreate = true, canUpdate = true, canDelete =
   const [entityType, setEntityType] = useState<string>("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingDef, setEditingDef] = useState<FieldDefinition | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<FieldDefinition | null>(null);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   const { data, isLoading, refetch } = useGetApiFieldDefinitions(
     entityType ? { entityType: entityType as GetApiFieldDefinitionsEntityType } : undefined,
   );
   const definitions = ((data as any)?.data as FieldDefinition[]) || [];
+
+  const totalPages = Math.max(1, Math.ceil(definitions.length / pageSize));
+  const pagedDefinitions = definitions.slice((page - 1) * pageSize, page * pageSize);
+
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages);
+  }, [page, totalPages]);
 
   const { data: propertyTypesData } = useGetApiPropertyTypes();
   const propertyTypes = ((propertyTypesData as any)?.data as PropertyType[]) || [];
@@ -121,10 +133,11 @@ export function DefinitionsTab({ canCreate = true, canUpdate = true, canDelete =
     },
   });
 
-  const { mutateAsync: deleteDefinition } = useDeleteApiFieldDefinition({
+  const { mutateAsync: deleteDefinition, isPending: isDeleting } = useDeleteApiFieldDefinition({
     mutation: {
       onSuccess: () => {
         toast.success("Xóa loại dữ liệu thành công");
+        setDeleteTarget(null);
         refetch();
       },
       onError: (err: any) => {
@@ -219,6 +232,7 @@ export function DefinitionsTab({ canCreate = true, canUpdate = true, canDelete =
             value={entityType}
             onValueChange={(v) => {
               setEntityType(v as string);
+              setPage(1);
             }}
           >
             <SelectTrigger className="w-48">
@@ -279,7 +293,7 @@ export function DefinitionsTab({ canCreate = true, canUpdate = true, canDelete =
               </TableRow>
             </TableHeader>
             <TableBody>
-              {definitions.map((def) => {
+              {pagedDefinitions.map((def) => {
                 return (
                   <TableRow key={def.id}>
                     <TableCell>
@@ -315,11 +329,7 @@ export function DefinitionsTab({ canCreate = true, canUpdate = true, canDelete =
                           </Button>
                         )}
                         {canDelete && (
-                          <Button variant="ghost" size="icon-sm" onClick={() => {
-                            if (confirm(`Xóa loại dữ liệu "${def.fieldLabel}"?`)) {
-                              deleteDefinition({ id: def.id });
-                            }
-                          }}>
+                          <Button variant="ghost" size="icon-sm" onClick={() => setDeleteTarget(def)}>
                             <Trash2 size={14} />
                           </Button>
                         )}
@@ -332,6 +342,27 @@ export function DefinitionsTab({ canCreate = true, canUpdate = true, canDelete =
           </Table>
         </div>
       )}
+
+      {!isLoading && definitions.length > 0 && (
+        <PaginationBar
+          pageSize={pageSize}
+          setPageSize={setPageSize}
+          currentPage={page}
+          setCurrentPage={setPage}
+          totalPages={totalPages}
+        />
+      )}
+
+      <ConfirmDeleteDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+        title="Xóa loại dữ liệu"
+        itemName={deleteTarget?.fieldLabel}
+        isPending={isDeleting}
+        onConfirm={() => {
+          if (deleteTarget) deleteDefinition({ id: deleteTarget.id });
+        }}
+      />
 
       <FieldDefinitionDialog
         open={dialogOpen}
