@@ -234,9 +234,10 @@ export function Hero() {
 
           <Button
             onClick={handleSearch}
-            className="flex h-10 w-10 shrink-0 items-center justify-center bg-[#092909] cursor-pointer"
+            className="flex h-10 w-full shrink-0 items-center justify-center gap-2 bg-[#092909] cursor-pointer md:w-10 md:gap-0"
           >
             <Search size={16} className="text-white" />
+            <span className="text-sm font-medium text-white md:hidden">{t("search")}</span>
           </Button>
         </div>
 

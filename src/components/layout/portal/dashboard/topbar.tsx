@@ -4,7 +4,7 @@ import { useAuthStore } from "@/lib/stores/auth-store";
 import { useUserStore } from "@/lib/stores/user-store";
 import { useRouter } from "next/navigation";
 import {
-  List,
+  Menu,
   LogOut,
   Moon,
   Sun,
@@ -57,13 +57,13 @@ export function TopBar({ onMenuClick }: { onMenuClick?: () => void }) {
   return (
     <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-border bg-surface/70 px-4 backdrop-blur-xl md:px-8">
       <div className="flex items-center gap-3">
-        <Button
+        <button
           onClick={onMenuClick}
-          className="lg:hidden rounded-lg p-2 text-foreground-muted hover:bg-surface-muted transition-colors duration-300"
+          className="lg:hidden text-foreground"
           aria-label="Menu"
         >
-          <List size={20} />
-        </Button>
+          <Menu size={20} />
+        </button>
         {tenantCode && (
           <span className="hidden md:inline-flex items-center rounded-lg border border-primary/20 bg-primary/8 px-3 py-1 text-[11px] font-medium tracking-wide text-primary">
             {tenantCode}

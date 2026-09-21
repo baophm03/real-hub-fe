@@ -44,28 +44,23 @@ export function HeaderMobileMenu({
   return (
     <div
       className={cn(
-        "overflow-hidden bg-primary/95 backdrop-blur-xl transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] lg:hidden",
+        "overflow-hidden border-b border-black/10 bg-white transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] lg:hidden",
         open
-          ? "max-h-[600px] border-t border-primary-foreground/10 opacity-100"
-          : "max-h-0 opacity-0"
+          ? "max-h-[calc(100vh-4rem)] overflow-y-auto opacity-100 shadow-[0_16px_48px_-12px_rgba(0,0,0,0.12)]"
+          : "max-h-0 border-b-0 opacity-0"
       )}
     >
       <nav className="flex flex-col gap-1 px-6 py-4">
-        {/* Mobile Search */}
-        <div className="mb-3 flex items-center gap-3 rounded-lg bg-primary-foreground/10 px-4 py-3">
-          <Search size={18} className="text-primary-foreground/50" />
-          <input
-            type="text"
-            placeholder={t("header.searchPlaceholder")}
-            className="flex-1 bg-transparent text-sm text-primary-foreground placeholder:text-primary-foreground/40 focus:outline-none"
-          />
-        </div>
-
         {/* Mobile Mega Menu — Accordion */}
         <div className="flex flex-col">
           <button
             onClick={() => setMegaOpen(!megaOpen)}
-            className="flex items-center justify-between rounded-lg px-4 py-3 text-sm font-medium text-primary-foreground/70 transition-colors hover:bg-primary-foreground/10"
+            className={cn(
+              "flex items-center justify-between rounded-lg px-4 py-3 text-sm font-medium transition-colors",
+              megaOpen
+                ? "bg-[#092909]/5 text-[#092909]"
+                : "text-black/80 hover:bg-black/5 hover:text-[#092909]"
+            )}
           >
             {t("browseProperties")}
             <ChevronDown
@@ -74,22 +69,24 @@ export function HeaderMobileMenu({
             />
           </button>
           {megaOpen && (
-            <div className="flex flex-col gap-0.5 pb-2 pl-4">
+            <div className="flex flex-col gap-0.5 pb-2 pl-2">
               {propertyCategories.map((cat) => (
                 <Link
                   key={cat.label}
                   href={cat.href}
                   onClick={onClose}
-                  className="flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm text-primary-foreground/60 transition-colors hover:bg-primary-foreground/10 hover:text-primary-foreground"
+                  className="flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm text-black/70 transition-colors hover:bg-black/5 hover:text-foreground"
                 >
-                  <cat.icon size={16} className={cat.colorOnDark} />
+                  <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-surface-muted">
+                    <cat.icon size={16} className={cat.color} />
+                  </span>
                   {cat.label}
                 </Link>
               ))}
               <Link
                 href="/listings"
                 onClick={onClose}
-                className="flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium text-primary-foreground"
+                className="flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium text-[#092909] transition-colors hover:bg-[#092909]/5"
               >
                 {t("common.viewAll")}
                 <ArrowUpRight size={12} />
@@ -106,31 +103,31 @@ export function HeaderMobileMenu({
             className={cn(
               "rounded-lg px-4 py-3 text-sm font-medium transition-colors",
               isActive(link.href)
-                ? "bg-primary-foreground/15 text-primary-foreground"
-                : "text-primary-foreground/70 hover:bg-primary-foreground/10 hover:text-primary-foreground"
+                ? "bg-[#092909]/5 text-[#092909]"
+                : "text-black/80 hover:bg-black/5 hover:text-[#092909]"
             )}
           >
             {link.label}
           </Link>
         ))}
 
-        <div className="mt-3 flex flex-col gap-2 border-t border-primary-foreground/10 pt-4">
+        <div className="mt-3 flex flex-col gap-2 border-t border-black/10 pt-4">
           {mounted && isAuthenticated ? (
             <>
-              <div className="flex items-center gap-3 rounded-lg bg-primary-foreground/10 px-4 py-3">
+              <div className="flex items-center gap-3 rounded-lg bg-black/5 px-4 py-3">
                 <Avatar className="size-9 rounded-full overflow-hidden">
                   {user?.avatarFile?.url && (
                     <AvatarImage src={user.avatarFile?.url} alt={user?.fullName ?? "User"} />
                   )}
-                  <AvatarFallback className="flex size-9 items-center justify-center rounded-full bg-primary-foreground/15 text-xs font-medium text-primary-foreground">
+                  <AvatarFallback className="flex size-9 items-center justify-center rounded-full bg-[#092909]/10 text-xs font-medium text-[#092909]">
                     {initials}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex flex-col">
-                  <span className="text-sm font-medium text-primary-foreground">
+                  <span className="text-sm font-medium text-foreground">
                     {user?.fullName ?? "User"}
                   </span>
-                  <span className="text-xs text-primary-foreground/50">{user?.email}</span>
+                  <span className="text-xs text-black/50">{user?.email}</span>
                 </div>
               </div>
 
@@ -140,7 +137,7 @@ export function HeaderMobileMenu({
                     router.push(`/${portalEntry.slug}`);
                     onClose();
                   }}
-                  className="flex items-center justify-center gap-2 rounded-lg bg-primary-foreground px-4 py-3 text-sm font-medium text-primary transition-colors"
+                  className="flex items-center justify-center gap-2 rounded-lg bg-[#092909] px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-[#092909]/90"
                 >
                   <portalEntry.icon size={16} />
                   {portalEntry.label}
@@ -153,7 +150,7 @@ export function HeaderMobileMenu({
                   router.push("/login");
                   onClose();
                 }}
-                className="flex items-center justify-center gap-2 rounded-lg border border-primary-foreground/20 px-4 py-3 text-sm font-medium text-primary-foreground/80 transition-colors hover:bg-primary-foreground/10"
+                className="flex items-center justify-center gap-2 rounded-lg border border-black/15 px-4 py-3 text-sm font-medium text-black/70 transition-colors hover:bg-black/5"
               >
                 <LogOut size={16} />
                 {t("header.logout")}
@@ -164,14 +161,14 @@ export function HeaderMobileMenu({
               <Link
                 href="/login"
                 onClick={onClose}
-                className="rounded-lg border border-primary-foreground/20 px-4 py-3 text-center text-sm font-medium text-primary-foreground/80 transition-colors hover:bg-primary-foreground/10"
+                className="rounded-lg border border-black/15 px-4 py-3 text-center text-sm font-medium text-black/70 transition-colors hover:bg-black/5"
               >
                 {t("signIn")}
               </Link>
               <Link
                 href="/register"
                 onClick={onClose}
-                className="flex items-center justify-center gap-2 rounded-lg bg-primary-foreground px-4 py-3 text-sm font-medium text-primary transition-colors"
+                className="flex items-center justify-center gap-2 rounded-lg bg-[#092909] px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-[#092909]/90"
               >
                 {t("signUp")}
                 <ArrowUpRight size={14} />

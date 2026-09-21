@@ -23,7 +23,7 @@ export function SidebarCollapse({ children }: SidebarCollapseProps) {
         type="button"
         onClick={() => setCollapsed((c) => !c)}
         aria-label={collapsed ? "Mở rộng sidebar" : "Thu gọn sidebar"}
-        className="absolute top-1/2 -right-3 z-50 flex h-10 w-6 translate-y-[-50%] items-center justify-center rounded-[7px] border border-border bg-surface shadow-sm transition-colors hover:bg-surface-muted"
+        className="absolute top-1/2 -right-3 z-50 hidden h-10 w-6 translate-y-[-50%] items-center justify-center rounded-[7px] border border-border bg-surface shadow-sm transition-colors hover:bg-surface-muted lg:flex"
       >
         {collapsed ? (
           <ChevronRight size={14} className="text-foreground-muted" />
