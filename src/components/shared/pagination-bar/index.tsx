@@ -21,7 +21,7 @@ export function PaginationBar({
   return (
     <div className="px-4 py-3 -mt-3 flex items-center justify-between bg-surface rounded-md border border-border">
       <div className="flex items-center gap-2">
-        <span className="text-sm text-foreground-muted">Hiển thị</span>
+        <span className="hidden text-sm text-foreground-muted md:inline">Hiển thị</span>
         <Select
           value={String(pageSize)}
           items={{ 10: "10", 20: "20", 50: "50", 100: "100" }}
@@ -42,7 +42,7 @@ export function PaginationBar({
             <SelectItem value="100" label="100">100</SelectItem>
           </SelectContent>
         </Select>
-        <span className="text-sm text-foreground-muted">mục</span>
+        <span className="hidden text-sm text-foreground-muted md:inline">mục</span>
       </div>
       <div className="flex items-center gap-4">
         <span className="text-sm text-foreground-muted">

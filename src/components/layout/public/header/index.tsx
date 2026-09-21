@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Link, usePathname } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
-import { Building2, List, X } from "lucide-react";
+import { Building2, Menu, X } from "lucide-react";
 import { useAuthStore } from "@/lib/stores/auth-store";
 import { useUserStore } from "@/lib/stores/user-store";
 import { HeaderDesktopNav, useNavLinks } from "./components/header-desktop-nav";
@@ -71,11 +71,11 @@ export function PublicHeader() {
             <LanguageSwitcher />
 
             {mounted && isAuthenticated ? (
-              <HeaderAuthDropdown initials={initials} />
+              !mobileOpen && <HeaderAuthDropdown initials={initials} />
             ) : (
               <Link
                 href="/login"
-                className="rounded-lg bg-[#0D2D0D] px-4 py-2 text-[15px] font-medium text-white transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-[#0D2D0D]/80"
+                className="hidden md:flex rounded-lg bg-[#0D2D0D] px-4 py-2 text-[15px] font-medium text-white transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-[#0D2D0D]/80"
               >
                 {t("header.joinNow")}
               </Link>
@@ -87,7 +87,7 @@ export function PublicHeader() {
               onClick={() => setMobileOpen(!mobileOpen)}
               aria-label="Toggle menu"
             >
-              {mobileOpen ? <X size={20} /> : <List size={20} />}
+              {mobileOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
           </div>
         </div>
