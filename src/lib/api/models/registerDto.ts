@@ -11,6 +11,8 @@ import type { RegisterDtoGender } from './registerDtoGender';
 export interface RegisterDto {
   fullName: string;
   email: string;
+  /** Username đăng nhập — 3-30 ký tự (chữ, số, _, ., -) */
+  username?: string;
   /** @minLength 8 */
   password: string;
   /**

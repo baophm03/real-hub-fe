@@ -67,10 +67,7 @@ const transactionTypeLabels: Record<string, string> = {
 
 const sellingModeLabels: Record<string, string> = {
   SELF_SELL: "Tự bán",
-  SALES_DISTRIBUTION: "Phân phối",
-  HYBRID: "Kết hợp",
-  INTERNAL_ONLY: "Chỉ nội bộ",
-  AGENCY_DISTRIBUTION: "Sàn công khai",
+  SALES_DISTRIBUTION: "Sale bán hộ",
 };
 
 const businessStatusLabels: Record<string, string> = {
@@ -297,9 +294,6 @@ function PropertyFormContent() {
                 <SelectContent>
                   <SelectItem value="SELF_SELL" label="Tự bán">Tự bán</SelectItem>
                   <SelectItem value="SALES_DISTRIBUTION" label="Sales bán hộ">Sales bán hộ</SelectItem>
-                  <SelectItem value="HYBRID" label="Kết hợp">Kết hợp</SelectItem>
-                  <SelectItem value="INTERNAL_ONLY" label="Chỉ nội bộ">Chỉ nội bộ</SelectItem>
-                  <SelectItem value="AGENCY_DISTRIBUTION" label="Sàn công khai">Sàn công khai</SelectItem>
                 </SelectContent>
               </Select>
             </FormField>

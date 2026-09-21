@@ -43,7 +43,7 @@ import { customInstance } from '../mutator/custom-instance';
 
 
 /**
- * @summary Create a new user (sends OTP for email verification)
+ * @summary Create a new user in current tenant (active immediately)
  */
 export const postApiUser = (
     createUserDto: CreateUserDto,
@@ -91,7 +91,7 @@ const {mutation: mutationOptions} = options ?
     export type PostApiUserMutationError = unknown
 
     /**
- * @summary Create a new user (sends OTP for email verification)
+ * @summary Create a new user in current tenant (active immediately)
  */
 export const usePostApiUser = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiUser>>, TError,{data: CreateUserDto}, TContext>, }

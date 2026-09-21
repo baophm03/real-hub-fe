@@ -367,7 +367,7 @@ export const usePutApiResetPassword = <TError = unknown,
       return useMutation(mutationOptions, queryClient);
     }
     /**
- * @summary Login with email and password
+ * @summary Login with email or username and password
  */
 export const postApiLogin = (
     loginDto: LoginDto,
@@ -415,7 +415,7 @@ const {mutation: mutationOptions} = options ?
     export type PostApiLoginMutationError = unknown
 
     /**
- * @summary Login with email and password
+ * @summary Login with email or username and password
  */
 export const usePostApiLogin = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiLogin>>, TError,{data: LoginDto}, TContext>, }

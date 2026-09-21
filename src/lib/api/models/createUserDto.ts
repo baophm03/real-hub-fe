@@ -10,6 +10,8 @@ import type { CreateUserDtoGender } from './createUserDtoGender';
 export interface CreateUserDto {
   fullName: string;
   email: string;
+  /** Username đăng nhập — 3-30 ký tự (chữ, số, _, ., -) */
+  username?: string;
   /** @minLength 8 */
   password: string;
   phone?: string;
@@ -20,4 +22,6 @@ export interface CreateUserDto {
   provinceId?: string;
   /** Location ID (ward level, type=WARD) — from /locations?type=WARD&parentId=<districtId> */
   wardId?: string;
+  /** Tenant role IDs to assign — user is added to current tenant as member */
+  roleIds?: string[];
 }

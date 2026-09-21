@@ -5,6 +5,7 @@
  * Multi-tenant Real Estate Platform API
  * OpenAPI spec version: v1
  */
+import type { ReplaceUserDtoUsername } from './replaceUserDtoUsername';
 import type { ReplaceUserDtoDateOfBirth } from './replaceUserDtoDateOfBirth';
 import type { ReplaceUserDtoGender } from './replaceUserDtoGender';
 import type { ReplaceUserDtoStatus } from './replaceUserDtoStatus';
@@ -12,6 +13,8 @@ import type { ReplaceUserDtoStatus } from './replaceUserDtoStatus';
 export interface ReplaceUserDto {
   fullName: string;
   email: string;
+  /** Username đăng nhập — bỏ trống sẽ reset về null */
+  username?: ReplaceUserDtoUsername;
   /** @minLength 8 */
   password: string;
   phone?: string;
