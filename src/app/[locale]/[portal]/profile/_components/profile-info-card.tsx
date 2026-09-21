@@ -92,7 +92,7 @@ export function ProfileInfoCard({ onSynced, avatarUploading }: ProfileInfoCardPr
       await updateProfile({
         data: {
           fullName: data.fullName,
-          username: data.username || null,
+          username: (data.username || null) as any,
           phone: data.phone,
           dateOfBirth: data.dateOfBirth as any,
           ...(data.gender ? { gender: data.gender } : {}),
