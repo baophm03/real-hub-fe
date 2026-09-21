@@ -40,12 +40,34 @@ export const dealStatusLabels: Record<string, string> = {
 
 export const CHART_COLORS = [
   "#2a5f3f",
-  "#5b8c6e",
-  "#8fb5a0",
-  "#c4d9cc",
+  "#1F6C9F",
   "#d4a373",
-  "#a07c5c",
+  "#6B3B8C",
+  "#8fb5a0",
+  "#956400",
 ];
+
+/** Semantic colors keyed by status code — falls back to CHART_COLORS by index */
+export const STATUS_COLORS: Record<string, string> = {
+  NEW: "#1F6C9F",
+  CONTACTED: "#956400",
+  INTERESTED: "#6B3B8C",
+  NEGOTIATING: "#a07c5c",
+  CONVERTED: "#2a5f3f",
+  LOST: "#9F2F2D",
+  SOFT_RESERVED: "#d4a373",
+  CONTRACT_PENDING: "#8fb5a0",
+  SIGNED: "#1F6C9F",
+  COMPLETED: "#2a5f3f",
+  CANCELLED: "#9F2F2D",
+  DRAFT: "#787774",
+  PENDING: "#956400",
+  VERIFIED: "#2a5f3f",
+  REJECTED: "#9F2F2D",
+  PRIVATE: "#956400",
+  PUBLIC: "#2a5f3f",
+  ARCHIVED: "#787774",
+};
 
 export const tooltipStyle = {
   background: "var(--surface)",

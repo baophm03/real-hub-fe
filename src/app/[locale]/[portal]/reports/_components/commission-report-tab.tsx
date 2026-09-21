@@ -61,10 +61,10 @@ export function CommissionReportTab({ startDate, endDate }: CommissionReportTabP
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Tổng deal có hoa hồng" value={report ? String(report.total) : "—"} icon={BarChart3} />
-        <StatCard label="Hoa hồng ước tính" value={report ? formatCompact(report.totalEstimated) : "—"} sub={report ? formatVnd(report.totalEstimated) : ""} icon={TrendingUp} />
-        <StatCard label="Hoa hồng đã xác nhận" value={report ? formatCompact(report.totalConfirmed) : "—"} sub={report ? formatVnd(report.totalConfirmed) : ""} icon={Wallet} />
-        <StatCard label="Tỷ lệ xác nhận" value={report ? `${confirmedRate}%` : "—"} icon={Handshake} />
+        <StatCard label="Tổng deal có hoa hồng" value={report ? String(report.total) : "—"} icon={BarChart3} accent="blue" />
+        <StatCard label="Hoa hồng ước tính" value={report ? formatCompact(report.totalEstimated) : "—"} sub={report ? formatVnd(report.totalEstimated) : ""} icon={TrendingUp} accent="yellow" />
+        <StatCard label="Hoa hồng đã xác nhận" value={report ? formatCompact(report.totalConfirmed) : "—"} sub={report ? formatVnd(report.totalConfirmed) : ""} icon={Wallet} accent="green" />
+        <StatCard label="Tỷ lệ xác nhận" value={report ? `${confirmedRate}%` : "—"} icon={Handshake} accent="purple" />
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
@@ -92,14 +92,14 @@ export function CommissionReportTab({ startDate, endDate }: CommissionReportTabP
                   <XAxis dataKey="name" tick={{ fontSize: 11 }} stroke="var(--foreground-muted)" />
                   <YAxis tick={{ fontSize: 11 }} stroke="var(--foreground-muted)" tickFormatter={formatCompact} width={56} />
                   <Tooltip contentStyle={tooltipStyle} formatter={(v: any) => formatVnd(Number(v))} cursor={{ fill: "var(--surface-muted)", opacity: 0.4 }} />
-                  <Bar dataKey="estimated" fill="#5b8c6e" radius={[4, 4, 0, 0]} maxBarSize={36} />
+                  <Bar dataKey="estimated" fill="#d4a373" radius={[4, 4, 0, 0]} maxBarSize={36} />
                   <Bar dataKey="confirmed" fill="#2a5f3f" radius={[4, 4, 0, 0]} maxBarSize={36} />
                 </BarChart>
               </ResponsiveContainer>
             )}
             <div className="flex items-center justify-center gap-6 pt-2">
               <div className="flex items-center gap-2 text-xs">
-                <span className="size-2.5 rounded-sm" style={{ backgroundColor: "#5b8c6e" }} />
+                <span className="size-2.5 rounded-sm" style={{ backgroundColor: "#d4a373" }} />
                 <span className="text-foreground-muted">Ước tính</span>
               </div>
               <div className="flex items-center gap-2 text-xs">

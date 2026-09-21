@@ -16,6 +16,7 @@ import { FormSection, FormField } from "@/components/shared/form-section";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { usePostApiDeal, getGetApiDealsQueryKey } from "@/lib/api/endpoints/deals-reservations";
 import { useGetApiLeadsAdmin } from "@/lib/api/endpoints/leads";
+import { DynamicFieldsSection } from "@/components/shared/dynamic-fields-section";
 import { useUserStore } from "@/lib/stores/user-store";
 import type { GetLeadsResponse, Lead } from "@/lib/api/types/leads";
 
@@ -41,6 +42,7 @@ export default function DealFormPage() {
   const [selectedTx, setSelectedTx] = useState("SALE");
   const [selectedLeadId, setSelectedLeadId] = useState("");
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const [dynamicValues, setDynamicValues] = useState<Record<string, unknown>>({});
 
   const currentUser = useUserStore((s) => s.user);
 
@@ -90,6 +92,7 @@ export default function DealFormPage() {
           leadId: selectedLead.id,
           expectedValue: data.expectedValue || undefined,
           salesUserId: currentUser?.id,
+          dynamicValuesJson: Object.keys(dynamicValues).length > 0 ? dynamicValues : undefined,
         } as any,
       });
       toast.success("Đã tạo giao dịch mới");
@@ -231,6 +234,12 @@ export default function DealFormPage() {
             </div>
           </FormSection>
         )}
+
+        <DynamicFieldsSection
+          entityType="DEAL"
+          initialValues={dynamicValues}
+          onChange={setDynamicValues}
+        />
 
         <div className="flex items-center justify-end gap-2">
           <Button type="button" variant="secondary" onClick={() => router.push(portalPath("/deals"))}>

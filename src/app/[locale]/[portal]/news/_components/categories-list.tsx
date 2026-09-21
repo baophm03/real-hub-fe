@@ -87,9 +87,10 @@ export function CategoriesList() {
     {
       id: "count",
       header: "Số bài viết",
-      cell: ({ row }) => (
-        <Badge variant="default">{row.original._count?.news ?? 0}</Badge>
-      ),
+      cell: ({ row }) => {
+        const count = row.original._count?.news ?? 0;
+        return <Badge variant={count > 0 ? "green" : "outline"}>{count}</Badge>;
+      },
     },
     {
       accessorKey: "createdAt",

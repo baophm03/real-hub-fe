@@ -25,12 +25,12 @@ import { usePagination } from "@/lib/hooks/use-pagination";
 import { PaginationBar } from "@/components/shared/pagination-bar";
 import { DeletePropertyDialog } from "./_components/delete-property-dialog";
 
-const statusVariant: Record<string, "green" | "yellow" | "red" | "blue" | "default"> = {
+const statusVariant: Record<string, "green" | "yellow" | "purple" | "blue" | "outline"> = {
   AVAILABLE: "green",
   RESERVED: "yellow",
-  SOLD: "red",
+  SOLD: "purple",
   RENTED: "blue",
-  OFF_MARKET: "default",
+  OFF_MARKET: "outline",
 };
 
 const statusLabel: Record<string, string> = {
@@ -50,9 +50,9 @@ const txLabel: Record<string, string> = {
 
 const verificationStatusVariant: Record<
   string,
-  "default" | "yellow" | "green" | "red"
+  "outline" | "yellow" | "green" | "red"
 > = {
-  DRAFT: "default",
+  DRAFT: "outline",
   PENDING: "yellow",
   VERIFIED: "green",
   REJECTED: "red",
@@ -140,7 +140,7 @@ export default function PropertiesPage() {
       cell: ({ row }) => {
         const vStatus = getVerificationStatus(row.original);
         return (
-          <Badge variant={verificationStatusVariant[vStatus] ?? "default"}>
+          <Badge variant={verificationStatusVariant[vStatus] ?? "outline"}>
             {verificationStatusLabel[vStatus] ?? vStatus}
           </Badge>
         );
@@ -150,7 +150,7 @@ export default function PropertiesPage() {
       accessorKey: "businessStatus",
       header: "Trạng thái",
       cell: ({ row }) => (
-        <Badge variant={statusVariant[row.original.businessStatus ?? ""] ?? "default"}>
+        <Badge variant={statusVariant[row.original.businessStatus ?? ""] ?? "outline"}>
           {statusLabel[row.original.businessStatus ?? ""] ?? row.original.businessStatus}
         </Badge>
       ),

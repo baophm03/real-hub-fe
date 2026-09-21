@@ -18,7 +18,7 @@ import {
   DialogOverlay,
 } from "@/components/ui/dialog";
 import { usePostApiUser } from "@/lib/api/endpoints/users";
-import { getGetApiMembershipsQueryKey } from "@/lib/api/endpoints/memberships";
+import { getGetApiMembershipsQueryKey, getGetApiMembershipsStatsQueryKey } from "@/lib/api/endpoints/memberships";
 import type { CreateUserDto } from "@/lib/api/models/createUserDto";
 
 interface CreateUserDialogProps {
@@ -76,6 +76,7 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
       };
       await createUser({ data: dto });
       await queryClient.invalidateQueries({ queryKey: getGetApiMembershipsQueryKey() });
+      await queryClient.invalidateQueries({ queryKey: getGetApiMembershipsStatsQueryKey() });
       router.refresh();
       toast.success(`Đã tạo người dùng "${fullName.trim()}"`);
       onOpenChange(false);
@@ -127,7 +128,7 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
               <Label htmlFor="user-username">Username</Label>
               <Input
                 id="user-username"
-                placeholder="nguyen.van.a (không bắt buộc)"
+                placeholder="realhubvn (không bắt buộc)"
                 autoComplete="off"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}

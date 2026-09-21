@@ -48,10 +48,10 @@ export function SalesReportTab({ startDate, endDate }: SalesReportTabProps) {
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Giao dịch" value={report ? String(report.deals.total) : "—"} sub={report ? formatCompact(report.deals.totalFinalValue) : ""} icon={Handshake} />
-        <StatCard label="Nguồn khách" value={report ? String(report.leads.total) : "—"} icon={Users} />
-        <StatCard label="Lịch hẹn" value={report ? String(report.appointments.total) : "—"} icon={Calendar} />
-        <StatCard label="Đặt cọc" value={report ? String(report.reservations.total) : "—"} icon={Wallet} />
+        <StatCard label="Giao dịch" value={report ? String(report.deals.total) : "—"} sub={report ? formatCompact(report.deals.totalFinalValue) : ""} icon={Handshake} accent="green" />
+        <StatCard label="Nguồn khách" value={report ? String(report.leads.total) : "—"} icon={Users} accent="purple" />
+        <StatCard label="Lịch hẹn" value={report ? String(report.appointments.total) : "—"} icon={Calendar} accent="blue" />
+        <StatCard label="Đặt cọc" value={report ? String(report.reservations.total) : "—"} icon={Wallet} accent="yellow" />
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">

@@ -16,6 +16,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { usePostApiLead } from "@/lib/api/endpoints/leads";
 import { useGetApiCustomers } from "@/lib/api/endpoints/customers";
 import { useGetApiPropertiesAdmin } from "@/lib/api/endpoints/properties";
+import { DynamicFieldsSection } from "@/components/shared/dynamic-fields-section";
 
 interface Customer {
   id: string;
@@ -68,6 +69,7 @@ export default function LeadFormPage() {
   const [selectedStatus, setSelectedStatus] = useState("NEW");
   const [selectedCustomerId, setSelectedCustomerId] = useState("");
   const [selectedPropertyId, setSelectedPropertyId] = useState("");
+  const [dynamicValues, setDynamicValues] = useState<Record<string, unknown>>({});
 
   const { mutateAsync: createLead } = usePostApiLead();
 
@@ -108,6 +110,7 @@ export default function LeadFormPage() {
           customerId: data.customerId || undefined,
           propertyId: data.propertyId || undefined,
           phoneNormalized: data.phoneNormalized || undefined,
+          dynamicValuesJson: Object.keys(dynamicValues).length > 0 ? dynamicValues : undefined,
         },
       });
       toast.success("Đã tạo nguồn khách hàng mới");
@@ -248,6 +251,12 @@ export default function LeadFormPage() {
             />
           </FormField>
         </FormSection>
+
+        <DynamicFieldsSection
+          entityType="LEAD"
+          initialValues={dynamicValues}
+          onChange={setDynamicValues}
+        />
 
         <div className="flex items-center justify-end gap-2">
           <Button type="button" variant="secondary" onClick={() => router.push(portalPath("/leads"))}>

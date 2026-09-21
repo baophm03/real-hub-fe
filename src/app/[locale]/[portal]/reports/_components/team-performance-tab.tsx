@@ -76,8 +76,8 @@ export function TeamPerformanceTab({ startDate, endDate }: TeamPerformanceTabPro
                   <YAxis tick={{ fontSize: 11 }} stroke="var(--foreground-muted)" allowDecimals={false} width={40} />
                   <Tooltip contentStyle={tooltipStyle} cursor={{ fill: "var(--surface-muted)", opacity: 0.4 }} />
                   <Bar dataKey="deals" fill="#2a5f3f" radius={[4, 4, 0, 0]} maxBarSize={36} />
-                  <Bar dataKey="leads" fill="#5b8c6e" radius={[4, 4, 0, 0]} maxBarSize={36} />
-                  <Bar dataKey="appointments" fill="#8fb5a0" radius={[4, 4, 0, 0]} maxBarSize={36} />
+                  <Bar dataKey="leads" fill="#1F6C9F" radius={[4, 4, 0, 0]} maxBarSize={36} />
+                  <Bar dataKey="appointments" fill="#d4a373" radius={[4, 4, 0, 0]} maxBarSize={36} />
                 </BarChart>
               </ResponsiveContainer>
               <div className="flex items-center justify-center gap-6 pt-2">
@@ -86,11 +86,11 @@ export function TeamPerformanceTab({ startDate, endDate }: TeamPerformanceTabPro
                   <span className="text-foreground-muted">Giao dịch</span>
                 </div>
                 <div className="flex items-center gap-2 text-xs">
-                  <span className="size-2.5 rounded-sm" style={{ backgroundColor: "#5b8c6e" }} />
+                  <span className="size-2.5 rounded-sm" style={{ backgroundColor: "#1F6C9F" }} />
                   <span className="text-foreground-muted">Nguồn khách</span>
                 </div>
                 <div className="flex items-center gap-2 text-xs">
-                  <span className="size-2.5 rounded-sm" style={{ backgroundColor: "#8fb5a0" }} />
+                  <span className="size-2.5 rounded-sm" style={{ backgroundColor: "#d4a373" }} />
                   <span className="text-foreground-muted">Lịch hẹn</span>
                 </div>
               </div>

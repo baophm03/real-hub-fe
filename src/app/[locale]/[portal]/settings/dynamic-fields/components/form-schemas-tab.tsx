@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -31,6 +31,8 @@ import { useGetApiPropertyTypes } from "@/lib/api/endpoints/properties";
 import type { CreateFormSchemaDto, UpdateFormSchemaDto, FormSchemaFieldDto } from "@/lib/api/models";
 import type { GetApiFormSchemasEntityType } from "@/lib/api/models/getApiFormSchemasEntityType";
 import { FormSchemaDialog } from "./form-schema-dialog";
+import { ConfirmDeleteDialog } from "./confirm-delete-dialog";
+import { PaginationBar } from "@/components/shared/pagination-bar";
 import { entityTypeOptions, getEntityTypeLabel } from "./entity-type.constants";
 
 interface FormSchema {
@@ -83,6 +85,9 @@ export function FormSchemasTab({ canCreate = true, canUpdate = true, canDelete =
     propertyTypeId: "",
   });
   const [selectedFields, setSelectedFields] = useState<FormSchemaFieldDto[]>([]);
+  const [deleteTarget, setDeleteTarget] = useState<FormSchema | null>(null);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   const { data: propertyTypesData } = useGetApiPropertyTypes();
   const propertyTypes = ((propertyTypesData as any)?.data as PropertyType[]) || [];
@@ -91,6 +96,13 @@ export function FormSchemasTab({ canCreate = true, canUpdate = true, canDelete =
     entityType ? { entityType: entityType as GetApiFormSchemasEntityType, ...(propertyTypeId ? { propertyTypeId } : {}) } : undefined,
   );
   const schemas = ((data as any)?.data as FormSchema[]) || [];
+
+  const totalPages = Math.max(1, Math.ceil(schemas.length / pageSize));
+  const pagedSchemas = schemas.slice((page - 1) * pageSize, page * pageSize);
+
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages);
+  }, [page, totalPages]);
 
   const { data: definitionsData } = useGetApiFieldDefinitions(
     form.entityType
@@ -128,10 +140,11 @@ export function FormSchemasTab({ canCreate = true, canUpdate = true, canDelete =
     },
   });
 
-  const { mutateAsync: deleteSchema } = useDeleteApiFormSchema({
+  const { mutateAsync: deleteSchema, isPending: isDeleting } = useDeleteApiFormSchema({
     mutation: {
       onSuccess: () => {
         toast.success("Xóa đối tượng áp dụng thành công");
+        setDeleteTarget(null);
         refetch();
       },
       onError: (err: any) => {
@@ -172,9 +185,9 @@ export function FormSchemasTab({ canCreate = true, canUpdate = true, canDelete =
     setSelectedFields([]);
   };
 
-  const handleDelete = (schema: FormSchema) => {
-    if (!confirm(`Xóa đối tượng áp dụng "${schema.name}"?`)) return;
-    deleteSchema({ id: schema.id });
+  const handleDelete = () => {
+    if (!deleteTarget) return;
+    deleteSchema({ id: deleteTarget.id });
   };
 
   const handleSubmit = () => {
@@ -212,6 +225,7 @@ export function FormSchemasTab({ canCreate = true, canUpdate = true, canDelete =
             onValueChange={(v) => {
               setEntityType(v as string);
               setPropertyTypeId("");
+              setPage(1);
             }}
           >
             <SelectTrigger className="w-48">
@@ -235,7 +249,10 @@ export function FormSchemasTab({ canCreate = true, canUpdate = true, canDelete =
           {entityType === "PROPERTY" && (
             <Select
               value={propertyTypeId}
-              onValueChange={(v) => setPropertyTypeId(v as string)}
+              onValueChange={(v) => {
+                setPropertyTypeId(v as string);
+                setPage(1);
+              }}
             >
               <SelectTrigger className="w-48">
                 <SelectValue placeholder="Tất cả loại BĐS">
@@ -296,7 +313,7 @@ export function FormSchemasTab({ canCreate = true, canUpdate = true, canDelete =
               </TableRow>
             </TableHeader>
             <TableBody>
-              {schemas.map((schema) => {
+              {pagedSchemas.map((schema) => {
                 const fieldCount = schema.fields?.length ?? 0;
                 return (
                   <TableRow key={schema.id}>
@@ -339,7 +356,7 @@ export function FormSchemasTab({ canCreate = true, canUpdate = true, canDelete =
                           </Button>
                         )}
                         {canDelete && (
-                          <Button variant="ghost" size="icon-sm" onClick={() => handleDelete(schema)}>
+                          <Button variant="ghost" size="icon-sm" onClick={() => setDeleteTarget(schema)}>
                             <Trash2 size={14} />
                           </Button>
                         )}
@@ -352,6 +369,25 @@ export function FormSchemasTab({ canCreate = true, canUpdate = true, canDelete =
           </Table>
         </div>
       )}
+
+      {!isLoading && schemas.length > 0 && (
+        <PaginationBar
+          pageSize={pageSize}
+          setPageSize={setPageSize}
+          currentPage={page}
+          setCurrentPage={setPage}
+          totalPages={totalPages}
+        />
+      )}
+
+      <ConfirmDeleteDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+        title="Xóa đối tượng áp dụng"
+        itemName={deleteTarget?.name}
+        isPending={isDeleting}
+        onConfirm={handleDelete}
+      />
 
       <FormSchemaDialog
         open={dialogOpen}

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { useAuthStore } from "@/lib/stores/auth-store";
 
 type PropertyType = {
   id: string;
@@ -24,7 +25,6 @@ type Province = {
 interface ListingsFilterProps {
   propertyTypes: PropertyType[];
   provinces: Province[];
-  // Current filter values from searchParams
   currentTransactionType: string;
   currentProvinceId: string;
   currentTypes: string[];
@@ -45,6 +45,7 @@ export function ListingsFilter({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
   // Draft state initialized from current searchParams
   const [draftTransactionType, setDraftTransactionType] = useState<"ALL" | "SALE" | "RENT">(
@@ -115,6 +116,12 @@ export function ListingsFilter({
 
   const applyFilters = () => {
     router.push(buildUrl());
+  };
+
+  const handleAlertSubscribe = () => {
+    if (!isAuthenticated) {
+      router.push("/login");
+    }
   };
 
   const clearFilters = () => {
@@ -243,7 +250,10 @@ export function ListingsFilter({
         <p className="text-sm text-white/80">
           {t("alertDesc")}
         </p>
-        <Button className="w-full mt-2 py-2 bg-surface text-[#072707] rounded-lg text-xs font-semibold uppercase tracking-wide hover:bg-surface-muted transition-colors">
+        <Button
+          onClick={handleAlertSubscribe}
+          className="w-full mt-2 py-2 bg-surface text-[#072707] rounded-lg text-xs font-semibold uppercase tracking-wide hover:bg-surface-muted transition-colors"
+        >
           {t("alertSubscribe")}
         </Button>
       </div>

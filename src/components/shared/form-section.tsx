@@ -40,6 +40,7 @@ interface FormFieldProps {
   children: ReactNode;
   required?: boolean;
   className?: string;
+  labelClassName?: string;
 }
 
 export function FormField({
@@ -50,12 +51,13 @@ export function FormField({
   children,
   required,
   className,
+  labelClassName,
 }: FormFieldProps) {
   return (
     <div className={cn("flex flex-col gap-2", className)}>
       <label
         htmlFor={htmlFor}
-        className="text-xs font-semibold tracking-wide text-foreground-muted"
+        className={cn("text-sm text-foreground-muted", labelClassName)}
       >
         {label}
         {required && <span className="ml-0.5 text-accent-red-text">*</span>}

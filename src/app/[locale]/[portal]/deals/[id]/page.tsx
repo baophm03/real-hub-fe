@@ -42,6 +42,7 @@ import type { UpdateDealDtoStatus } from "@/lib/api/models/updateDealDtoStatus";
 import { DeleteDealDialog } from "./_components/delete-deal-dialog";
 import { CreateReservationDialog } from "./_components/create-reservation-dialog";
 import { DealWorkflowActions } from "./_components/deal-workflow-actions";
+import { DynamicValuesDisplay } from "@/components/shared/dynamic-values-display";
 import { useGetApiDealCommissions } from "@/lib/api/endpoints/commission";
 
 interface DealProperty {
@@ -90,6 +91,7 @@ interface Deal {
   status: string;
   currentWorkflowState?: string | null;
   createdAt?: string;
+  dynamicValuesJson?: Record<string, unknown> | null;
   property?: DealProperty | null;
   customer?: DealCustomer | null;
   lead?: DealLead | null;
@@ -521,6 +523,11 @@ export default function DealDetailPage() {
               )}
             </div>
           </div>
+
+          <DynamicValuesDisplay
+            entityType="DEAL"
+            values={deal.dynamicValuesJson}
+          />
 
           {/* Status update */}
           <Can I="UPDATE_OWN" a="DEAL">

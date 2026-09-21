@@ -27,7 +27,13 @@ import {
 import type { GetNewsResponse, News } from "@/lib/api/types/news";
 import { formatDate } from "@/utils";
 
+const categoryVariants = ["blue", "purple", "yellow", "green", "red"] as const;
 
+const categoryVariant = (id: string) => {
+  let h = 0;
+  for (const c of id) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  return categoryVariants[h % categoryVariants.length];
+};
 
 export function NewsList() {
   const router = useRouter();
@@ -80,7 +86,9 @@ export function NewsList() {
       header: "Chuyên mục",
       cell: ({ row }) =>
         row.original.category ? (
-          <Badge variant="default">{row.original.category.name}</Badge>
+          <Badge variant={categoryVariant(row.original.category.id)}>
+            {row.original.category.name}
+          </Badge>
         ) : (
           <span className="text-xs text-foreground-muted">—</span>
         ),

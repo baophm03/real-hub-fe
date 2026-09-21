@@ -90,6 +90,7 @@ function VerifyOtpContent() {
             setUser({
               id: profileData.id,
               email: profileData.email,
+              username: profileData.username,
               fullName: profileData.fullName,
               phone: profileData.phone,
               avatarFile: profileData.avatarFile,

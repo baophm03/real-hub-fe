@@ -16,6 +16,7 @@ export const formatCompact = (v: number) => {
 export const recordToChartData = (rec: Record<string, number> | undefined, labels: Record<string, string>) => {
   if (!rec) return [];
   return Object.entries(rec).map(([key, value]) => ({
+    key,
     name: labels[key] ?? key,
     value,
   }));

@@ -8,10 +8,10 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { CHART_COLORS, tooltipStyle } from "./constants";
+import { CHART_COLORS, STATUS_COLORS, tooltipStyle } from "./constants";
 
 interface BreakdownBarProps {
-  data: { name: string; value: number }[];
+  data: { key?: string; name: string; value: number }[];
   valueFormatter?: (v: number) => string;
 }
 
@@ -33,8 +33,8 @@ export function BreakdownBar({ data, valueFormatter }: BreakdownBarProps) {
         />
         <Tooltip contentStyle={tooltipStyle} cursor={{ fill: "var(--surface-muted)", opacity: 0.4 }} formatter={valueFormatter ? ((v: any) => valueFormatter(Number(v))) : undefined} />
         <Bar dataKey="value" radius={[6, 6, 0, 0]} maxBarSize={48}>
-          {data.map((_, i) => (
-            <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+          {data.map((entry, i) => (
+            <Cell key={i} fill={(entry.key && STATUS_COLORS[entry.key]) || CHART_COLORS[i % CHART_COLORS.length]} />
           ))}
         </Bar>
       </BarChart>
