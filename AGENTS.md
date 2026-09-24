@@ -32,10 +32,10 @@ RealHub là nền tảng hệ sinh thái Bất động sản đa tenant (multi-t
 GUEST, CUSTOMER, OWNER, SALES, COLLABORATOR (CTV), TEAM_LEADER, AGENCY_ADMIN, OPERATOR, SUPER_ADMIN
 
 ## 5 Selling Modes
-SELF_SELL, SALES_DISTRIBUTION, HYBRID, INTERNAL_ONLY, AGENCY_DISTRIBUTION
+SELF_SELL, SALES_DISTRIBUTION, HYBRID, INTERNAL_ONLY, MARKETPLACE_PUBLIC
 
 ## FE Tech Stack
-Next.js 16 App Router + React 19 + Tailwind CSS 4 + Zustand + TanStack Query v5 + React Hook Form + Zod + Lucide React + Recharts + Base UI + react-dropzone + date-fns + Leaflet + Framer Motion
+Next.js 16 App Router + React 18 + Tailwind CSS 4 + Zustand + TanStack Query v5 + React Hook Form + Zod + Lucide React + Recharts + Base UI + react-dropzone + date-fns + Leaflet + Framer Motion + Jodit + next-intl + CASL
 
 ## Dev Environment
 - API: `http://localhost:3001/api`

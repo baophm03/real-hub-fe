@@ -1517,6 +1517,199 @@ export const prefetchGetApiAssignmentIdQuery = async <TData = Awaited<ReturnType
 
 
 /**
+ * @summary Get public link URL + QR SVG for an assignment
+ */
+export const getApiAssignmentQr = (
+    id: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<unknown>(
+      {url: `/api/assignments/${id}/qr`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getGetApiAssignmentQrInfiniteQueryKey = (id?: string,) => {
+    return [
+    'infinite', `/api/assignments/${id}/qr`
+    ] as const;
+    }
+
+export const getGetApiAssignmentQrQueryKey = (id?: string,) => {
+    return [
+    `/api/assignments/${id}/qr`
+    ] as const;
+    }
+
+    
+export const getGetApiAssignmentQrInfiniteQueryOptions = <TData = InfiniteData<Awaited<ReturnType<typeof getApiAssignmentQr>>>, TError = unknown>(id: string, options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiAssignmentQr>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiAssignmentQrInfiniteQueryKey(id);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiAssignmentQr>>> = ({ signal }) => getApiAssignmentQr(id, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(id),  retry: 3, retryDelay: 1000,  ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiAssignmentQr>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiAssignmentQrInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getApiAssignmentQr>>>
+export type GetApiAssignmentQrInfiniteQueryError = unknown
+
+
+export function useGetApiAssignmentQrInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getApiAssignmentQr>>>, TError = unknown>(
+ id: string, options: { query:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiAssignmentQr>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiAssignmentQr>>,
+          TError,
+          Awaited<ReturnType<typeof getApiAssignmentQr>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiAssignmentQrInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getApiAssignmentQr>>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiAssignmentQr>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiAssignmentQr>>,
+          TError,
+          Awaited<ReturnType<typeof getApiAssignmentQr>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiAssignmentQrInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getApiAssignmentQr>>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiAssignmentQr>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get public link URL + QR SVG for an assignment
+ */
+
+export function useGetApiAssignmentQrInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getApiAssignmentQr>>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiAssignmentQr>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiAssignmentQrInfiniteQueryOptions(id,options)
+
+  const query = useInfiniteQuery(queryOptions, queryClient) as  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+/**
+ * @summary Get public link URL + QR SVG for an assignment
+ */
+export const prefetchGetApiAssignmentQrInfiniteQuery = async <TData = Awaited<ReturnType<typeof getApiAssignmentQr>>, TError = unknown>(
+ queryClient: QueryClient, id: string, options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiAssignmentQr>>, TError, TData>>, }
+
+  ): Promise<QueryClient> => {
+
+  const queryOptions = getGetApiAssignmentQrInfiniteQueryOptions(id,options)
+
+  await queryClient.prefetchInfiniteQuery(queryOptions);
+
+  return queryClient;
+}
+
+
+
+export const getGetApiAssignmentQrQueryOptions = <TData = Awaited<ReturnType<typeof getApiAssignmentQr>>, TError = unknown>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAssignmentQr>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiAssignmentQrQueryKey(id);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiAssignmentQr>>> = ({ signal }) => getApiAssignmentQr(id, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(id),  retry: 3, retryDelay: 1000,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiAssignmentQr>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiAssignmentQrQueryResult = NonNullable<Awaited<ReturnType<typeof getApiAssignmentQr>>>
+export type GetApiAssignmentQrQueryError = unknown
+
+
+export function useGetApiAssignmentQr<TData = Awaited<ReturnType<typeof getApiAssignmentQr>>, TError = unknown>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAssignmentQr>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiAssignmentQr>>,
+          TError,
+          Awaited<ReturnType<typeof getApiAssignmentQr>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiAssignmentQr<TData = Awaited<ReturnType<typeof getApiAssignmentQr>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAssignmentQr>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiAssignmentQr>>,
+          TError,
+          Awaited<ReturnType<typeof getApiAssignmentQr>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiAssignmentQr<TData = Awaited<ReturnType<typeof getApiAssignmentQr>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAssignmentQr>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get public link URL + QR SVG for an assignment
+ */
+
+export function useGetApiAssignmentQr<TData = Awaited<ReturnType<typeof getApiAssignmentQr>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAssignmentQr>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiAssignmentQrQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+/**
+ * @summary Get public link URL + QR SVG for an assignment
+ */
+export const prefetchGetApiAssignmentQrQuery = async <TData = Awaited<ReturnType<typeof getApiAssignmentQr>>, TError = unknown>(
+ queryClient: QueryClient, id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAssignmentQr>>, TError, TData>>, }
+
+  ): Promise<QueryClient> => {
+
+  const queryOptions = getGetApiAssignmentQrQueryOptions(id,options)
+
+  await queryClient.prefetchQuery(queryOptions);
+
+  return queryClient;
+}
+
+
+
+/**
  * @summary Revoke an assignment
  */
 export const patchApiRevokeAssignment = (

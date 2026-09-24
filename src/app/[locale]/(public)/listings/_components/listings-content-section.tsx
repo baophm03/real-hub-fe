@@ -7,6 +7,7 @@ import type {
   Property,
 } from "@/lib/api/types/properties";
 import { ListingsToolbar } from "./listings-toolbar";
+import { ListingsMap } from "./listings-map";
 import { PropertyCard } from "@/components/shared/property-card";
 import { extractFirstImageUrlFromMedia } from "@/components/shared/property-utils";
 
@@ -49,19 +50,31 @@ function findFieldValue(
 interface ListingsContentSectionProps {
   transactionType: string;
   provinceId: string;
+  districtId: string;
+  wardId: string;
   types: string[];
   minPrice: string;
   maxPrice: string;
+  minArea: string;
+  maxArea: string;
+  projectId: string;
   sort: string;
+  view: string;
 }
 
 export async function ListingsContentSection({
   transactionType,
   provinceId,
+  districtId,
+  wardId,
   types,
   minPrice,
   maxPrice,
+  minArea,
+  maxArea,
+  projectId,
   sort,
+  view,
 }: ListingsContentSectionProps) {
   const t = await getTranslations("public.listings");
   const apiParams: Record<string, string> = {
@@ -72,8 +85,13 @@ export async function ListingsContentSection({
   };
   if (transactionType) apiParams.transactionType = transactionType;
   if (provinceId) apiParams.provinceId = provinceId;
+  if (districtId) apiParams.districtId = districtId;
+  if (wardId) apiParams.wardId = wardId;
   if (minPrice) apiParams.minPrice = minPrice;
   if (maxPrice) apiParams.maxPrice = maxPrice;
+  if (minArea) apiParams.minArea = minArea;
+  if (maxArea) apiParams.maxArea = maxArea;
+  if (projectId) apiParams.projectId = projectId;
 
   const [propertiesRes, schemaRes] = await Promise.all([
     getApiProperties(apiParams as any),
@@ -131,7 +149,7 @@ export async function ListingsContentSection({
 
   return (
     <div className="flex-1 flex flex-col gap-6 min-w-0">
-      <ListingsToolbar currentSort={sort} resultCount={result.length} />
+      <ListingsToolbar currentSort={sort} resultCount={result.length} currentView={view} />
 
       {result.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-4 py-20 text-center">
@@ -140,6 +158,8 @@ export async function ListingsContentSection({
             {t("clearAllFilters")}
           </Link>
         </div>
+      ) : view === "map" ? (
+        <ListingsMap properties={result} />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {result.map((property) => (

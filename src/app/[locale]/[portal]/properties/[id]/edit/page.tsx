@@ -61,7 +61,7 @@ const propertySchema = z.object({
   slug: z.string().optional(),
   propertyTypeId: z.string().min(1, "Vui lòng chọn loại BĐS"),
   transactionType: z.enum(["SALE", "RENT", "TRANSFER", "INVESTMENT"]),
-  sellingMode: z.enum(["SELF_SELL", "SALES_DISTRIBUTION", "HYBRID", "INTERNAL_ONLY", "AGENCY_DISTRIBUTION"]),
+  sellingMode: z.enum(["SELF_SELL", "SALES_DISTRIBUTION", "HYBRID", "INTERNAL_ONLY", "MARKETPLACE_PUBLIC"]),
   provinceId: z.string().optional(),
   districtId: z.string().optional(),
   price: z.number().min(0, "Giá phải lớn hơn 0"),

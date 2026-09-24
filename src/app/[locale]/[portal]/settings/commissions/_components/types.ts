@@ -97,7 +97,7 @@ export const sellingModeOptions: { value: string; label: string }[] = [
   { value: "SALES_DISTRIBUTION", label: "Sales khai thác" },
   { value: "HYBRID", label: "Kết hợp" },
   { value: "INTERNAL_ONLY", label: "Nội bộ" },
-  { value: "AGENCY_DISTRIBUTION", label: "Phân phối agency" },
+  { value: "MARKETPLACE_PUBLIC", label: "Sàn công khai" },
 ];
 
 // ── Helpers ──────────────────────────────────────────────

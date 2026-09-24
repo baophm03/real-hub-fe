@@ -32,8 +32,12 @@ import type {
 import type {
   CreateCustomerDto,
   CreateCustomerNeedDto,
+  CreateMyNeedDto,
   GetApiCustomerNeedsParams,
   GetApiCustomersAdminParams,
+  GetApiCustomersMeAppointmentsParams,
+  GetApiCustomersMeContactsParams,
+  GetApiCustomersMeDealsParams,
   GetApiCustomersParams,
   TransitionCustomerNeedDto,
   UpdateCustomerDto
@@ -489,6 +493,1038 @@ export const prefetchGetApiCustomersAdminQuery = async <TData = Awaited<ReturnTy
   ): Promise<QueryClient> => {
 
   const queryOptions = getGetApiCustomersAdminQueryOptions(params,options)
+
+  await queryClient.prefetchQuery(queryOptions);
+
+  return queryClient;
+}
+
+
+
+/**
+ * @summary Get my customer profile
+ */
+export const getApiCustomersMe = (
+    
+ signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<void>(
+      {url: `/api/customers/me`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getGetApiCustomersMeInfiniteQueryKey = () => {
+    return [
+    'infinite', `/api/customers/me`
+    ] as const;
+    }
+
+export const getGetApiCustomersMeQueryKey = () => {
+    return [
+    `/api/customers/me`
+    ] as const;
+    }
+
+    
+export const getGetApiCustomersMeInfiniteQueryOptions = <TData = InfiniteData<Awaited<ReturnType<typeof getApiCustomersMe>>>, TError = unknown>( options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiCustomersMe>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiCustomersMeInfiniteQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiCustomersMe>>> = ({ signal }) => getApiCustomersMe(signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiCustomersMe>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiCustomersMeInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getApiCustomersMe>>>
+export type GetApiCustomersMeInfiniteQueryError = unknown
+
+
+export function useGetApiCustomersMeInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getApiCustomersMe>>>, TError = unknown>(
+  options: { query:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiCustomersMe>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiCustomersMe>>,
+          TError,
+          Awaited<ReturnType<typeof getApiCustomersMe>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiCustomersMeInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getApiCustomersMe>>>, TError = unknown>(
+  options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiCustomersMe>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiCustomersMe>>,
+          TError,
+          Awaited<ReturnType<typeof getApiCustomersMe>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiCustomersMeInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getApiCustomersMe>>>, TError = unknown>(
+  options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiCustomersMe>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get my customer profile
+ */
+
+export function useGetApiCustomersMeInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getApiCustomersMe>>>, TError = unknown>(
+  options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiCustomersMe>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiCustomersMeInfiniteQueryOptions(options)
+
+  const query = useInfiniteQuery(queryOptions, queryClient) as  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+/**
+ * @summary Get my customer profile
+ */
+export const prefetchGetApiCustomersMeInfiniteQuery = async <TData = Awaited<ReturnType<typeof getApiCustomersMe>>, TError = unknown>(
+ queryClient: QueryClient,  options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiCustomersMe>>, TError, TData>>, }
+
+  ): Promise<QueryClient> => {
+
+  const queryOptions = getGetApiCustomersMeInfiniteQueryOptions(options)
+
+  await queryClient.prefetchInfiniteQuery(queryOptions);
+
+  return queryClient;
+}
+
+
+
+export const getGetApiCustomersMeQueryOptions = <TData = Awaited<ReturnType<typeof getApiCustomersMe>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiCustomersMe>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiCustomersMeQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiCustomersMe>>> = ({ signal }) => getApiCustomersMe(signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiCustomersMe>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiCustomersMeQueryResult = NonNullable<Awaited<ReturnType<typeof getApiCustomersMe>>>
+export type GetApiCustomersMeQueryError = unknown
+
+
+export function useGetApiCustomersMe<TData = Awaited<ReturnType<typeof getApiCustomersMe>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiCustomersMe>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiCustomersMe>>,
+          TError,
+          Awaited<ReturnType<typeof getApiCustomersMe>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiCustomersMe<TData = Awaited<ReturnType<typeof getApiCustomersMe>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiCustomersMe>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiCustomersMe>>,
+          TError,
+          Awaited<ReturnType<typeof getApiCustomersMe>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiCustomersMe<TData = Awaited<ReturnType<typeof getApiCustomersMe>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiCustomersMe>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get my customer profile
+ */
+
+export function useGetApiCustomersMe<TData = Awaited<ReturnType<typeof getApiCustomersMe>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiCustomersMe>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiCustomersMeQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+/**
+ * @summary Get my customer profile
+ */
+export const prefetchGetApiCustomersMeQuery = async <TData = Awaited<ReturnType<typeof getApiCustomersMe>>, TError = unknown>(
+ queryClient: QueryClient,  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiCustomersMe>>, TError, TData>>, }
+
+  ): Promise<QueryClient> => {
+
+  const queryOptions = getGetApiCustomersMeQueryOptions(options)
+
+  await queryClient.prefetchQuery(queryOptions);
+
+  return queryClient;
+}
+
+
+
+/**
+ * @summary List my customer needs
+ */
+export const getApiCustomersMeNeeds = (
+    
+ signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<void>(
+      {url: `/api/customers/me/needs`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getGetApiCustomersMeNeedsInfiniteQueryKey = () => {
+    return [
+    'infinite', `/api/customers/me/needs`
+    ] as const;
+    }
+
+export const getGetApiCustomersMeNeedsQueryKey = () => {
+    return [
+    `/api/customers/me/needs`
+    ] as const;
+    }
+
+    
+export const getGetApiCustomersMeNeedsInfiniteQueryOptions = <TData = InfiniteData<Awaited<ReturnType<typeof getApiCustomersMeNeeds>>>, TError = unknown>( options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiCustomersMeNeeds>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiCustomersMeNeedsInfiniteQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiCustomersMeNeeds>>> = ({ signal }) => getApiCustomersMeNeeds(signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiCustomersMeNeeds>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiCustomersMeNeedsInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getApiCustomersMeNeeds>>>
+export type GetApiCustomersMeNeedsInfiniteQueryError = unknown
+
+
+export function useGetApiCustomersMeNeedsInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getApiCustomersMeNeeds>>>, TError = unknown>(
+  options: { query:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiCustomersMeNeeds>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiCustomersMeNeeds>>,
+          TError,
+          Awaited<ReturnType<typeof getApiCustomersMeNeeds>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiCustomersMeNeedsInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getApiCustomersMeNeeds>>>, TError = unknown>(
+  options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiCustomersMeNeeds>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiCustomersMeNeeds>>,
+          TError,
+          Awaited<ReturnType<typeof getApiCustomersMeNeeds>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiCustomersMeNeedsInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getApiCustomersMeNeeds>>>, TError = unknown>(
+  options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiCustomersMeNeeds>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List my customer needs
+ */
+
+export function useGetApiCustomersMeNeedsInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getApiCustomersMeNeeds>>>, TError = unknown>(
+  options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiCustomersMeNeeds>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiCustomersMeNeedsInfiniteQueryOptions(options)
+
+  const query = useInfiniteQuery(queryOptions, queryClient) as  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+/**
+ * @summary List my customer needs
+ */
+export const prefetchGetApiCustomersMeNeedsInfiniteQuery = async <TData = Awaited<ReturnType<typeof getApiCustomersMeNeeds>>, TError = unknown>(
+ queryClient: QueryClient,  options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiCustomersMeNeeds>>, TError, TData>>, }
+
+  ): Promise<QueryClient> => {
+
+  const queryOptions = getGetApiCustomersMeNeedsInfiniteQueryOptions(options)
+
+  await queryClient.prefetchInfiniteQuery(queryOptions);
+
+  return queryClient;
+}
+
+
+
+export const getGetApiCustomersMeNeedsQueryOptions = <TData = Awaited<ReturnType<typeof getApiCustomersMeNeeds>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiCustomersMeNeeds>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiCustomersMeNeedsQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiCustomersMeNeeds>>> = ({ signal }) => getApiCustomersMeNeeds(signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiCustomersMeNeeds>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiCustomersMeNeedsQueryResult = NonNullable<Awaited<ReturnType<typeof getApiCustomersMeNeeds>>>
+export type GetApiCustomersMeNeedsQueryError = unknown
+
+
+export function useGetApiCustomersMeNeeds<TData = Awaited<ReturnType<typeof getApiCustomersMeNeeds>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiCustomersMeNeeds>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiCustomersMeNeeds>>,
+          TError,
+          Awaited<ReturnType<typeof getApiCustomersMeNeeds>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiCustomersMeNeeds<TData = Awaited<ReturnType<typeof getApiCustomersMeNeeds>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiCustomersMeNeeds>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiCustomersMeNeeds>>,
+          TError,
+          Awaited<ReturnType<typeof getApiCustomersMeNeeds>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiCustomersMeNeeds<TData = Awaited<ReturnType<typeof getApiCustomersMeNeeds>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiCustomersMeNeeds>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List my customer needs
+ */
+
+export function useGetApiCustomersMeNeeds<TData = Awaited<ReturnType<typeof getApiCustomersMeNeeds>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiCustomersMeNeeds>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiCustomersMeNeedsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+/**
+ * @summary List my customer needs
+ */
+export const prefetchGetApiCustomersMeNeedsQuery = async <TData = Awaited<ReturnType<typeof getApiCustomersMeNeeds>>, TError = unknown>(
+ queryClient: QueryClient,  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiCustomersMeNeeds>>, TError, TData>>, }
+
+  ): Promise<QueryClient> => {
+
+  const queryOptions = getGetApiCustomersMeNeedsQueryOptions(options)
+
+  await queryClient.prefetchQuery(queryOptions);
+
+  return queryClient;
+}
+
+
+
+/**
+ * @summary Create a need for myself (customer self-service)
+ */
+export const postApiCustomersMeNeeds = (
+    createMyNeedDto: CreateMyNeedDto,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<void>(
+      {url: `/api/customers/me/needs`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createMyNeedDto, signal
+    },
+      );
+    }
+  
+
+
+export const getPostApiCustomersMeNeedsMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiCustomersMeNeeds>>, TError,{data: CreateMyNeedDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof postApiCustomersMeNeeds>>, TError,{data: CreateMyNeedDto}, TContext> => {
+
+const mutationKey = ['postApiCustomersMeNeeds'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiCustomersMeNeeds>>, {data: CreateMyNeedDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  postApiCustomersMeNeeds(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostApiCustomersMeNeedsMutationResult = NonNullable<Awaited<ReturnType<typeof postApiCustomersMeNeeds>>>
+    export type PostApiCustomersMeNeedsMutationBody = CreateMyNeedDto
+    export type PostApiCustomersMeNeedsMutationError = unknown
+
+    /**
+ * @summary Create a need for myself (customer self-service)
+ */
+export const usePostApiCustomersMeNeeds = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiCustomersMeNeeds>>, TError,{data: CreateMyNeedDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postApiCustomersMeNeeds>>,
+        TError,
+        {data: CreateMyNeedDto},
+        TContext
+      > => {
+
+      const mutationOptions = getPostApiCustomersMeNeedsMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * @summary List my deals (track transaction status)
+ */
+export const getApiCustomersMeDeals = (
+    params?: GetApiCustomersMeDealsParams,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<void>(
+      {url: `/api/customers/me/deals`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+  
+
+
+
+export const getGetApiCustomersMeDealsInfiniteQueryKey = (params?: GetApiCustomersMeDealsParams,) => {
+    return [
+    'infinite', `/api/customers/me/deals`, ...(params ? [params]: [])
+    ] as const;
+    }
+
+export const getGetApiCustomersMeDealsQueryKey = (params?: GetApiCustomersMeDealsParams,) => {
+    return [
+    `/api/customers/me/deals`, ...(params ? [params]: [])
+    ] as const;
+    }
+
+    
+export const getGetApiCustomersMeDealsInfiniteQueryOptions = <TData = InfiniteData<Awaited<ReturnType<typeof getApiCustomersMeDeals>>>, TError = unknown>(params?: GetApiCustomersMeDealsParams, options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiCustomersMeDeals>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiCustomersMeDealsInfiniteQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiCustomersMeDeals>>> = ({ signal }) => getApiCustomersMeDeals(params, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiCustomersMeDeals>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiCustomersMeDealsInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getApiCustomersMeDeals>>>
+export type GetApiCustomersMeDealsInfiniteQueryError = unknown
+
+
+export function useGetApiCustomersMeDealsInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getApiCustomersMeDeals>>>, TError = unknown>(
+ params: undefined |  GetApiCustomersMeDealsParams, options: { query:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiCustomersMeDeals>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiCustomersMeDeals>>,
+          TError,
+          Awaited<ReturnType<typeof getApiCustomersMeDeals>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiCustomersMeDealsInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getApiCustomersMeDeals>>>, TError = unknown>(
+ params?: GetApiCustomersMeDealsParams, options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiCustomersMeDeals>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiCustomersMeDeals>>,
+          TError,
+          Awaited<ReturnType<typeof getApiCustomersMeDeals>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiCustomersMeDealsInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getApiCustomersMeDeals>>>, TError = unknown>(
+ params?: GetApiCustomersMeDealsParams, options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiCustomersMeDeals>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List my deals (track transaction status)
+ */
+
+export function useGetApiCustomersMeDealsInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getApiCustomersMeDeals>>>, TError = unknown>(
+ params?: GetApiCustomersMeDealsParams, options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiCustomersMeDeals>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiCustomersMeDealsInfiniteQueryOptions(params,options)
+
+  const query = useInfiniteQuery(queryOptions, queryClient) as  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+/**
+ * @summary List my deals (track transaction status)
+ */
+export const prefetchGetApiCustomersMeDealsInfiniteQuery = async <TData = Awaited<ReturnType<typeof getApiCustomersMeDeals>>, TError = unknown>(
+ queryClient: QueryClient, params?: GetApiCustomersMeDealsParams, options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiCustomersMeDeals>>, TError, TData>>, }
+
+  ): Promise<QueryClient> => {
+
+  const queryOptions = getGetApiCustomersMeDealsInfiniteQueryOptions(params,options)
+
+  await queryClient.prefetchInfiniteQuery(queryOptions);
+
+  return queryClient;
+}
+
+
+
+export const getGetApiCustomersMeDealsQueryOptions = <TData = Awaited<ReturnType<typeof getApiCustomersMeDeals>>, TError = unknown>(params?: GetApiCustomersMeDealsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiCustomersMeDeals>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiCustomersMeDealsQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiCustomersMeDeals>>> = ({ signal }) => getApiCustomersMeDeals(params, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiCustomersMeDeals>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiCustomersMeDealsQueryResult = NonNullable<Awaited<ReturnType<typeof getApiCustomersMeDeals>>>
+export type GetApiCustomersMeDealsQueryError = unknown
+
+
+export function useGetApiCustomersMeDeals<TData = Awaited<ReturnType<typeof getApiCustomersMeDeals>>, TError = unknown>(
+ params: undefined |  GetApiCustomersMeDealsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiCustomersMeDeals>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiCustomersMeDeals>>,
+          TError,
+          Awaited<ReturnType<typeof getApiCustomersMeDeals>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiCustomersMeDeals<TData = Awaited<ReturnType<typeof getApiCustomersMeDeals>>, TError = unknown>(
+ params?: GetApiCustomersMeDealsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiCustomersMeDeals>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiCustomersMeDeals>>,
+          TError,
+          Awaited<ReturnType<typeof getApiCustomersMeDeals>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiCustomersMeDeals<TData = Awaited<ReturnType<typeof getApiCustomersMeDeals>>, TError = unknown>(
+ params?: GetApiCustomersMeDealsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiCustomersMeDeals>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List my deals (track transaction status)
+ */
+
+export function useGetApiCustomersMeDeals<TData = Awaited<ReturnType<typeof getApiCustomersMeDeals>>, TError = unknown>(
+ params?: GetApiCustomersMeDealsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiCustomersMeDeals>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiCustomersMeDealsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+/**
+ * @summary List my deals (track transaction status)
+ */
+export const prefetchGetApiCustomersMeDealsQuery = async <TData = Awaited<ReturnType<typeof getApiCustomersMeDeals>>, TError = unknown>(
+ queryClient: QueryClient, params?: GetApiCustomersMeDealsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiCustomersMeDeals>>, TError, TData>>, }
+
+  ): Promise<QueryClient> => {
+
+  const queryOptions = getGetApiCustomersMeDealsQueryOptions(params,options)
+
+  await queryClient.prefetchQuery(queryOptions);
+
+  return queryClient;
+}
+
+
+
+/**
+ * @summary List my appointments
+ */
+export const getApiCustomersMeAppointments = (
+    params?: GetApiCustomersMeAppointmentsParams,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<void>(
+      {url: `/api/customers/me/appointments`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+  
+
+
+
+export const getGetApiCustomersMeAppointmentsInfiniteQueryKey = (params?: GetApiCustomersMeAppointmentsParams,) => {
+    return [
+    'infinite', `/api/customers/me/appointments`, ...(params ? [params]: [])
+    ] as const;
+    }
+
+export const getGetApiCustomersMeAppointmentsQueryKey = (params?: GetApiCustomersMeAppointmentsParams,) => {
+    return [
+    `/api/customers/me/appointments`, ...(params ? [params]: [])
+    ] as const;
+    }
+
+    
+export const getGetApiCustomersMeAppointmentsInfiniteQueryOptions = <TData = InfiniteData<Awaited<ReturnType<typeof getApiCustomersMeAppointments>>>, TError = unknown>(params?: GetApiCustomersMeAppointmentsParams, options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiCustomersMeAppointments>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiCustomersMeAppointmentsInfiniteQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiCustomersMeAppointments>>> = ({ signal }) => getApiCustomersMeAppointments(params, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiCustomersMeAppointments>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiCustomersMeAppointmentsInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getApiCustomersMeAppointments>>>
+export type GetApiCustomersMeAppointmentsInfiniteQueryError = unknown
+
+
+export function useGetApiCustomersMeAppointmentsInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getApiCustomersMeAppointments>>>, TError = unknown>(
+ params: undefined |  GetApiCustomersMeAppointmentsParams, options: { query:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiCustomersMeAppointments>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiCustomersMeAppointments>>,
+          TError,
+          Awaited<ReturnType<typeof getApiCustomersMeAppointments>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiCustomersMeAppointmentsInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getApiCustomersMeAppointments>>>, TError = unknown>(
+ params?: GetApiCustomersMeAppointmentsParams, options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiCustomersMeAppointments>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiCustomersMeAppointments>>,
+          TError,
+          Awaited<ReturnType<typeof getApiCustomersMeAppointments>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiCustomersMeAppointmentsInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getApiCustomersMeAppointments>>>, TError = unknown>(
+ params?: GetApiCustomersMeAppointmentsParams, options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiCustomersMeAppointments>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List my appointments
+ */
+
+export function useGetApiCustomersMeAppointmentsInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getApiCustomersMeAppointments>>>, TError = unknown>(
+ params?: GetApiCustomersMeAppointmentsParams, options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiCustomersMeAppointments>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiCustomersMeAppointmentsInfiniteQueryOptions(params,options)
+
+  const query = useInfiniteQuery(queryOptions, queryClient) as  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+/**
+ * @summary List my appointments
+ */
+export const prefetchGetApiCustomersMeAppointmentsInfiniteQuery = async <TData = Awaited<ReturnType<typeof getApiCustomersMeAppointments>>, TError = unknown>(
+ queryClient: QueryClient, params?: GetApiCustomersMeAppointmentsParams, options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiCustomersMeAppointments>>, TError, TData>>, }
+
+  ): Promise<QueryClient> => {
+
+  const queryOptions = getGetApiCustomersMeAppointmentsInfiniteQueryOptions(params,options)
+
+  await queryClient.prefetchInfiniteQuery(queryOptions);
+
+  return queryClient;
+}
+
+
+
+export const getGetApiCustomersMeAppointmentsQueryOptions = <TData = Awaited<ReturnType<typeof getApiCustomersMeAppointments>>, TError = unknown>(params?: GetApiCustomersMeAppointmentsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiCustomersMeAppointments>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiCustomersMeAppointmentsQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiCustomersMeAppointments>>> = ({ signal }) => getApiCustomersMeAppointments(params, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiCustomersMeAppointments>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiCustomersMeAppointmentsQueryResult = NonNullable<Awaited<ReturnType<typeof getApiCustomersMeAppointments>>>
+export type GetApiCustomersMeAppointmentsQueryError = unknown
+
+
+export function useGetApiCustomersMeAppointments<TData = Awaited<ReturnType<typeof getApiCustomersMeAppointments>>, TError = unknown>(
+ params: undefined |  GetApiCustomersMeAppointmentsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiCustomersMeAppointments>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiCustomersMeAppointments>>,
+          TError,
+          Awaited<ReturnType<typeof getApiCustomersMeAppointments>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiCustomersMeAppointments<TData = Awaited<ReturnType<typeof getApiCustomersMeAppointments>>, TError = unknown>(
+ params?: GetApiCustomersMeAppointmentsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiCustomersMeAppointments>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiCustomersMeAppointments>>,
+          TError,
+          Awaited<ReturnType<typeof getApiCustomersMeAppointments>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiCustomersMeAppointments<TData = Awaited<ReturnType<typeof getApiCustomersMeAppointments>>, TError = unknown>(
+ params?: GetApiCustomersMeAppointmentsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiCustomersMeAppointments>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List my appointments
+ */
+
+export function useGetApiCustomersMeAppointments<TData = Awaited<ReturnType<typeof getApiCustomersMeAppointments>>, TError = unknown>(
+ params?: GetApiCustomersMeAppointmentsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiCustomersMeAppointments>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiCustomersMeAppointmentsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+/**
+ * @summary List my appointments
+ */
+export const prefetchGetApiCustomersMeAppointmentsQuery = async <TData = Awaited<ReturnType<typeof getApiCustomersMeAppointments>>, TError = unknown>(
+ queryClient: QueryClient, params?: GetApiCustomersMeAppointmentsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiCustomersMeAppointments>>, TError, TData>>, }
+
+  ): Promise<QueryClient> => {
+
+  const queryOptions = getGetApiCustomersMeAppointmentsQueryOptions(params,options)
+
+  await queryClient.prefetchQuery(queryOptions);
+
+  return queryClient;
+}
+
+
+
+/**
+ * @summary List my property contact requests
+ */
+export const getApiCustomersMeContacts = (
+    params?: GetApiCustomersMeContactsParams,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<void>(
+      {url: `/api/customers/me/contacts`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+  
+
+
+
+export const getGetApiCustomersMeContactsInfiniteQueryKey = (params?: GetApiCustomersMeContactsParams,) => {
+    return [
+    'infinite', `/api/customers/me/contacts`, ...(params ? [params]: [])
+    ] as const;
+    }
+
+export const getGetApiCustomersMeContactsQueryKey = (params?: GetApiCustomersMeContactsParams,) => {
+    return [
+    `/api/customers/me/contacts`, ...(params ? [params]: [])
+    ] as const;
+    }
+
+    
+export const getGetApiCustomersMeContactsInfiniteQueryOptions = <TData = InfiniteData<Awaited<ReturnType<typeof getApiCustomersMeContacts>>>, TError = unknown>(params?: GetApiCustomersMeContactsParams, options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiCustomersMeContacts>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiCustomersMeContactsInfiniteQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiCustomersMeContacts>>> = ({ signal }) => getApiCustomersMeContacts(params, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiCustomersMeContacts>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiCustomersMeContactsInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getApiCustomersMeContacts>>>
+export type GetApiCustomersMeContactsInfiniteQueryError = unknown
+
+
+export function useGetApiCustomersMeContactsInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getApiCustomersMeContacts>>>, TError = unknown>(
+ params: undefined |  GetApiCustomersMeContactsParams, options: { query:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiCustomersMeContacts>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiCustomersMeContacts>>,
+          TError,
+          Awaited<ReturnType<typeof getApiCustomersMeContacts>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiCustomersMeContactsInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getApiCustomersMeContacts>>>, TError = unknown>(
+ params?: GetApiCustomersMeContactsParams, options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiCustomersMeContacts>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiCustomersMeContacts>>,
+          TError,
+          Awaited<ReturnType<typeof getApiCustomersMeContacts>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiCustomersMeContactsInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getApiCustomersMeContacts>>>, TError = unknown>(
+ params?: GetApiCustomersMeContactsParams, options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiCustomersMeContacts>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List my property contact requests
+ */
+
+export function useGetApiCustomersMeContactsInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getApiCustomersMeContacts>>>, TError = unknown>(
+ params?: GetApiCustomersMeContactsParams, options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiCustomersMeContacts>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiCustomersMeContactsInfiniteQueryOptions(params,options)
+
+  const query = useInfiniteQuery(queryOptions, queryClient) as  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+/**
+ * @summary List my property contact requests
+ */
+export const prefetchGetApiCustomersMeContactsInfiniteQuery = async <TData = Awaited<ReturnType<typeof getApiCustomersMeContacts>>, TError = unknown>(
+ queryClient: QueryClient, params?: GetApiCustomersMeContactsParams, options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiCustomersMeContacts>>, TError, TData>>, }
+
+  ): Promise<QueryClient> => {
+
+  const queryOptions = getGetApiCustomersMeContactsInfiniteQueryOptions(params,options)
+
+  await queryClient.prefetchInfiniteQuery(queryOptions);
+
+  return queryClient;
+}
+
+
+
+export const getGetApiCustomersMeContactsQueryOptions = <TData = Awaited<ReturnType<typeof getApiCustomersMeContacts>>, TError = unknown>(params?: GetApiCustomersMeContactsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiCustomersMeContacts>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiCustomersMeContactsQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiCustomersMeContacts>>> = ({ signal }) => getApiCustomersMeContacts(params, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiCustomersMeContacts>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiCustomersMeContactsQueryResult = NonNullable<Awaited<ReturnType<typeof getApiCustomersMeContacts>>>
+export type GetApiCustomersMeContactsQueryError = unknown
+
+
+export function useGetApiCustomersMeContacts<TData = Awaited<ReturnType<typeof getApiCustomersMeContacts>>, TError = unknown>(
+ params: undefined |  GetApiCustomersMeContactsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiCustomersMeContacts>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiCustomersMeContacts>>,
+          TError,
+          Awaited<ReturnType<typeof getApiCustomersMeContacts>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiCustomersMeContacts<TData = Awaited<ReturnType<typeof getApiCustomersMeContacts>>, TError = unknown>(
+ params?: GetApiCustomersMeContactsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiCustomersMeContacts>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiCustomersMeContacts>>,
+          TError,
+          Awaited<ReturnType<typeof getApiCustomersMeContacts>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiCustomersMeContacts<TData = Awaited<ReturnType<typeof getApiCustomersMeContacts>>, TError = unknown>(
+ params?: GetApiCustomersMeContactsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiCustomersMeContacts>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List my property contact requests
+ */
+
+export function useGetApiCustomersMeContacts<TData = Awaited<ReturnType<typeof getApiCustomersMeContacts>>, TError = unknown>(
+ params?: GetApiCustomersMeContactsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiCustomersMeContacts>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiCustomersMeContactsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+/**
+ * @summary List my property contact requests
+ */
+export const prefetchGetApiCustomersMeContactsQuery = async <TData = Awaited<ReturnType<typeof getApiCustomersMeContacts>>, TError = unknown>(
+ queryClient: QueryClient, params?: GetApiCustomersMeContactsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiCustomersMeContacts>>, TError, TData>>, }
+
+  ): Promise<QueryClient> => {
+
+  const queryOptions = getGetApiCustomersMeContactsQueryOptions(params,options)
 
   await queryClient.prefetchQuery(queryOptions);
 

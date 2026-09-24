@@ -16,7 +16,7 @@
     "SELF_SELL": "Tự bán",
     "SALES_DISTRIBUTION": "Phân phối sales",
     "HYBRID": "Kết hợp",
-    "AGENCY_DISTRIBUTION": "Sàn công khai",
+    "MARKETPLACE_PUBLIC": "Sàn công khai",
     "INTERNAL_ONLY": "Nội bộ"
   },
   "projectStatus": {

@@ -37,7 +37,7 @@ const sellingModeLabel: Record<string, string> = {
   SALES_DISTRIBUTION: "Sales bán hộ",
   HYBRID: "Kết hợp",
   INTERNAL_ONLY: "Chỉ nội bộ",
-  AGENCY_DISTRIBUTION: "Sàn công khai",
+  MARKETPLACE_PUBLIC: "Sàn công khai",
 };
 
 export default function AvailablePropertyDetailPage() {
