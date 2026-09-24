@@ -1,11 +1,12 @@
-import { Building2, LayoutDashboard, Store } from "lucide-react";
+import { Building2, LayoutDashboard, Store, UserRound } from "lucide-react";
 import type { UserRole } from "@/lib/api/types/users";
 
 export const dashboardRoles: UserRole[] = ["SUPER_ADMIN", "OPERATOR", "AGENCY_ADMIN", "TEAM_LEADER"];
 export const salesRoles: UserRole[] = ["SALES", "COLLABORATOR"];
 export const ownerRoles: UserRole[] = ["OWNER"];
+export const customerRoles: UserRole[] = ["CUSTOMER"];
 
-export type PortalSlug = "dashboard" | "sales-portal" | "owner-portal";
+export type PortalSlug = "dashboard" | "sales-portal" | "owner-portal" | "customer-portal";
 
 export interface PortalEntry {
   slug: PortalSlug;
@@ -33,6 +34,12 @@ export const portalEntries: Record<PortalSlug, PortalEntry> = {
     icon: Building2,
     roles: ownerRoles,
   },
+  "customer-portal": {
+    slug: "customer-portal",
+    label: "Cổng khách hàng",
+    icon: UserRound,
+    roles: customerRoles,
+  },
 };
 
 export function isValidPortalSlug(slug: string): slug is PortalSlug {
@@ -51,6 +58,9 @@ export function getPortalEntry(roleCodes?: string[] | string | null): PortalEntr
   }
   if (codes.some((c) => ownerRoles.includes(c as UserRole))) {
     return portalEntries["owner-portal"];
+  }
+  if (codes.some((c) => customerRoles.includes(c as UserRole))) {
+    return portalEntries["customer-portal"];
   }
   return null;
 }

@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { ArrowUpRight, MailCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,26 +16,29 @@ import { AuthCard } from "../_components/auth-card";
 
 const OTP_RESEND_COOLDOWN_SECONDS = 60;
 
-function mapOtpError(err: any): string {
+type AuthT = (key: string) => string;
+
+function mapOtpError(err: any, t: AuthT): string {
   const messages = err?.response?.data?.error?.message;
   const message = Array.isArray(messages) ? messages[0] : messages;
   switch (message) {
     case "Invalid OTP":
-      return "Mã OTP không đúng. Vui lòng thử lại.";
+      return t("errInvalidOtp");
     case "Too many attempts":
-      return "Bạn đã nhập sai quá nhiều lần. Vui lòng gửi lại mã mới.";
+      return t("errTooManyAttempts");
     case "Please wait before requesting a new OTP":
-      return "Vui lòng đợi chút trước khi yêu cầu gửi lại mã.";
+      return t("errOtpRateLimited");
     case "Account already verified":
-      return "Tài khoản đã được xác thực. Bạn có thể đăng nhập.";
+      return t("errAlreadyVerified");
     case "User not found":
-      return "Không tìm thấy người dùng với email này.";
+      return t("errUserNotFound");
     default:
-      return message || "Đã có lỗi xảy ra, vui lòng thử lại";
+      return message || t("genericError");
   }
 }
 
 function VerifyOtpContent() {
+  const t = useTranslations("auth");
   const searchParams = useSearchParams();
   const emailFromQuery = searchParams.get("email") ?? "";
 
@@ -104,7 +108,7 @@ function VerifyOtpContent() {
         setVerified(true);
       },
       onError: (err: any) => {
-        setError(mapOtpError(err));
+        setError(mapOtpError(err, t));
       },
     },
   });
@@ -117,7 +121,7 @@ function VerifyOtpContent() {
         setResendCooldown(OTP_RESEND_COOLDOWN_SECONDS);
       },
       onError: (err: any) => {
-        setError(mapOtpError(err));
+        setError(mapOtpError(err, t));
       },
     },
   });
@@ -128,11 +132,11 @@ function VerifyOtpContent() {
 
     const normalizedEmail = email.trim();
     if (!/^\S+@\S+\.\S+$/.test(normalizedEmail)) {
-      setError("Vui lòng nhập email hợp lệ");
+      setError(t("emailInvalid"));
       return;
     }
     if (!/^\d{6}$/.test(otp)) {
-      setError("Mã OTP gồm 6 chữ số");
+      setError(t("otpInvalid"));
       return;
     }
 
@@ -147,10 +151,10 @@ function VerifyOtpContent() {
             <MailCheck size={26} className="text-accent-green-text" />
           </div>
           <h2 className="font-serif text-2xl font-semibold tracking-tight">
-            Xác thực thành công
+            {t("verifiedTitle")}
           </h2>
           <p className="mt-2 text-sm leading-relaxed text-foreground-muted">
-            Tài khoản của bạn đã được kích hoạt. Đang chuyển hướng...
+            {t("verifiedDesc")}
           </p>
         </div>
       </AuthCard>
@@ -159,17 +163,17 @@ function VerifyOtpContent() {
 
   return (
     <AuthCard
-      title="Xác thực email"
-      subtitle="Nhập mã OTP 6 số đã được gửi đến email của bạn"
+      title={t("verifyTitle")}
+      subtitle={t("verifySubtitle")}
       className="max-w-md"
     >
       <form onSubmit={handleSubmit} className="flex flex-col gap-5">
         <div className="flex flex-col gap-2">
-          <Label htmlFor="email" className="text-[13px] font-medium">Email</Label>
+          <Label htmlFor="email" className="text-[13px] font-medium">{t("email")}</Label>
           <Input
             id="email"
             type="email"
-            placeholder="Nhập email của bạn"
+            placeholder={t("emailPlaceholder")}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             autoComplete="email"
@@ -177,7 +181,7 @@ function VerifyOtpContent() {
         </div>
 
         <div className="flex flex-col gap-2">
-          <Label htmlFor="otp" className="text-[13px] font-medium">Mã OTP</Label>
+          <Label htmlFor="otp" className="text-[13px] font-medium">{t("otpLabel")}</Label>
           <Input
             id="otp"
             type="text"
@@ -191,7 +195,7 @@ function VerifyOtpContent() {
             aria-invalid={!!error}
           />
           <p className="text-xs text-foreground-muted">
-            Mã có hiệu lực trong 5 phút
+            {t("otpHint")}
           </p>
         </div>
 
@@ -206,11 +210,11 @@ function VerifyOtpContent() {
         )}
 
         <Button type="submit" disabled={isPending} className="mt-1 w-full" size="lg">
-          {isPending ? "Đang xác thực..." : "Xác thực"}
+          {isPending ? t("verifying") : t("verify")}
         </Button>
 
         <div className="flex items-center justify-between">
-          <span className="text-xs text-foreground-muted">Không nhận được mã?</span>
+          <span className="text-xs text-foreground-muted">{t("noCode")}</span>
           <Button
             type="button"
             variant="link"
@@ -219,10 +223,10 @@ function VerifyOtpContent() {
             onClick={() => resendOtp({ data: { email: email.trim() } })}
           >
             {resendCooldown > 0
-              ? `Gửi lại sau ${resendCooldown}s`
+              ? t("resendIn", { seconds: resendCooldown })
               : isResending
-                ? "Đang gửi..."
-                : "Gửi lại mã"}
+                ? t("resending")
+                : t("resend")}
           </Button>
         </div>
       </form>
@@ -232,7 +236,7 @@ function VerifyOtpContent() {
           href="/login"
           className="group inline-flex items-center gap-2 text-sm text-foreground-muted transition-colors hover:text-foreground"
         >
-          <span>Quay lại đăng nhập</span>
+          <span>{t("backToLogin")}</span>
           <span className="inline-flex size-6 items-center justify-center rounded-lg bg-surface-muted transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:translate-x-0.5 group-hover:-translate-y-0.5">
             <ArrowUpRight size={12} />
           </span>

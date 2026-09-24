@@ -12,6 +12,7 @@ import {
   Eye,
   Globe,
   Bell,
+  RefreshCw,
 } from "lucide-react";
 
 const settingModules = [
@@ -51,12 +52,12 @@ const settingModules = [
     title: "Hiển thị dữ liệu",
     description: "Quy định role nào thấy trường nào, mask dữ liệu nhạy cảm",
   },
-  // {
-  //   href: "/settings/lead-protection",
-  //   icon: Shield,
-  //   title: "Bảo vệ lead",
-  //   description: "Thời gian bảo vệ, reclaim, reassign và xử lý tranh chấp",
-  // },
+  {
+    href: "/settings/revalidation",
+    icon: RefreshCw,
+    title: "Revalidation BĐS",
+    description: "Chu kỳ xác nhận lại BĐS công khai + quản lý task revalidation",
+  },
   {
     href: "/settings/seo",
     icon: Globe,

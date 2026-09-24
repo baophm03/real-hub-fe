@@ -1,16 +1,16 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { Send, Phone, CalendarCheck, Loader2 } from "lucide-react";
+import { Send, Phone, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { usePostApiPropertyContacts, usePostApiPropertyContactsConsultation } from "@/lib/api/endpoints/property-contacts";
+import { usePostApiPropertyContacts } from "@/lib/api/endpoints/property-contacts";
 import { useGetApiAssignmentByPublicLink } from "@/lib/api/endpoints/assignments";
-import { useAuthStore } from "@/lib/stores/auth-store";
+import { useUserStore } from "@/lib/stores/user-store";
 
 interface ContactInfo {
   id?: string | null;
@@ -39,8 +39,18 @@ function ContactSidebarInner({
   const t = useTranslations("public.listingDetail");
   const tp = useTranslations("public");
   const { mutateAsync: submitContact, isPending } = usePostApiPropertyContacts();
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const currentUser = useUserStore((s) => s.user);
   const [form, setForm] = useState({ name: "", phone: "", message: "" });
+
+  useEffect(() => {
+    if (currentUser) {
+      setForm((f) => ({
+        ...f,
+        name: f.name || currentUser.fullName || "",
+        phone: f.phone || currentUser.phone || "",
+      }));
+    }
+  }, [currentUser]);
 
   const searchParams = useSearchParams();
   const refCode = searchParams.get("ref");
@@ -52,8 +62,6 @@ function ContactSidebarInner({
   const refAssignedUser = refAssignment?.assignedUser;
 
   const sellingMode: string | undefined = property?.sellingMode;
-  // Chỉ SELF_SELL mới liên hệ trực tiếp owner. Sales chỉ hiện khi khách đi qua
-  // ref link của sales đó; mọi trường hợp còn lại → RealHub support (pool).
   const assignedUser = refAssignedUser ?? null;
   const owner = sellingMode === "SELF_SELL" ? property?.owner : null;
 
@@ -86,40 +94,24 @@ function ContactSidebarInner({
       return;
     }
     try {
-      const recipientUserId = contacts.find((c) => c.id)?.id ?? "";
-      await submitContact({
+      const result: any = await submitContact({
         data: {
           propertyId: property?.id,
-          recipientUserId: recipientUserId || (undefined as any),
+          refCode: refCode || undefined,
           userName: form.name.trim(),
           userPhone: form.phone.trim(),
           userContent: form.message.trim() || undefined,
         },
       });
-      toast.success(t("contactSuccess"));
-      setForm({ name: "", phone: "", message: "" });
-    } catch (err) {
-      toast.error((err as any)?.response?.data?.error?.message?.[0] || t("contactError"));
-      console.error(err);
-    }
-  };
-
-  const consultationMutation = usePostApiPropertyContactsConsultation();
-
-  const handleBookConsultation = async () => {
-    const recipientUserId = contacts.find((c) => c.id)?.id ?? undefined;
-    try {
-      const result: any = await consultationMutation.mutateAsync({
-        data: { propertyId: property?.id, recipientUserId } as any,
-      });
       const isDuplicate = result?.data?.duplicate ?? result?.duplicate;
       if (isDuplicate) {
         toast.info(t("contactAlreadyRegistered"));
       } else {
-        toast.success(t("contactRegistered"));
+        toast.success(t("contactSuccess"));
       }
+      setForm({ name: "", phone: "", message: "" });
     } catch (err) {
-      toast.error((err as any)?.response?.data?.error?.message?.[0] || t("contactRegisterFailed"));
+      toast.error((err as any)?.response?.data?.error?.message?.[0] || t("contactError"));
       console.error(err);
     }
   };
@@ -146,47 +138,40 @@ function ContactSidebarInner({
           </div>
         ))}
 
-        {/* Contact Form / Consultation Booking */}
+        {/* Contact Form */}
         <div className="space-y-3">
-          {isAuthenticated ? (
+          <form className="space-y-3" onSubmit={handleSubmit}>
+            <Input
+              type="text"
+              placeholder={t("contactNamePlaceholder")}
+              value={form.name}
+              onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+              className="w-full h-10 rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+            />
+            <Input
+              type="tel"
+              placeholder={t("contactPhonePlaceholder")}
+              value={form.phone}
+              onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
+              className="w-full h-10 rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+            />
+            <Textarea
+              placeholder={t("contactMessagePlaceholder")}
+              rows={3}
+              value={form.message}
+              onChange={(e) => setForm((f) => ({ ...f, message: e.target.value }))}
+              className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+            />
             <Button
-              type="button"
+              type="submit"
               className="w-full"
               size="lg"
-              leftIcon={consultationMutation.isPending ? <Loader2 size={16} className="animate-spin" /> : <CalendarCheck size={16} />}
-              onClick={handleBookConsultation}
-              disabled={consultationMutation.isPending}
+              disabled={isPending}
+              leftIcon={isPending ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
             >
-              {consultationMutation.isPending ? t("contactSending") : t("contactConsultNow")}
+              {isPending ? t("contactSending") : t("contactSendRequest")}
             </Button>
-          ) : (
-            <form className="space-y-3" onSubmit={handleSubmit}>
-              <Input
-                type="text"
-                placeholder={t("contactNamePlaceholder")}
-                value={form.name}
-                onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                className="w-full h-10 rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-              />
-              <Input
-                type="tel"
-                placeholder={t("contactPhonePlaceholder")}
-                value={form.phone}
-                onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
-                className="w-full h-10 rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-              />
-              <Textarea
-                placeholder={t("contactMessagePlaceholder")}
-                rows={3}
-                value={form.message}
-                onChange={(e) => setForm((f) => ({ ...f, message: e.target.value }))}
-                className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-              />
-              <Button type="submit" className="w-full" size="lg" disabled={isPending} leftIcon={<Send size={16} />}>
-                {isPending ? t("contactSending") : t("contactSendRequest")}
-              </Button>
-            </form>
-          )}
+          </form>
           {contacts.map((item) => (
             <div key={`${item.id ?? item.name ?? item.phone ?? "phone"}`} className="flex flex-col gap-3">
               {item.phone && (

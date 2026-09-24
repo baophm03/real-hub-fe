@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { ArrowUpRight, Eye, EyeOff, MailCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +21,7 @@ interface LoginFormData {
 }
 
 export default function LoginPage() {
+  const t = useTranslations("auth");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [needsVerification, setNeedsVerification] = useState(false);
@@ -87,10 +89,10 @@ export default function LoginPage() {
           : messages === "Please verify your email first";
         const errorMessage = Array.isArray(messages)
           ? messages[0]
-          : messages || "Đã có lỗi xảy ra vui lòng thử lại";
+          : messages || t("genericError");
         setError(
           isPendingVerification
-            ? "Tài khoản chưa được xác thực email. Vui lòng nhập mã OTP được gửi đến email của bạn."
+            ? t("unverifiedEmail")
             : errorMessage
         );
         setNeedsVerification(isPendingVerification);
@@ -137,11 +139,12 @@ export default function LoginPage() {
         </div>
         <div className="relative z-10 max-w-md">
           <p className="font-serif text-[2rem] leading-[1.15] tracking-tight text-background/95 xl:text-[2.5rem]">
-            Hệ sinh thái Bất động sản{" "}
-            <span className="italic text-accent-green/80">đa tenant</span> — kết nối toàn vòng đời.
+            {t.rich("brandTagline", {
+              i: (chunks) => <span className="italic text-accent-green/80">{chunks}</span>,
+            })}
           </p>
           <p className="mt-6 text-sm leading-relaxed text-background/55">
-            Sản phẩm · Khách hàng · Lịch hẹn · Giao dịch · Hoa hồng
+            {t("brandItems")}
           </p>
         </div>
         <div className="relative z-10 text-[11px] uppercase tracking-[0.18em] text-background/40">
@@ -165,17 +168,17 @@ export default function LoginPage() {
         </Link>
         <div className="relative z-10 flex w-full justify-center animate-fade-up">
           <AuthCard
-            title="Đăng nhập"
-            subtitle="Nhập thông tin tài khoản để tiếp tục"
+            title={t("loginTitle")}
+            subtitle={t("loginSubtitle")}
             className="max-w-md"
           >
             <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
               <div className="flex flex-col gap-2">
-                <Label htmlFor="identifier" className="text-[13px] font-medium">Email hoặc username</Label>
+                <Label htmlFor="identifier" className="text-[13px] font-medium">{t("emailOrUsername")}</Label>
                 <Input
                   id="identifier"
                   type="text"
-                  placeholder="Email hoặc username của bạn"
+                  placeholder={t("emailOrUsernamePlaceholder")}
                   autoComplete="username"
                   {...register("identifier")}
                   aria-invalid={!!errors.identifier}
@@ -189,12 +192,12 @@ export default function LoginPage() {
               </div>
 
               <div className="flex flex-col gap-2">
-                <Label htmlFor="password" className="text-[13px] font-medium">Mật khẩu</Label>
+                <Label htmlFor="password" className="text-[13px] font-medium">{t("password")}</Label>
                 <div className="relative">
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
-                    placeholder="Nhập mật khẩu"
+                    placeholder={t("passwordPlaceholder")}
                     autoComplete="current-password"
                     className="pr-11"
                     {...register("password")}
@@ -205,7 +208,7 @@ export default function LoginPage() {
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground-muted transition-colors duration-300 hover:text-foreground"
-                    aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                    aria-label={showPassword ? t("hidePassword") : t("showPassword")}
                   >
                     {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
@@ -223,7 +226,7 @@ export default function LoginPage() {
                   href="/forgot-password"
                   className="text-xs font-medium text-foreground-muted underline-offset-4 transition-colors hover:text-primary hover:underline"
                 >
-                  Quên mật khẩu?
+                  {t("forgotPasswordLink")}
                 </Link>
               </div>
 
@@ -245,12 +248,12 @@ export default function LoginPage() {
                   className="flex items-center justify-center gap-2 rounded-lg border border-primary/30 bg-primary/5 px-4 py-3 text-sm font-medium text-primary transition-colors hover:bg-primary/10"
                 >
                   <MailCheck size={16} />
-                  Xác thực email ngay
+                  {t("verifyEmailNow")}
                 </Link>
               )}
 
               <Button type="submit" disabled={isPending} className="mt-1 w-full" size="lg">
-                {isPending ? "Đang đăng nhập..." : "Đăng nhập"}
+                {isPending ? t("loggingIn") : t("login")}
               </Button>
             </form>
 
@@ -259,7 +262,7 @@ export default function LoginPage() {
                 href="/register"
                 className="group inline-flex items-center gap-2 text-sm text-foreground-muted transition-colors hover:text-foreground"
               >
-                <span>Chưa có tài khoản? Đăng ký</span>
+                <span>{t("noAccountRegister")}</span>
                 <span className="inline-flex size-6 items-center justify-center rounded-lg bg-surface-muted transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:translate-x-0.5 group-hover:-translate-y-0.5">
                   <ArrowUpRight size={12} />
                 </span>

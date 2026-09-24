@@ -1,5 +1,8 @@
+"use client";
+
 import * as React from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -20,8 +23,10 @@ export function AuthCard({
   className,
   bodyClassName,
   backHref,
-  backLabel = "Quay lại",
+  backLabel,
 }: AuthCardProps) {
+  const t = useTranslations("auth");
+  const resolvedBackLabel = backLabel ?? t("back");
   return (
     <div className={cn("w-full", className)}>
       <div className="rounded-[1.25rem] border border-border bg-surface/80 p-7 shadow-[0_24px_70px_-24px_rgba(45,95,63,0.14)] backdrop-blur-xl md:p-10">
@@ -35,7 +40,7 @@ export function AuthCard({
                 size={15}
                 className="transition-transform duration-300 group-hover:-translate-x-0.5"
               />
-              <span>{backLabel}</span>
+              <span>{resolvedBackLabel}</span>
             </Link>
           ) : null}
           {title ? (

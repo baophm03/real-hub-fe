@@ -15,6 +15,7 @@ import {
   getPropertyBedrooms,
   getPropertyBathrooms,
 } from "@/components/shared/property-utils";
+import { FavoriteButton } from "@/components/shared/favorite-button";
 
 // Re-export for backward compatibility
 export {
@@ -84,6 +85,8 @@ export function PropertyCard({
             className="h-full w-full object-cover"
           />
         )}
+        {/* Favorite toggle — top right */}
+        <FavoriteButton propertyId={property.id} />
         {/* Transaction badge — top left */}
         <div className="absolute top-3 left-3 z-10">
           <span

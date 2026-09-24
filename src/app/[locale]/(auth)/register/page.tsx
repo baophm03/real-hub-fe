@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -21,39 +22,42 @@ import { usePostApiRegister } from "@/lib/api/endpoints/auth";
 import { LocationSelectWithLabel } from "@/app/[locale]/_components/location-select-with-label";
 import { AuthCard } from "../_components/auth-card";
 
-const REGISTER_ROLES = [
-  { value: "CUSTOMER", label: "Khách hàng", description: "Tìm mua / thuê bất động sản" },
-  { value: "OWNER", label: "Chủ bất động sản", description: "Chủ sở hữu muốn đăng tin cho thuê / bán" },
-  { value: "SALES", label: "Sales", description: "Bạn là nhân viên sale muốn có thêm thu nhập" },
-] as const;
-
-const GENDERS = [
-  { value: "MALE", label: "Nam" },
-  { value: "FEMALE", label: "Nữ" },
-  { value: "OTHER", label: "Khác" },
-] as const;
-
-const registerSchema = z.object({
+const createRegisterSchema = (t: (key: string) => string) => z.object({
   roleCode: z.enum(["CUSTOMER", "OWNER", "SALES"]),
-  fullName: z.string().min(2, "Họ tên phải có ít nhất 2 ký tự"),
-  email: z.string().email("Email không hợp lệ"),
-  username: z.string().regex(/^[a-zA-Z0-9_.-]{3,30}$/, "Username 3-30 ký tự (chữ, số, _, ., -)").optional().or(z.literal("")),
-  password: z.string().min(8, "Mật khẩu phải có ít nhất 8 ký tự"),
-  confirmPassword: z.string().min(8, "Mật khẩu phải có ít nhất 8 ký tự"),
-  phone: z.string().min(10, "Số điện thoại không hợp lệ"),
-  dateOfBirth: z.string().min(1, "Vui lòng chọn ngày sinh"),
+  fullName: z.string().min(2, t("fullNameMin")),
+  email: z.string().email(t("emailInvalid")),
+  username: z.string().regex(/^[a-zA-Z0-9_.-]{3,30}$/, t("usernameInvalid")).optional().or(z.literal("")),
+  password: z.string().min(8, t("passwordMin")),
+  confirmPassword: z.string().min(8, t("passwordMin")),
+  phone: z.string().min(10, t("phoneInvalid")),
+  dateOfBirth: z.string().min(1, t("dobRequired")),
   gender: z.enum(["MALE", "FEMALE", "OTHER"]).optional(),
   provinceId: z.string().optional().or(z.literal("")),
   wardId: z.string().optional().or(z.literal("")),
 }).refine((data) => data.password === data.confirmPassword, {
-  message: "Xác nhận mật khẩu không khớp",
+  message: t("passwordMismatch"),
   path: ["confirmPassword"],
 });
 
-type RegisterFormData = z.infer<typeof registerSchema>;
+type RegisterFormData = z.infer<ReturnType<typeof createRegisterSchema>>;
 
 export default function RegisterPage() {
+  const t = useTranslations("auth");
   const router = useRouter();
+
+  const registerSchema = useMemo(() => createRegisterSchema(t), [t]);
+
+  const REGISTER_ROLES = useMemo(() => [
+    { value: "CUSTOMER", label: t("roleCustomer"), description: t("roleCustomerDesc") },
+    { value: "OWNER", label: t("roleOwner"), description: t("roleOwnerDesc") },
+    { value: "SALES", label: t("roleSales"), description: t("roleSalesDesc") },
+  ] as const, [t]);
+
+  const GENDERS = useMemo(() => [
+    { value: "MALE", label: t("genderMale") },
+    { value: "FEMALE", label: t("genderFemale") },
+    { value: "OTHER", label: t("genderOther") },
+  ] as const, [t]);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -79,7 +83,7 @@ export default function RegisterPage() {
         router.push(`/verify-otp?email=${encodeURIComponent(variables.data.email)}`);
       },
       onError: (err: any) => {
-        const errorMessage = err?.response?.data?.error?.message?.[0] || "Đã có lỗi xảy ra vui lòng thử lại";
+        const errorMessage = err?.response?.data?.error?.message?.[0] || t("genericError");
         setError(errorMessage);
       },
     },
@@ -106,15 +110,15 @@ export default function RegisterPage() {
 
   return (
     <AuthCard
-      title="Đăng ký"
-      subtitle="Chọn vai trò và điền thông tin để tạo tài khoản"
+      title={t("registerTitle")}
+      subtitle={t("registerSubtitle")}
       className="max-w-5xl"
       backHref="/login"
     >
       <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 gap-8 lg:grid-cols-5">
         {/* ── Cột trái: Chọn vai trò (dọc, có chỗ cho vai trò tương lai) ── */}
         <div className="flex flex-col gap-3 lg:col-span-2">
-          <Label className="text-[13px] font-medium">Bạn là ?</Label>
+          <Label className="text-[13px] font-medium">{t("roleQuestion")}</Label>
           <div className="flex flex-col gap-2.5">
             {REGISTER_ROLES.map((role) => {
               const isActive = selectedRole === role.value;
@@ -162,11 +166,11 @@ export default function RegisterPage() {
         {/* ── Cột phải: Thông tin đăng ký — grid 2 cột nội bộ để gọn ── */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:col-span-3">
           <div className="flex flex-col gap-2">
-            <Label htmlFor="fullName" className="text-[13px] font-medium">Họ và tên <span className="ml-0.5 text-accent-red-text">*</span></Label>
+            <Label htmlFor="fullName" className="text-[13px] font-medium">{t("fullName")} <span className="ml-0.5 text-accent-red-text">*</span></Label>
             <Input
               id="fullName"
               type="text"
-              placeholder="Nguyễn Văn An"
+              placeholder={t("fullNamePlaceholder")}
               autoComplete="name"
               {...register("fullName")}
               aria-invalid={!!errors.fullName}
@@ -180,11 +184,11 @@ export default function RegisterPage() {
           </div>
 
           <div className="flex flex-col gap-2">
-            <Label htmlFor="email" className="text-[13px] font-medium">Email <span className="ml-0.5 text-accent-red-text">*</span></Label>
+            <Label htmlFor="email" className="text-[13px] font-medium">{t("email")} <span className="ml-0.5 text-accent-red-text">*</span></Label>
             <Input
               id="email"
               type="email"
-              placeholder="Nhập email của bạn"
+              placeholder={t("emailPlaceholder")}
               autoComplete="email"
               {...register("email")}
               aria-invalid={!!errors.email}
@@ -198,11 +202,11 @@ export default function RegisterPage() {
           </div>
 
           <div className="flex flex-col gap-2">
-            <Label htmlFor="username" className="text-[13px] font-medium">Username</Label>
+            <Label htmlFor="username" className="text-[13px] font-medium">{t("username")}</Label>
             <Input
               id="username"
               type="text"
-              placeholder="realhubvn (không bắt buộc)"
+              placeholder={t("usernamePlaceholder")}
               autoComplete="username"
               {...register("username")}
               aria-invalid={!!errors.username}
@@ -216,11 +220,11 @@ export default function RegisterPage() {
           </div>
 
           <div className="flex flex-col gap-2">
-            <Label htmlFor="phone" className="text-[13px] font-medium">Số điện thoại <span className="ml-0.5 text-accent-red-text">*</span></Label>
+            <Label htmlFor="phone" className="text-[13px] font-medium">{t("phone")} <span className="ml-0.5 text-accent-red-text">*</span></Label>
             <Input
               id="phone"
               type="tel"
-              placeholder="0901234567"
+              placeholder={t("phonePlaceholder")}
               autoComplete="tel"
               {...register("phone")}
               aria-invalid={!!errors.phone}
@@ -234,7 +238,7 @@ export default function RegisterPage() {
           </div>
 
           <div className="flex flex-col gap-2">
-            <Label htmlFor="dateOfBirth" className="text-[13px] font-medium">Ngày sinh <span className="ml-0.5 text-accent-red-text">*</span></Label>
+            <Label htmlFor="dateOfBirth" className="text-[13px] font-medium">{t("dateOfBirth")} <span className="ml-0.5 text-accent-red-text">*</span></Label>
             <Input
               id="dateOfBirth"
               type="date"
@@ -250,13 +254,13 @@ export default function RegisterPage() {
           </div>
 
           <div className="flex flex-col gap-2">
-            <Label className="text-[13px] font-medium">Giới tính</Label>
+            <Label className="text-[13px] font-medium">{t("gender")}</Label>
             <Select
               value={selectedGender ?? ""}
               onValueChange={(v) => setValue("gender", v as RegisterFormData["gender"])}
             >
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Chọn giới tính">
+                <SelectValue placeholder={t("genderPlaceholder")}>
                   {GENDERS.find((gender) => gender.value === selectedGender)?.label}
                 </SelectValue>
               </SelectTrigger>
@@ -275,24 +279,25 @@ export default function RegisterPage() {
 
           {/* Địa chỉ: chiếm trọn 1 hàng, tỉnh + phường nằm ngang */}
           <div className="flex flex-col gap-2 sm:col-span-2">
-            <Label className="text-[13px] font-medium">Địa chỉ</Label>
+            <Label className="text-[13px] font-medium">{t("address")}</Label>
             <LocationSelectWithLabel
               provinceId={selectedProvinceId || null}
               wardId={selectedWardId || null}
               onProvinceChange={(id) => setValue("provinceId", id ?? "")}
               onWardChange={(id) => setValue("wardId", id ?? "")}
-              wardPlaceholder="Chọn phường/xã"
+              wardPlaceholder={t("wardPlaceholder")}
+              provincePlaceholder={t("provincePlaceholder")}
               horizontal
             />
           </div>
 
           <div className="flex flex-col gap-2 sm:col-span-2">
-            <Label htmlFor="password" className="text-[13px] font-medium">Mật khẩu</Label>
+            <Label htmlFor="password" className="text-[13px] font-medium">{t("password")}</Label>
             <div className="relative">
               <Input
                 id="password"
                 type={showPassword ? "text" : "password"}
-                placeholder="Ít nhất 8 ký tự"
+                placeholder={t("passwordHint")}
                 autoComplete="new-password"
                 className="pr-11"
                 {...register("password")}
@@ -303,7 +308,7 @@ export default function RegisterPage() {
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground-muted transition-colors duration-300 hover:text-foreground"
-                aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                aria-label={showPassword ? t("hidePassword") : t("showPassword")}
               >
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
@@ -316,12 +321,12 @@ export default function RegisterPage() {
           </div>
 
           <div className="flex flex-col gap-2 sm:col-span-2">
-            <Label htmlFor="confirmPassword" className="text-[13px] font-medium">Xác nhận mật khẩu</Label>
+            <Label htmlFor="confirmPassword" className="text-[13px] font-medium">{t("confirmPassword")}</Label>
             <div className="relative">
               <Input
                 id="confirmPassword"
                 type={showPassword ? "text" : "password"}
-                placeholder="Nhập lại mật khẩu"
+                placeholder={t("confirmPasswordPlaceholder")}
                 autoComplete="new-password"
                 className="pr-11"
                 {...register("confirmPassword")}
@@ -332,7 +337,7 @@ export default function RegisterPage() {
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground-muted transition-colors duration-300 hover:text-foreground"
-                aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                aria-label={showPassword ? t("hidePassword") : t("showPassword")}
               >
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
@@ -355,7 +360,7 @@ export default function RegisterPage() {
           )}
 
           <Button type="submit" disabled={isPending} className="mt-1 w-full sm:col-span-2" size="lg">
-            {isPending ? "Đang đăng ký..." : "Đăng ký"}
+            {isPending ? t("registering") : t("register")}
           </Button>
 
           <div className="text-center sm:col-span-2">
@@ -363,7 +368,7 @@ export default function RegisterPage() {
               href="/login"
               className="group inline-flex items-center gap-2 text-sm text-foreground-muted transition-colors hover:text-foreground"
             >
-              <span>Đã có tài khoản? Đăng nhập</span>
+              <span>{t("haveAccountLogin")}</span>
               <span className="inline-flex size-6 items-center justify-center rounded-lg bg-surface-muted transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:translate-x-0.5 group-hover:-translate-y-0.5">
                 <ArrowUpRight size={12} />
               </span>

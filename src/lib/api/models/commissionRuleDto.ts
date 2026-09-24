@@ -14,7 +14,7 @@ export interface CommissionRuleDto {
   dealType?: string;
   /** UUID của PropertyType. Null = áp dụng mọi loại BĐS. */
   propertyTypeId?: string;
-  /** SELF_SELL | SALES_DISTRIBUTION | HYBRID | INTERNAL_ONLY | AGENCY_DISTRIBUTION. Null = áp dụng mọi selling mode. */
+  /** SELF_SELL | SALES_DISTRIBUTION | HYBRID | INTERNAL_ONLY | MARKETPLACE_PUBLIC. Null = áp dụng mọi selling mode. */
   sellingMode?: string;
   calculationType: string;
   calculationValue: number;
