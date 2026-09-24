@@ -16,7 +16,7 @@
     "SELF_SELL": "Self Sell",
     "SALES_DISTRIBUTION": "Sales Distribution",
     "HYBRID": "Hybrid",
-    "AGENCY_DISTRIBUTION": "Agency Distribution",
+    "MARKETPLACE_PUBLIC": "Marketplace Public",
     "INTERNAL_ONLY": "Internal Only"
   },
   "projectStatus": {

@@ -68,7 +68,7 @@ export const sellingModeOptions: { value: string; label: string; hint: string }[
   { value: "SALES_DISTRIBUTION", label: "Phân phối sales", hint: "Sales khai thác" },
   { value: "HYBRID", label: "Kết hợp", hint: "Owner + sales" },
   { value: "INTERNAL_ONLY", label: "Nội bộ", hint: "Chỉ tenant" },
-  { value: "AGENCY_DISTRIBUTION", label: "Phân phối agency", hint: "Công khai" },
+  { value: "MARKETPLACE_PUBLIC", label: "Sàn công khai", hint: "Marketplace public" },
 ];
 
 export const expireBehaviorOptions: { value: string; label: string; hint: string }[] = [

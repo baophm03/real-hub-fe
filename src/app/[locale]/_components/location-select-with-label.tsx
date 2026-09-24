@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo } from "react";
+import { useTranslations } from "next-intl";
 import {
   Select,
   SelectContent,
@@ -17,6 +18,7 @@ interface LocationSelectWithLabelProps {
   onProvinceChange: (id: string | null) => void;
   onWardChange: (id: string | null) => void;
   wardPlaceholder?: string;
+  provincePlaceholder?: string;
   horizontal?: boolean;
 }
 
@@ -25,9 +27,13 @@ export function LocationSelectWithLabel({
   wardId,
   onProvinceChange,
   onWardChange,
-  wardPlaceholder = "Chọn phường/xã",
+  wardPlaceholder,
+  provincePlaceholder,
   horizontal = false,
 }: LocationSelectWithLabelProps) {
+  const t = useTranslations("auth");
+  const resolvedWardPlaceholder = wardPlaceholder ?? t("wardPlaceholder");
+  const resolvedProvincePlaceholder = provincePlaceholder ?? t("provincePlaceholder");
   const { data: provincesData, isLoading: provincesLoading } = useGetApiLocations({
     type: "PROVINCE",
     limit: 100,
@@ -64,7 +70,7 @@ export function LocationSelectWithLabel({
         }}
       >
         <SelectTrigger className="w-full">
-          <SelectValue placeholder={provincesLoading ? "Đang tải..." : "Chọn tỉnh/thành phố"}>
+          <SelectValue placeholder={provincesLoading ? t("loadingLocations") : resolvedProvincePlaceholder}>
             {provinceName}
           </SelectValue>
         </SelectTrigger>
@@ -84,7 +90,7 @@ export function LocationSelectWithLabel({
       >
         <SelectTrigger className="w-full">
           <SelectValue
-            placeholder={!provinceId ? wardPlaceholder : wardsLoading ? "Đang tải..." : wardPlaceholder}
+            placeholder={!provinceId ? resolvedWardPlaceholder : wardsLoading ? t("loadingLocations") : resolvedWardPlaceholder}
           >
             {wardName}
           </SelectValue>

@@ -494,6 +494,199 @@ export const prefetchGetApiTenantIdQuery = async <TData = Awaited<ReturnType<typ
 
 
 /**
+ * @summary Resolve tenant by code (public, for branding)
+ */
+export const getApiTenantByCode = (
+    code: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<unknown>(
+      {url: `/api/tenants/code/${code}`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getGetApiTenantByCodeInfiniteQueryKey = (code?: string,) => {
+    return [
+    'infinite', `/api/tenants/code/${code}`
+    ] as const;
+    }
+
+export const getGetApiTenantByCodeQueryKey = (code?: string,) => {
+    return [
+    `/api/tenants/code/${code}`
+    ] as const;
+    }
+
+    
+export const getGetApiTenantByCodeInfiniteQueryOptions = <TData = InfiniteData<Awaited<ReturnType<typeof getApiTenantByCode>>>, TError = unknown>(code: string, options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiTenantByCode>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiTenantByCodeInfiniteQueryKey(code);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiTenantByCode>>> = ({ signal }) => getApiTenantByCode(code, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(code),  retry: 3, retryDelay: 1000,  ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiTenantByCode>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiTenantByCodeInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getApiTenantByCode>>>
+export type GetApiTenantByCodeInfiniteQueryError = unknown
+
+
+export function useGetApiTenantByCodeInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getApiTenantByCode>>>, TError = unknown>(
+ code: string, options: { query:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiTenantByCode>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiTenantByCode>>,
+          TError,
+          Awaited<ReturnType<typeof getApiTenantByCode>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiTenantByCodeInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getApiTenantByCode>>>, TError = unknown>(
+ code: string, options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiTenantByCode>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiTenantByCode>>,
+          TError,
+          Awaited<ReturnType<typeof getApiTenantByCode>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiTenantByCodeInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getApiTenantByCode>>>, TError = unknown>(
+ code: string, options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiTenantByCode>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Resolve tenant by code (public, for branding)
+ */
+
+export function useGetApiTenantByCodeInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getApiTenantByCode>>>, TError = unknown>(
+ code: string, options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiTenantByCode>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiTenantByCodeInfiniteQueryOptions(code,options)
+
+  const query = useInfiniteQuery(queryOptions, queryClient) as  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+/**
+ * @summary Resolve tenant by code (public, for branding)
+ */
+export const prefetchGetApiTenantByCodeInfiniteQuery = async <TData = Awaited<ReturnType<typeof getApiTenantByCode>>, TError = unknown>(
+ queryClient: QueryClient, code: string, options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiTenantByCode>>, TError, TData>>, }
+
+  ): Promise<QueryClient> => {
+
+  const queryOptions = getGetApiTenantByCodeInfiniteQueryOptions(code,options)
+
+  await queryClient.prefetchInfiniteQuery(queryOptions);
+
+  return queryClient;
+}
+
+
+
+export const getGetApiTenantByCodeQueryOptions = <TData = Awaited<ReturnType<typeof getApiTenantByCode>>, TError = unknown>(code: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiTenantByCode>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiTenantByCodeQueryKey(code);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiTenantByCode>>> = ({ signal }) => getApiTenantByCode(code, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(code),  retry: 3, retryDelay: 1000,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiTenantByCode>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiTenantByCodeQueryResult = NonNullable<Awaited<ReturnType<typeof getApiTenantByCode>>>
+export type GetApiTenantByCodeQueryError = unknown
+
+
+export function useGetApiTenantByCode<TData = Awaited<ReturnType<typeof getApiTenantByCode>>, TError = unknown>(
+ code: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiTenantByCode>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiTenantByCode>>,
+          TError,
+          Awaited<ReturnType<typeof getApiTenantByCode>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiTenantByCode<TData = Awaited<ReturnType<typeof getApiTenantByCode>>, TError = unknown>(
+ code: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiTenantByCode>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiTenantByCode>>,
+          TError,
+          Awaited<ReturnType<typeof getApiTenantByCode>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiTenantByCode<TData = Awaited<ReturnType<typeof getApiTenantByCode>>, TError = unknown>(
+ code: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiTenantByCode>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Resolve tenant by code (public, for branding)
+ */
+
+export function useGetApiTenantByCode<TData = Awaited<ReturnType<typeof getApiTenantByCode>>, TError = unknown>(
+ code: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiTenantByCode>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiTenantByCodeQueryOptions(code,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+/**
+ * @summary Resolve tenant by code (public, for branding)
+ */
+export const prefetchGetApiTenantByCodeQuery = async <TData = Awaited<ReturnType<typeof getApiTenantByCode>>, TError = unknown>(
+ queryClient: QueryClient, code: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiTenantByCode>>, TError, TData>>, }
+
+  ): Promise<QueryClient> => {
+
+  const queryOptions = getGetApiTenantByCodeQueryOptions(code,options)
+
+  await queryClient.prefetchQuery(queryOptions);
+
+  return queryClient;
+}
+
+
+
+/**
  * @summary Resolve tenant by domain
  */
 export const getApiTenantByDomain = (

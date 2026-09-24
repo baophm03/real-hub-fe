@@ -36,7 +36,7 @@ export const sellingModeLabels: Record<string, string> = {
   SALES_DISTRIBUTION: "Phân phối sales",
   HYBRID: "Kết hợp",
   INTERNAL_ONLY: "Nội bộ",
-  AGENCY_DISTRIBUTION: "Phân phối đại lý",
+  MARKETPLACE_PUBLIC: "Sàn công khai",
 };
 
 export const verificationLabels: Record<string, string> = {

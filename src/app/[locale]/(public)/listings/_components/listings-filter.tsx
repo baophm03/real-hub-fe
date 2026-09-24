@@ -9,6 +9,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { useAuthStore } from "@/lib/stores/auth-store";
+import { useGetApiLocations } from "@/lib/api/endpoints/locations";
+import { useGetApiProjects } from "@/lib/api/endpoints/projects";
+import type { Location } from "@/lib/api/types/locations";
+import { PriceRangeSlider } from "./price-range-slider";
+
+type Project = { id: string; name: string };
 
 type PropertyType = {
   id: string;
@@ -27,9 +33,14 @@ interface ListingsFilterProps {
   provinces: Province[];
   currentTransactionType: string;
   currentProvinceId: string;
+  currentDistrictId: string;
+  currentWardId: string;
   currentTypes: string[];
   currentPriceFrom: string;
   currentPriceTo: string;
+  currentMinArea: string;
+  currentMaxArea: string;
+  currentProjectId: string;
 }
 
 export function ListingsFilter({
@@ -37,9 +48,14 @@ export function ListingsFilter({
   provinces,
   currentTransactionType,
   currentProvinceId,
+  currentDistrictId,
+  currentWardId,
   currentTypes,
   currentPriceFrom,
   currentPriceTo,
+  currentMinArea,
+  currentMaxArea,
+  currentProjectId,
 }: ListingsFilterProps) {
   const t = useTranslations("public.listings");
   const router = useRouter();
@@ -52,25 +68,55 @@ export function ListingsFilter({
     (currentTransactionType as "ALL" | "SALE" | "RENT") || "ALL",
   );
   const [draftSelectedZone, setDraftSelectedZone] = useState(currentProvinceId || "");
+  const [draftDistrictId, setDraftDistrictId] = useState(currentDistrictId || "");
+  const [draftWardId, setDraftWardId] = useState(currentWardId || "");
   const [draftSelectedTypes, setDraftSelectedTypes] = useState<string[]>(currentTypes || []);
   const [draftPriceFrom, setDraftPriceFrom] = useState(currentPriceFrom || "");
   const [draftPriceTo, setDraftPriceTo] = useState(currentPriceTo || "");
+  const [draftMinArea, setDraftMinArea] = useState(currentMinArea || "");
+  const [draftMaxArea, setDraftMaxArea] = useState(currentMaxArea || "");
+  const [draftProjectId, setDraftProjectId] = useState(currentProjectId || "");
+
+  // Cascading locations: district theo province, ward theo district (fallback province)
+  const { data: districtsData } = useGetApiLocations(
+    draftSelectedZone ? { type: "DISTRICT", parentId: draftSelectedZone, limit: 100 } : undefined,
+  );
+  const districts: Location[] = ((districtsData as unknown as { data?: Location[] })?.data) ?? [];
+
+  const wardParentId = draftDistrictId || draftSelectedZone;
+  const { data: wardsData } = useGetApiLocations(
+    wardParentId ? { type: "WARD", parentId: wardParentId, limit: 200 } : undefined,
+  );
+  const wards: Location[] = ((wardsData as unknown as { data?: Location[] })?.data) ?? [];
+
+  const { data: projectsData } = useGetApiProjects({ limit: "100" });
+  const projects: Project[] = ((projectsData as unknown as { data?: Project[] })?.data) ?? [];
 
   // Sync draft state when URL searchParams change (e.g. after "Xóa bộ lọc" or external nav)
   useEffect(() => {
     setDraftTransactionType((currentTransactionType as "ALL" | "SALE" | "RENT") || "ALL");
     setDraftSelectedZone(currentProvinceId || "");
+    setDraftDistrictId(currentDistrictId || "");
+    setDraftWardId(currentWardId || "");
     setDraftSelectedTypes(currentTypes || []);
     setDraftPriceFrom(currentPriceFrom || "");
     setDraftPriceTo(currentPriceTo || "");
-  }, [currentTransactionType, currentProvinceId, currentTypes, currentPriceFrom, currentPriceTo]);
+    setDraftMinArea(currentMinArea || "");
+    setDraftMaxArea(currentMaxArea || "");
+    setDraftProjectId(currentProjectId || "");
+  }, [currentTransactionType, currentProvinceId, currentDistrictId, currentWardId, currentTypes, currentPriceFrom, currentPriceTo, currentMinArea, currentMaxArea, currentProjectId]);
 
   const hasFilters =
     draftSelectedTypes.length > 0 ||
     draftTransactionType !== "ALL" ||
     draftPriceFrom !== "" ||
     draftPriceTo !== "" ||
-    draftSelectedZone !== "";
+    draftSelectedZone !== "" ||
+    draftDistrictId !== "" ||
+    draftWardId !== "" ||
+    draftMinArea !== "" ||
+    draftMaxArea !== "" ||
+    draftProjectId !== "";
 
   const toggleType = (typeCode: string) => {
     setDraftSelectedTypes((prev) =>
@@ -85,13 +131,20 @@ export function ListingsFilter({
 
     params.delete("transactionType");
     params.delete("provinceId");
+    params.delete("districtId");
+    params.delete("wardId");
     params.delete("types");
     params.delete("minPrice");
     params.delete("maxPrice");
+    params.delete("minArea");
+    params.delete("maxArea");
+    params.delete("projectId");
     params.delete("sort");
 
     if (draftTransactionType !== "ALL") params.set("transactionType", draftTransactionType);
     if (draftSelectedZone) params.set("provinceId", draftSelectedZone);
+    if (draftDistrictId) params.set("districtId", draftDistrictId);
+    if (draftWardId) params.set("wardId", draftWardId);
     if (draftPriceFrom) {
       const multiplier = draftTransactionType === "RENT" ? 1000000 : 1000000000;
       params.set("minPrice", String(parseFloat(draftPriceFrom) * multiplier));
@@ -100,6 +153,9 @@ export function ListingsFilter({
       const multiplier = draftTransactionType === "RENT" ? 1000000 : 1000000000;
       params.set("maxPrice", String(parseFloat(draftPriceTo) * multiplier));
     }
+    if (draftMinArea) params.set("minArea", draftMinArea);
+    if (draftMaxArea) params.set("maxArea", draftMaxArea);
+    if (draftProjectId) params.set("projectId", draftProjectId);
     if (sort) params.set("sort", sort);
 
     // Build query manually to keep comma raw (URLSearchParams encodes it to %2C)
@@ -172,10 +228,17 @@ export function ListingsFilter({
           </div>
         </div>
 
-        {/* Zone Filter */}
+        {/* Zone Filter — cascading tỉnh → huyện → phường */}
         <div className="flex flex-col gap-2">
           <Label className="text-xs font-semibold uppercase tracking-wide text-foreground-muted">{t("region")}</Label>
-          <Select value={draftSelectedZone} onValueChange={(value) => setDraftSelectedZone(value ?? "")}>
+          <Select
+            value={draftSelectedZone}
+            onValueChange={(value) => {
+              setDraftSelectedZone(value ?? "");
+              setDraftDistrictId("");
+              setDraftWardId("");
+            }}
+          >
             <SelectTrigger className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-[#072707] focus:outline-none focus:ring-1 focus:ring-[#072707]">
               <SelectValue placeholder={t("all")}>
                 {(value: string) => {
@@ -194,13 +257,135 @@ export function ListingsFilter({
               ))}
             </SelectContent>
           </Select>
+
+          {draftSelectedZone && districts.length > 0 && (
+            <Select
+              value={draftDistrictId}
+              onValueChange={(value) => {
+                setDraftDistrictId(value ?? "");
+                setDraftWardId("");
+              }}
+            >
+              <SelectTrigger className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-[#072707] focus:outline-none focus:ring-1 focus:ring-[#072707]">
+                <SelectValue placeholder={t("allDistricts")}>
+                  {(value: string) => {
+                    if (!value) return t("allDistricts");
+                    return districts.find((d) => d.id === value)?.name || value;
+                  }}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="" label={t("allDistricts")}>{t("allDistricts")}</SelectItem>
+                {districts.map((d) => (
+                  <SelectItem key={d.id} value={d.id} label={d.name}>
+                    {d.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+
+          {draftSelectedZone && wards.length > 0 && (
+            <Select
+              value={draftWardId}
+              onValueChange={(value) => setDraftWardId(value ?? "")}
+            >
+              <SelectTrigger className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-[#072707] focus:outline-none focus:ring-1 focus:ring-[#072707]">
+                <SelectValue placeholder={t("allWards")}>
+                  {(value: string) => {
+                    if (!value) return t("allWards");
+                    return wards.find((w) => w.id === value)?.name || value;
+                  }}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="" label={t("allWards")}>{t("allWards")}</SelectItem>
+                {wards.map((w) => (
+                  <SelectItem key={w.id} value={w.id} label={w.name}>
+                    {w.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
         </div>
 
-        {/* Price Range */}
+        {/* Project */}
+        {projects.length > 0 && (
+          <div className="flex flex-col gap-2">
+            <Label className="text-xs font-semibold uppercase tracking-wide text-foreground-muted">{t("project")}</Label>
+            <Select
+              value={draftProjectId}
+              onValueChange={(value) => setDraftProjectId(value ?? "")}
+            >
+              <SelectTrigger className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-[#072707] focus:outline-none focus:ring-1 focus:ring-[#072707]">
+                <SelectValue placeholder={t("allProjects")}>
+                  {(value: string) => {
+                    if (!value) return t("allProjects");
+                    return projects.find((p) => p.id === value)?.name || value;
+                  }}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="" label={t("allProjects")}>{t("allProjects")}</SelectItem>
+                {projects.map((p) => (
+                  <SelectItem key={p.id} value={p.id} label={p.name}>
+                    {p.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+
+        {/* Area Range */}
+        <div className="flex flex-col gap-2">
+          <Label className="text-xs font-semibold uppercase tracking-wide text-foreground-muted">{t("areaRange")}</Label>
+          <div className="flex items-center gap-2">
+            <Input
+              type="number"
+              min={0}
+              value={draftMinArea}
+              onChange={(e) => setDraftMinArea(e.target.value)}
+              placeholder={t("areaFrom")}
+              className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-[#072707] focus:outline-none focus:ring-1 focus:ring-[#072707]"
+            />
+            <span className="text-foreground-muted">—</span>
+            <Input
+              type="number"
+              min={0}
+              value={draftMaxArea}
+              onChange={(e) => setDraftMaxArea(e.target.value)}
+              placeholder={t("areaTo")}
+              className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-[#072707] focus:outline-none focus:ring-1 focus:ring-[#072707]"
+            />
+          </div>
+        </div>
+
+        {/* Price Range — slider + input */}
         <div className="flex flex-col gap-2">
           <Label className="text-xs font-semibold uppercase tracking-wide text-foreground-muted">
             {t("priceRange", { unit: draftTransactionType === "RENT" ? t("priceUnitMillion") : t("priceUnitBillion") })}
           </Label>
+          {(() => {
+            const sliderMax = draftTransactionType === "RENT" ? 100 : 50;
+            const sliderStep = draftTransactionType === "RENT" ? 1 : 0.5;
+            const from = Math.min(Number(draftPriceFrom) || 0, sliderMax);
+            const to = draftPriceTo === "" ? sliderMax : Math.min(Number(draftPriceTo) || sliderMax, sliderMax);
+            return (
+              <PriceRangeSlider
+                min={0}
+                max={sliderMax}
+                step={sliderStep}
+                valueFrom={from}
+                valueTo={to}
+                onChange={(f, v) => {
+                  setDraftPriceFrom(f > 0 ? String(f) : "");
+                  setDraftPriceTo(v >= sliderMax ? "" : String(v));
+                }}
+              />
+            );
+          })()}
           <div className="flex items-center gap-2">
             <Input
               type="text"

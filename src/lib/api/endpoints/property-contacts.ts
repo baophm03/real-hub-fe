@@ -30,7 +30,6 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
-  CreateConsultationDto,
   CreatePropertyContactDto,
   GetApiPropertyContactsParams,
   UpdatePropertyContactDto
@@ -615,70 +614,6 @@ export const useDeleteApiPropertyContactsId = <TError = unknown,
       > => {
 
       const mutationOptions = getDeleteApiPropertyContactsIdMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
-    }
-    /**
- * @summary Logged-in user registers a consultation (creates customer + lead)
- */
-export const postApiPropertyContactsConsultation = (
-    createConsultationDto: CreateConsultationDto,
- signal?: AbortSignal
-) => {
-      
-      
-      return customInstance<unknown>(
-      {url: `/api/property-contacts/consultation`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: createConsultationDto, signal
-    },
-      );
-    }
-  
-
-
-export const getPostApiPropertyContactsConsultationMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiPropertyContactsConsultation>>, TError,{data: CreateConsultationDto}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof postApiPropertyContactsConsultation>>, TError,{data: CreateConsultationDto}, TContext> => {
-
-const mutationKey = ['postApiPropertyContactsConsultation'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiPropertyContactsConsultation>>, {data: CreateConsultationDto}> = (props) => {
-          const {data} = props ?? {};
-
-          return  postApiPropertyContactsConsultation(data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type PostApiPropertyContactsConsultationMutationResult = NonNullable<Awaited<ReturnType<typeof postApiPropertyContactsConsultation>>>
-    export type PostApiPropertyContactsConsultationMutationBody = CreateConsultationDto
-    export type PostApiPropertyContactsConsultationMutationError = unknown
-
-    /**
- * @summary Logged-in user registers a consultation (creates customer + lead)
- */
-export const usePostApiPropertyContactsConsultation = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiPropertyContactsConsultation>>, TError,{data: CreateConsultationDto}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof postApiPropertyContactsConsultation>>,
-        TError,
-        {data: CreateConsultationDto},
-        TContext
-      > => {
-
-      const mutationOptions = getPostApiPropertyContactsConsultationMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }

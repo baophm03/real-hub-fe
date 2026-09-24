@@ -32,10 +32,16 @@ export default async function ListingsPage({ params, searchParams }: Props) {
   // filters
   const transactionType = (sp.transactionType as string) ?? "";
   const provinceId = (sp.provinceId as string) ?? "";
+  const districtId = (sp.districtId as string) ?? "";
+  const wardId = (sp.wardId as string) ?? "";
+  const view = (sp.view as string) ?? "grid";
   const typesRaw = (sp.types as string) ?? "";
   const types = typesRaw ? typesRaw.split(",").filter(Boolean) : [];
   const minPrice = (sp.minPrice as string) ?? "";
   const maxPrice = (sp.maxPrice as string) ?? "";
+  const minArea = (sp.minArea as string) ?? "";
+  const maxArea = (sp.maxArea as string) ?? "";
+  const projectId = (sp.projectId as string) ?? "";
   const sort = (sp.sort as string) ?? "newest";
   const priceMultiplier = transactionType === "RENT" ? 1000000 : 1000000000;
   const currentPriceFrom = minPrice ? String(Number(minPrice) / priceMultiplier) : "";
@@ -49,9 +55,14 @@ export default async function ListingsPage({ params, searchParams }: Props) {
             <ListingsFilterSection
               currentTransactionType={transactionType}
               currentProvinceId={provinceId}
+              currentDistrictId={districtId}
+              currentWardId={wardId}
               currentTypes={types}
               currentPriceFrom={currentPriceFrom}
               currentPriceTo={currentPriceTo}
+              currentMinArea={minArea}
+              currentMaxArea={maxArea}
+              currentProjectId={projectId}
             />
           </Suspense>
         </aside>
@@ -60,10 +71,16 @@ export default async function ListingsPage({ params, searchParams }: Props) {
           <ListingsContentSection
             transactionType={transactionType}
             provinceId={provinceId}
+            districtId={districtId}
+            wardId={wardId}
             types={types}
             minPrice={minPrice}
             maxPrice={maxPrice}
+            minArea={minArea}
+            maxArea={maxArea}
+            projectId={projectId}
             sort={sort}
+            view={view}
           />
         </Suspense>
       </div>

@@ -25,6 +25,8 @@
 | `SUPER_ADMIN` | Nền tảng | Dashboard (platform admin) | Quản trị toàn hệ thống: tenant, role, plan, cấu hình platform. Permission: `*` |
 
 > **Quy tắc**: 1 user có thể có nhiều vai trò nghiệp vụ + nhiều tenant membership. Không thiết kế 1 tài khoản chỉ 1 vai trò cố định.
+>
+> **Vai trò nghiệp vụ vs role hệ thống**: tài liệu chính thức (§5–§6) liệt kê 10 vai trò nghiệp vụ — bảng trên là 9 **role hệ thống** Phase 1. Vai trò nghiệp vụ thứ 10 là **Developer / Chủ đầu tư** (tạo dự án/quỹ sản phẩm, tự phân phối hoặc mở cho agency/sales khai thác) — Phase 1 không có system role riêng, được mô hình qua `tenant.type = DEVELOPER` + user trong tenant đó.
 
 ### 1.2 Module chức năng
 
@@ -43,6 +45,33 @@
 | **File Upload** | Upload file lên MinIO, presigned URL, visibility |
 | **Lead Protection** | Chính sách bảo hộ lead, tranh chấp |
 | **Visibility** | Chính sách hiển thị & masking dữ liệu theo role |
+| **Projects** | Dự án/quỹ căn của chủ đầu tư |
+| **Property Contacts** | Form liên hệ → tự động tạo lead (guest → pool), `refCode` resolve sang sales |
+| **Contact Requests** | Yêu cầu liên hệ từ khách (inbox xử lý) |
+| **Assignments** | Sales nhận phụ trách sản phẩm, link/QR, assignment policy |
+| **Lead Pool** | Lead chưa gán (`GET /leads/pool`, claim, assign → sales/team) |
+| **Teams** | CRUD team + member, TEAM_LEADER scope |
+| **Memberships** | User ↔ tenant ↔ role membership, `/memberships/stats` |
+| **Roles & Permissions** | Role CRUD + permission matrix `MODULE:ACTION` |
+| **Notifications** | In-app notification + rules/templates + email kèm (mailer) |
+| **News** | Tin tức + categories (admin + public) |
+| **Reports / Dashboard** | Báo cáo sales/commission/properties/team, dashboard stats |
+| **Audit Log** | Nhật ký audit (query, filter, detail before/after) |
+| **Import/Export** | Import/export jobs (property, lead, customer) |
+| **Revalidation** | Policy kiểm tra lại sản phẩm định kỳ |
+| **SEO** | SEO templates động + `/api/seo/resolve` |
+
+### 1.3 Chế độ khai thác sản phẩm (Selling Modes)
+
+| selling_mode | Ý nghĩa | Lead gán cho ai |
+|--------------|---------|-----------------|
+| `SELF_SELL` | Người đăng tự bán/tự cho thuê | Owner/chủ nguồn |
+| `SALES_DISTRIBUTION` | Sales/agency khai thác | Sales theo assignment/team |
+| `HYBRID` | Owner + sales cùng khai thác | Theo nguồn lead (owner link, sales link, CTV link, public) |
+| `INTERNAL_ONLY` | Chỉ nội bộ tenant thấy | Theo người được phân quyền |
+| `MARKETPLACE_PUBLIC` | Public trên RealHub marketplace | Theo lead source/policy |
+
+> ✅ Đã chốt theo tài liệu chính thức: toàn bộ code dùng `MARKETPLACE_PUBLIC` (rename từ `AGENCY_DISTRIBUTION`, 2026-09-24). Data migration `20260924000001_rename_selling_mode` cập nhật các record cũ khi apply.
 
 ---
 
@@ -50,21 +79,26 @@
 
 | Layer | Công nghệ | Lý do |
 |-------|-----------|-------|
-| Framework | **Next.js 16** (App Router) | SSR/SSG cho SEO property pages, API routes cho BFF |
-| UI Library | **React 19** | Cộng đồng lớn, ecosystem phong phú |
+| Framework | **Next.js 16.2.x** (App Router) | SSR/SSG cho SEO property pages, API routes cho BFF |
+| UI Library | **React 18** (`react@^18`) | ⚠️ package.json dùng React 18, KHÔNG phải React 19 |
 | Styling | **Tailwind CSS 4** | Utility-first, rapid development, consistent design |
-| Components | **shadcn/ui** + **Radix UI** | Accessible, customizable, dark mode ready |
+| Components | **shadcn/ui** + **Base UI** (`@base-ui/react`) | Accessible, customizable, dark mode ready |
+| Permissions UI | **CASL** (`@casl/ability` + `@casl/react`) | Ẩn/hiện UI theo `ability.can(action, module)` |
 | State Management | **Zustand** (global) + **TanStack Query v5** (server state) | Đơn giản, mạnh mẽ cho data fetching & caching |
-| Forms | **React Hook Form** + **Zod** | Validation schema đồng nhất với BE |
+| Forms | **React Hook Form** + **Zod 4** | Validation schema đồng nhất với BE |
 | Table/DataGrid | **TanStack Table v8** | Sorting, filtering, pagination, row selection |
 | Charts | **Recharts** | Dashboard báo cáo, commission, thống kê |
 | Icons | **Lucide React** | Nhẹ, nhất quán, đi kèm shadcn/ui |
 | File Upload | **react-dropzone** | Drag & drop, multiple files |
-| Date Picker | **date-fns** + shadcn Calendar | Xử lý lịch hẹn, reservation |
-| Rich Text | **Tiptap** (nếu cần) | Mô tả property, note |
+| Date Picker | **date-fns** + **react-day-picker** | Xử lý lịch hẹn, reservation |
+| Rich Text | **Jodit** (`jodit-react`) | Mô tả property, news content, note |
 | Maps | **Leaflet** + **react-leaflet** | Hiển thị vị trí BĐS |
-| Animation | **Framer Motion** (`motion/react`) + `tw-animate-css` | Spring physics, scroll reveal |
-| i18n | **next-intl** | Đa ngôn ngữ (vi/en) |
+| Animation | **Framer Motion** + **GSAP** + `tailwindcss-animate` | Spring physics, scroll reveal |
+| i18n | **next-intl** | Đa ngôn ngữ (vi/en) — public pages đã cover, portal/auth chưa |
+| Toast/Command | **Sonner** + **cmdk** | Toast notification, command palette |
+| Carousel | **Swiper** | Gallery ảnh BĐS, hero sections |
+| HTTP client | **axios** + **Orval** generated client | Endpoint files + DTO models trong `src/lib/api/` |
+| Theme | **next-themes** (deps) + custom `useTheme` | Dark mode toggle trong topbar |
 
 > **Banned**: FontAwesome, Material Icons, emoji thay icon, Inter/Roboto/Arial làm font chính.
 
@@ -514,29 +548,28 @@ Mọi component phải có đủ 4 trạng thái:
 
 #### Dynamic Tenant Theme
 
-Tenant settings (`GET /api/tenants/:id/settings`) trả về `primaryColor` và `logoUrl`. Áp dụng dynamic:
+Đã implement qua `useTenantBranding` hook (`lib/hooks/use-tenant-branding.ts`) + `TenantBranding` component mount ở `[locale]/layout.tsx`. Hook gọi public endpoint `GET /api/tenants/code/:code` (tenant code từ auth-store → `NEXT_PUBLIC_TENANT_CODE` → `"DEMO"`) rồi apply `primaryColor` lên CSS var `--primary` (validate hex trước khi set):
 
 ```tsx
+// lib/hooks/use-tenant-branding.ts
 useEffect(() => {
-  const settings = tenantStore.settings
-  if (settings?.primaryColor) {
-    document.documentElement.style.setProperty('--accent', settings.primaryColor)
+  if (primaryColor && HEX_COLOR_RE.test(primaryColor)) {
+    document.documentElement.style.setProperty("--primary", primaryColor);
+    return () => document.documentElement.style.removeProperty("--primary");
   }
-}, [tenantStore.settings])
+}, [primaryColor]);
 ```
 
 #### Dark Mode
 
-- Toggle trong user menu
+- Toggle trong topbar (custom `useTheme` hook, lưu localStorage)
 - Dùng `class` strategy (Tailwind)
-- `prefers-color-scheme` làm default
-- Lưu preference trong localStorage
+- `next-themes` có trong deps nhưng chưa dùng (custom hook chưa respect `prefers-color-scheme`)
 
 #### Branding Assets
 
-- Logo: load từ `tenantSettings.logoUrl`
-- Favicon: dynamic per tenant
-- Primary color: override CSS variable `--accent`
+- Logo: load từ tenant `logoUrl`
+- Primary color: override CSS variable `--primary` (Tailwind v4 primary token)
 
 ---
 
@@ -583,15 +616,34 @@ Mỗi request (trừ public routes) phải gửi **một trong hai**:
 | Theo code | `x-tenant-code: DEMO` | Khuyên dùng cho dev |
 | Theo domain | Tự động resolve từ `Origin` / `Host` header | Production |
 
-### 4.4 Public Routes (không cần tenant + auth)
+### 4.4 Public Routes (không cần auth)
 
+> Vẫn resolve tenant qua `x-tenant-code` hoặc domain (TenantMiddleware chạy trên mọi route) — "public" ở đây nghĩa là **không yêu cầu JWT**.
+
+**Auth:**
 - `POST /api/auth/register`
+- `POST /api/auth/verify-otp`
+- `POST /api/auth/resend-otp`
+- `POST /api/auth/forgot-password`
+- `PUT /api/auth/reset-password`
 - `POST /api/auth/login`
 - `POST /api/auth/refresh`
-- `POST /api/tenants` (tạo tenant mới)
+
+**Public data** (dùng cho `(public)` pages):
+- `GET /api/properties` + `GET /api/properties/:id` + `GET /api/properties/code/:propertyCode` + `GET /api/properties/types`
+- `GET /api/projects` + `GET /api/projects/:id` + `GET /api/projects/code/:code`
+- `GET /api/news` + `GET /api/news/:id` + `GET /api/news/slug/:slug` + `GET /api/news/category/:code` + `GET /api/news-categories`
+- `GET /api/locations` + `GET /api/locations/tree` + `GET /api/locations/:id`
+- `POST /api/property-contacts` (form liên hệ → tự tạo Customer + Lead; guest → lead pool)
+- `GET /api/seo/resolve`
 - `GET /api/tenants/domain/:domain` (resolve tenant)
+- `GET /api/dashboard/public-stats` (public landing stats)
+
+**System:**
 - `GET /api/health` / `health/live` / `health/ready` / `health/metrics`
 - `GET /api/docs` (Swagger)
+
+> ⚠️ `POST /api/tenants` và `POST /api/users` **không phải public** — cả hai yêu cầu JWT (`TENANT:CREATE` cho tenants).
 
 ### 4.5 Response Format
 
@@ -602,7 +654,7 @@ Mỗi request (trừ public routes) phải gửi **một trong hai**:
 ```json
 {
   "statusCode": 403,
-  "message": "Missing permissions: leads:write",
+  "message": "Missing permissions: LEAD:UPDATE",
   "error": "Forbidden"
 }
 ```
@@ -624,15 +676,26 @@ Tất cả DELETE endpoint là **soft delete** (set `status: 'INACTIVE'`), khôn
 
 ### 4.8 Permission Format
 
-Permission theo format `module:action`, hỗ trợ wildcard:
+Permission theo format **`MODULE:ACTION`** (uppercase), trả về trong `GET /api/auth/me` → `permissions[]` (mỗi entry `{ module, action }`). FE check qua CASL: `ability.can('READ_ALL', 'PROPERTY')`.
 
 | Permission | Ý nghĩa |
 |------------|---------|
-| `properties:read` | Xem BĐS |
-| `properties:write` | Tạo/sửa BĐS |
-| `properties:delete` | Xóa BĐS |
-| `properties:*` | Tất cả action trên module properties |
+| `PROPERTY:READ` | Xem BĐS (detail) |
+| `PROPERTY:READ_OWN` / `PROPERTY:READ_ALL` | Xem list — scope bản thân / toàn tenant |
+| `PROPERTY:CREATE` | Tạo BĐS |
+| `PROPERTY:UPDATE_OWN` / `PROPERTY:UPDATE_ALL` | Sửa BĐS của mình / mọi BĐS |
+| `PROPERTY:DELETE_OWN` / `PROPERTY:DELETE_ALL` | Xóa BĐS của mình / mọi BĐS |
+| `PROPERTY:APPROVE` / `PROPERTY:APPROVE_VIEW` | Duyệt / xem màn duyệt BĐS |
+| `LEAD:UPDATE_ALL` | Bypass lead protection khi claim/assign |
+| `POOL:VIEW` / `POOL:READ` / `POOL:CLAIM` / `POOL:ASSIGN` | Lead pool: xem / chi tiết / tự claim / phân bổ |
+| `TEAM:MANAGE_MEMBERS` | Quản lý member trong team mình lead |
 | `*` | SUPER_ADMIN — tất cả |
+
+**28 permission modules**: `PROPERTY`, `LEAD`, `CUSTOMER`, `DEAL`, `COMMISSION`, `APPOINTMENT`, `ASSIGNMENT`, `FILE`, `USER`, `ROLE`, `TENANT`, `TEAM`, `POOL`, `WORKFLOW`, `REPORT`, `SETTING`, `DYNAMIC_FIELD`, `LOCATION`, `IMPORT`, `EXPORT`, `AUDIT`, `NOTIFICATION`, `SEO`, `REVALIDATION`, `NEWS`, `PROJECT`, `PROPERTY_CONTACT`, `CONTACT_REQUEST`.
+
+**Actions chuẩn**: `CREATE`, `VIEW`, `READ`, `READ_OWN`, `READ_ALL`, `UPDATE`, `UPDATE_OWN`, `UPDATE_ALL`, `DELETE`, `DELETE_OWN`, `DELETE_ALL`, `APPROVE`, `APPROVE_VIEW`, `EXPORT`, `ASSIGN`, `MANAGE_MEMBERS`, `CLAIM` (tùy module — xem `permissions.config.ts` / endpoint `GET /api/permissions/modules`).
+
+> ⚠️ Đừng dùng format cũ `properties:read` / `leads:write` — đó là draft ban đầu, code thực tế dùng `MODULE:ACTION` uppercase.
 
 ---
 
@@ -642,16 +705,26 @@ Permission theo format `module:action`, hỗ trợ wildcard:
 
 | Method | Endpoint | Auth | Permission | Mô tả |
 |--------|----------|------|------------|-------|
-| `POST` | `/api/auth/register` | - | - | Đăng ký tài khoản |
-| `POST` | `/api/auth/login` | - | - | Đăng nhập, trả access + refresh token |
+| `POST` | `/api/auth/register` | - | - | Đăng ký (tạo user + gửi OTP email) |
+| `POST` | `/api/auth/verify-otp` | - | - | Xác thực OTP sau register |
+| `POST` | `/api/auth/resend-otp` | - | - | Gửi lại OTP |
+| `POST` | `/api/auth/forgot-password` | - | - | Gửi link reset password qua email |
+| `PUT` | `/api/auth/reset-password` | - | - | Reset password bằng token |
+| `POST` | `/api/auth/login` | - | - | Đăng nhập — `identifier` = email **hoặc** username **hoặc** SĐT |
 | `POST` | `/api/auth/refresh` | - | - | Refresh access token |
+| `GET` | `/api/auth/me` | Bearer | - | Profile hiện tại (bao gồm `permissions` array) |
+| `PATCH` / `PUT` | `/api/auth/me` | Bearer | - | Cập nhật profile (fullName, phone, username, dateOfBirth, gender, province, ward, avatar) |
+| `PATCH` | `/api/auth/me/password` | Bearer | - | Đổi mật khẩu |
 | `POST` | `/api/auth/logout` | Bearer | - | Logout, revoke session + tokens |
+| `POST` | `/api/auth/switch-tenant/:tenantId` | Bearer | - | Đổi active tenant (trả token mới) |
+| `POST` | `/api/auth/revoke-all-tokens` | Bearer | - | Thu hồi mọi session (bump token_version) |
 
 **Register DTO:**
 ```json
 {
   "fullName": "Nguyen Van A",
   "email": "user@example.com",
+  "username": "nguyenvana",
   "password": "SecurePass123!",
   "phone": "0901234567"
 }
@@ -660,29 +733,40 @@ Permission theo format `module:action`, hỗ trợ wildcard:
 **Login DTO:**
 ```json
 {
-  "email": "user@example.com",
+  "identifier": "user@example.com",
   "password": "SecurePass123!"
 }
 ```
 
-### 5.2 Users
+### 5.2 Users & Memberships
 
 | Method | Endpoint | Auth | Permission | Mô tả |
 |--------|----------|------|------------|-------|
-| `POST` | `/api/users` | - | - | Tạo user mới |
-| `GET` | `/api/users/me` | Bearer + Tenant | `users:read` | Lấy profile hiện tại (bao gồm `permissions` array) |
+| `POST` | `/api/users` | Bearer + Tenant | - | Tạo user mới trong tenant hiện tại (active ngay) |
+| `GET` | `/api/users` | Bearer + Tenant | `USER:READ` | List users |
+| `GET` | `/api/users/:id` | Bearer + Tenant | `USER:READ` | Chi tiết user |
+| `PATCH` / `PUT` | `/api/users/:id` | Bearer + Tenant | `USER:UPDATE` | Cập nhật user |
+| `GET` | `/api/memberships` | Bearer + Tenant | `USER:READ` | List memberships |
+| `GET` | `/api/memberships/stats` | Bearer + Tenant | `USER:READ` | Stats: total/active/inactive/newThisMonth |
+| `GET` | `/api/memberships/user/:userId` | Bearer + Tenant | `USER:READ` | Memberships của 1 user |
+| `PUT` | `/api/memberships/user/:userId` | Bearer + Tenant | `USER:UPDATE` | Gán roles/memberships cho user |
+| `PATCH` / `PUT` / `DELETE` | `/api/memberships/:id` | Bearer + Tenant | `USER:UPDATE` | Sửa/xóa membership |
+
+> ⚠️ Profile endpoint là `GET /api/auth/me` — KHÔNG phải `/api/users/me` (route này không tồn tại).
 
 ### 5.3 Tenants
 
 | Method | Endpoint | Auth | Permission | Mô tả |
 |--------|----------|------|------------|-------|
-| `POST` | `/api/tenants` | - | - | Tạo tenant mới |
-| `GET` | `/api/tenants/:id` | Bearer + Tenant | `tenants:read` | Chi tiết tenant |
+| `GET` | `/api/tenants` | Bearer + Tenant | `TENANT:READ` | List tenants (search, type, status) |
+| `POST` | `/api/tenants` | Bearer | `TENANT:CREATE` | Tạo tenant mới (SUPER_ADMIN) |
+| `GET` | `/api/tenants/:id` | Bearer + Tenant | `TENANT:READ` | Chi tiết tenant |
 | `GET` | `/api/tenants/domain/:domain` | - | - | Resolve tenant theo domain |
-| `GET` | `/api/tenants/:id/settings` | Bearer + Tenant | `tenants:read` | Settings của tenant |
-| `PATCH` | `/api/tenants/:id/settings` | Bearer + Tenant | `tenants:write` | Upsert setting |
-| `GET` | `/api/tenants/:id/features` | Bearer + Tenant | `tenants:read` | Feature flags |
-| `PATCH` | `/api/tenants/:id/features` | Bearer + Tenant | `tenants:write` | Toggle feature flag |
+| `GET` | `/api/tenants/code/:code` | - | - | Resolve tenant theo code (id, name, code, logoUrl, primaryColor) — dùng cho dynamic branding |
+| `GET` | `/api/tenants/:id/settings` | Bearer + Tenant | `TENANT:READ` | Settings của tenant |
+| `PATCH` | `/api/tenants/:id/settings` | Bearer + Tenant | `TENANT:UPDATE` | Upsert setting |
+| `GET` | `/api/tenants/:id/features` | Bearer + Tenant | `TENANT:READ` | Feature flags |
+| `PATCH` | `/api/tenants/:id/features` | Bearer + Tenant | `TENANT:UPDATE` | Toggle feature flag |
 
 **Create Tenant DTO:**
 ```json
@@ -700,12 +784,12 @@ Permission theo format `module:action`, hỗ trợ wildcard:
 
 | Method | Endpoint | Auth | Permission | Mô tả |
 |--------|----------|------|------------|-------|
-| `GET` | `/api/locations` | Bearer + Tenant | `locations:read` | List locations (filter: type, level, parentId, search) |
-| `GET` | `/api/locations/tree` | Bearer + Tenant | `locations:read` | Cây địa lý (query: parentId) |
-| `GET` | `/api/locations/:id` | Bearer + Tenant | `locations:read` | Chi tiết location |
-| `POST` | `/api/locations` | Bearer + Tenant | `locations:write` | Tạo location |
-| `PATCH` | `/api/locations/:id` | Bearer + Tenant | `locations:write` | Cập nhật |
-| `DELETE` | `/api/locations/:id` | Bearer + Tenant | `locations:delete` | Soft delete |
+| `GET` | `/api/locations` | - (public) | - | List locations (filter: type, level, parentId, search) |
+| `GET` | `/api/locations/tree` | - (public) | - | Cây địa lý (query: parentId) |
+| `GET` | `/api/locations/:id` | - (public) | - | Chi tiết location |
+| `POST` | `/api/locations` | Bearer + Tenant | `LOCATION:CREATE` | Tạo location |
+| `PATCH` | `/api/locations/:id` | Bearer + Tenant | `LOCATION:UPDATE` | Cập nhật |
+| `DELETE` | `/api/locations/:id` | Bearer + Tenant | `LOCATION:DELETE` | Soft delete |
 
 **Location types:** `COUNTRY`, `PROVINCE`, `DISTRICT`, `WARD`, `STREET`
 
@@ -713,11 +797,19 @@ Permission theo format `module:action`, hỗ trợ wildcard:
 
 | Method | Endpoint | Auth | Permission | Mô tả |
 |--------|----------|------|------------|-------|
-| `GET` | `/api/properties` | Bearer + Tenant | `properties:read` | List BĐS (filter đa tiêu chí) |
-| `GET` | `/api/properties/:id` | Bearer + Tenant | `properties:read` | Chi tiết BĐS |
-| `POST` | `/api/properties` | Bearer + Tenant | `properties:write` | Tạo BĐS |
-| `PATCH` | `/api/properties/:id` | Bearer + Tenant | `properties:write` | Cập nhật |
-| `DELETE` | `/api/properties/:id` | Bearer + Tenant | `properties:delete` | Soft delete |
+| `GET` | `/api/properties` | - (public) | - | List BĐS public (filter đa tiêu chí) |
+| `GET` | `/api/properties/admin` | Bearer + Tenant | `PROPERTY:READ` | List BĐS nội bộ (portal) |
+| `GET` | `/api/properties/available-for-assignment` | Bearer + Tenant | `ASSIGNMENT:READ` | BĐS sales có thể nhận phụ trách |
+| `GET` | `/api/properties/types` | - (public) | - | List loại BĐS |
+| `POST` | `/api/properties/types` | Bearer + Tenant | `PROPERTY:CREATE` | Tạo loại BĐS |
+| `GET` | `/api/properties/:id` | - (public) | - | Chi tiết BĐS (masking theo role) |
+| `GET` | `/api/properties/code/:propertyCode` | - (public) | - | Chi tiết theo propertyCode (SEO URL) |
+| `POST` | `/api/properties` | Bearer + Tenant | `PROPERTY:CREATE` | Tạo BĐS |
+| `PATCH` | `/api/properties/:id` | Bearer + Tenant | `PROPERTY:UPDATE` | Cập nhật |
+| `DELETE` | `/api/properties/:id` | Bearer + Tenant | `PROPERTY:DELETE` | Soft delete |
+| `GET` | `/api/properties/:id/transitions` | Bearer + Tenant | `PROPERTY:READ` | Workflow transitions khả dụng |
+| `POST` | `/api/properties/:id/transition` | Bearer + Tenant | `PROPERTY:UPDATE` | Chuyển trạng thái (verify, publish...) |
+| `GET`/`POST`/`PATCH`/`DELETE` | `/api/properties/:id/media[...]` | Bearer + Tenant | `PROPERTY:CREATE/UPDATE/DELETE` | Media: list, upload, reorder, set-primary |
 
 **Query params cho GET /api/properties:**
 
@@ -764,20 +856,35 @@ Permission theo format `module:action`, hỗ trợ wildcard:
 
 | Method | Endpoint | Auth | Permission | Mô tả |
 |--------|----------|------|------------|-------|
-| `GET` | `/api/customers` | Bearer + Tenant | `customers:read` | List khách hàng |
-| `GET` | `/api/customers/:id` | Bearer + Tenant | `customers:read` | Chi tiết khách hàng |
-| `POST` | `/api/customers` | Bearer + Tenant | `customers:write` | Tạo khách hàng |
-| `PATCH` | `/api/customers/:id` | Bearer + Tenant | `customers:write` | Cập nhật |
-| `DELETE` | `/api/customers/:id` | Bearer + Tenant | `customers:delete` | Soft delete |
-| `GET` | `/api/customer-needs` | Bearer + Tenant | `customers:read` | List nhu cầu (query: customerId) |
-| `POST` | `/api/customer-needs` | Bearer + Tenant | `customers:write` | Tạo nhu cầu |
-| `GET` | `/api/leads` | Bearer + Tenant | `leads:read` | List leads (filter đa tiêu chí) |
-| `GET` | `/api/leads/:id` | Bearer + Tenant | `leads:read` | Chi tiết lead |
-| `POST` | `/api/leads` | Bearer + Tenant | `leads:write` | Tạo lead |
-| `PATCH` | `/api/leads/:id` | Bearer + Tenant | `leads:write` | Cập nhật lead |
-| `DELETE` | `/api/leads/:id` | Bearer + Tenant | `leads:delete` | Soft delete |
-| `GET` | `/api/leads/:id/activities` | Bearer + Tenant | `leads:read` | Hoạt động của lead |
-| `POST` | `/api/leads/:id/activities` | Bearer + Tenant | `leads:write` | Thêm hoạt động |
+| `GET` | `/api/customers` | Bearer + Tenant | `CUSTOMER:READ` | List khách hàng |
+| `GET` | `/api/customers/admin` | Bearer + Tenant | `CUSTOMER:READ` | List khách hàng (admin view) |
+| `GET` | `/api/customers/:id` | Bearer + Tenant | `CUSTOMER:READ` | Chi tiết khách hàng |
+| `POST` | `/api/customers` | Bearer + Tenant | `CUSTOMER:CREATE` | Tạo khách hàng |
+| `PATCH` | `/api/customers/:id` | Bearer + Tenant | `CUSTOMER:UPDATE` | Cập nhật |
+| `DELETE` | `/api/customers/:id` | Bearer + Tenant | `CUSTOMER:DELETE` | Soft delete |
+| `GET` | `/api/customers/me` | Bearer + Tenant | `JwtAuthGuard` (own) | Hồ sơ customer của user hiện tại |
+| `GET` | `/api/customers/me/needs` | Bearer + Tenant | `JwtAuthGuard` (own) | List nhu cầu của tôi |
+| `POST` | `/api/customers/me/needs` | Bearer + Tenant | `JwtAuthGuard` (own) | Tự tạo nhu cầu (customer self-service) |
+| `GET` | `/api/customers/me/deals` | Bearer + Tenant | `JwtAuthGuard` (own) | Giao dịch của tôi (theo dõi trạng thái) |
+| `GET` | `/api/customers/me/appointments` | Bearer + Tenant | `JwtAuthGuard` (own) | Lịch hẹn của tôi |
+| `GET` | `/api/customers/me/contacts` | Bearer + Tenant | `JwtAuthGuard` (own) | Yêu cầu tư vấn tôi đã gửi |
+| `GET` | `/api/customer-needs` | Bearer + Tenant | `CUSTOMER:READ` | List nhu cầu (query: customerId) |
+| `POST` | `/api/customer-needs` | Bearer + Tenant | `CUSTOMER:CREATE` | Tạo nhu cầu |
+| `GET` | `/api/customer-needs/:id/transitions` | Bearer + Tenant | `CUSTOMER:READ` | Workflow transitions |
+| `POST` | `/api/customer-needs/:id/transition` | Bearer + Tenant | `CUSTOMER:UPDATE` | Chuyển trạng thái nhu cầu |
+| `GET` | `/api/leads` | Bearer + Tenant | `LEAD:READ` | List leads (filter đa tiêu chí) |
+| `GET` | `/api/leads/admin` | Bearer + Tenant | `LEAD:READ` | List leads (admin view) |
+| `GET` | `/api/leads/pool` | Bearer + Tenant | `POOL:READ` | Lead pool (chưa gán sales/team) |
+| `POST` | `/api/leads/:id/claim` | Bearer + Tenant | `POOL:CLAIM` | Sales tự claim lead từ pool |
+| `POST` | `/api/leads/:id/assign` | Bearer + Tenant | `POOL:ASSIGN` | Phân bổ lead → sales hoặc team |
+| `GET` | `/api/leads/:id` | Bearer + Tenant | `LEAD:READ` | Chi tiết lead |
+| `POST` | `/api/leads` | Bearer + Tenant | `LEAD:CREATE` | Tạo lead |
+| `PATCH` | `/api/leads/:id` | Bearer + Tenant | `LEAD:UPDATE` | Cập nhật lead (check bảo hộ) |
+| `DELETE` | `/api/leads/:id` | Bearer + Tenant | `LEAD:DELETE` | Soft delete |
+| `GET` | `/api/leads/:id/transitions` | Bearer + Tenant | `LEAD:READ` | Workflow transitions |
+| `POST` | `/api/leads/:id/transition` | Bearer + Tenant | `LEAD:UPDATE` | Chuyển trạng thái lead |
+| `GET` | `/api/leads/:id/activities` | Bearer + Tenant | `LEAD:READ` | Hoạt động của lead |
+| `POST` | `/api/leads/:id/activities` | Bearer + Tenant | `LEAD:CREATE` | Thêm hoạt động |
 
 **Lead statuses:** `NEW`, `CONTACTED`, `INTERESTED`, `NEGOTIATING`, `CONVERTED`, `LOST`, `RECYCLED`
 
@@ -785,26 +892,68 @@ Permission theo format `module:action`, hỗ trợ wildcard:
 
 **Lead activity types:** `CALL`, `NOTE`, `MESSAGE`, `SEND_PROPERTY`, `STATUS_CHANGE`, `APPOINTMENT_CREATED`, `DEAL_CREATED`
 
+### 5.6b Property Contacts & Contact Requests
+
+| Method | Endpoint | Auth | Permission | Mô tả |
+|--------|----------|------|------------|-------|
+| `POST` | `/api/property-contacts` | - (public, JWT optional) | - | Form liên hệ → auto Customer + Lead; `refCode` resolve sang sales; guest → pool |
+| `GET` | `/api/property-contacts` | Bearer + Tenant | `PROPERTY_CONTACT:READ` | Inbox liên hệ (`/consultations`) |
+| `GET` | `/api/property-contacts/:id` | Bearer + Tenant | `PROPERTY_CONTACT:READ` | Chi tiết |
+| `PATCH` | `/api/property-contacts/:id` | Bearer + Tenant | `PROPERTY_CONTACT:UPDATE` | Cập nhật trạng thái |
+| `DELETE` | `/api/property-contacts/:id` | Bearer + Tenant | `PROPERTY_CONTACT:DELETE` | Xóa |
+| `POST` | `/api/contact-requests` | - (public) | - | Tạo yêu cầu liên hệ từ public form |
+| `GET` | `/api/contact-requests` | Bearer + Tenant | `CONTACT_REQUEST:READ` | List contact requests |
+| `GET` | `/api/contact-requests/:id` | Bearer + Tenant | `CONTACT_REQUEST:READ` | Chi tiết |
+| `PATCH` | `/api/contact-requests/:id` | Bearer + Tenant | `CONTACT_REQUEST:UPDATE` | Cập nhật |
+| `DELETE` | `/api/contact-requests/:id` | Bearer + Tenant | `CONTACT_REQUEST:DELETE` | Xóa |
+
+> Chi tiết luồng contact → lead: `real-hub-be/docs/contact-lead-flow.md`.
+
+### 5.6c Favorites (Lưu sản phẩm)
+
+| Method | Endpoint | Auth | Permission | Mô tả |
+|--------|----------|------|------------|-------|
+| `GET` | `/api/favorites` | Bearer + Tenant | `JwtAuthGuard` (own) | List BĐS đã lưu của tôi |
+| `GET` | `/api/favorites/ids` | Bearer + Tenant | `JwtAuthGuard` (own) | List propertyId đã lưu (cho heart state) |
+| `POST` | `/api/favorites` | Bearer + Tenant | `JwtAuthGuard` (own) | Lưu sản phẩm `{ propertyId }` |
+| `DELETE` | `/api/favorites/:propertyId` | Bearer + Tenant | `JwtAuthGuard` (own) | Bỏ lưu |
+
+### 5.6d Teams
+
+| Method | Endpoint | Auth | Permission | Mô tả |
+|--------|----------|------|------------|-------|
+| `GET` | `/api/teams` | Bearer + Tenant | `TEAM:READ` | List teams (+ `/api/teams/my` team của mình) |
+| `GET` | `/api/teams/:id` | Bearer + Tenant | `TEAM:READ` | Chi tiết team + members |
+| `POST` | `/api/teams` | Bearer + Tenant | `TEAM:CREATE` | Tạo team |
+| `PATCH` | `/api/teams/:id` | Bearer + Tenant | `TEAM:UPDATE` | Cập nhật team |
+| `DELETE` | `/api/teams/:id` | Bearer + Tenant | `TEAM:DELETE` | Xóa team |
+| `POST` | `/api/teams/:id/members` | Bearer + Tenant | `TEAM:MANAGE_MEMBERS` | Thêm member |
+| `PATCH` | `/api/teams/:id/members/:userId` | Bearer + Tenant | `TEAM:MANAGE_MEMBERS` | Đổi roleInTeam |
+| `DELETE` | `/api/teams/:id/members/:userId` | Bearer + Tenant | `TEAM:MANAGE_MEMBERS` | Xóa member |
+
 ### 5.7 Appointments & Deals
 
 | Method | Endpoint | Auth | Permission | Mô tả |
 |--------|----------|------|------------|-------|
-| `GET` | `/api/appointments` | Bearer + Tenant | `appointments:read` | List lịch hẹn |
-| `GET` | `/api/appointments/:id` | Bearer + Tenant | `appointments:read` | Chi tiết |
-| `POST` | `/api/appointments` | Bearer + Tenant | `appointments:write` | Tạo lịch hẹn |
-| `PATCH` | `/api/appointments/:id` | Bearer + Tenant | `appointments:write` | Cập nhật |
-| `DELETE` | `/api/appointments/:id` | Bearer + Tenant | `appointments:delete` | Soft delete |
-| `GET` | `/api/deals` | Bearer + Tenant | `deals:read` | List giao dịch |
-| `GET` | `/api/deals/:id` | Bearer + Tenant | `deals:read` | Chi tiết deal |
-| `POST` | `/api/deals` | Bearer + Tenant | `deals:write` | Tạo deal |
-| `PATCH` | `/api/deals/:id` | Bearer + Tenant | `deals:write` | Cập nhật deal |
-| `DELETE` | `/api/deals/:id` | Bearer + Tenant | `deals:delete` | Soft delete |
-| `GET` | `/api/deals/:id/activities` | Bearer + Tenant | `deals:read` | Hoạt động deal |
-| `POST` | `/api/deals/:id/activities` | Bearer + Tenant | `deals:write` | Thêm hoạt động |
-| `GET` | `/api/reservations` | Bearer + Tenant | `deals:read` | List đặt cọc |
-| `POST` | `/api/reservations` | Bearer + Tenant | `deals:write` | Tạo đặt cọc |
-| `PATCH` | `/api/reservations/:id/approve` | Bearer + Tenant | `deals:approve` | Duyệt đặt cọc |
-| `PATCH` | `/api/reservations/:id/reject` | Bearer + Tenant | `deals:approve` | Từ chối đặt cọc |
+| `GET` | `/api/appointments` | Bearer + Tenant | `APPOINTMENT:READ` | List lịch hẹn |
+| `GET` | `/api/appointments/admin` | Bearer + Tenant | `APPOINTMENT:READ` | List lịch hẹn (admin view) |
+| `GET` | `/api/appointments/:id` | Bearer + Tenant | `APPOINTMENT:READ` | Chi tiết |
+| `POST` | `/api/appointments` | Bearer + Tenant | `APPOINTMENT:UPDATE` | Tạo lịch hẹn |
+| `PATCH` | `/api/appointments/:id` | Bearer + Tenant | `APPOINTMENT:UPDATE` | Cập nhật |
+| `DELETE` | `/api/appointments/:id` | Bearer + Tenant | `APPOINTMENT:DELETE` | Soft delete |
+| `GET` | `/api/deals` | Bearer + Tenant | `DEAL:READ` | List giao dịch |
+| `GET` | `/api/deals/:id` | Bearer + Tenant | `DEAL:READ` | Chi tiết deal |
+| `POST` | `/api/deals` | Bearer + Tenant | `DEAL:CREATE` | Tạo deal |
+| `PATCH` | `/api/deals/:id` | Bearer + Tenant | `DEAL:UPDATE` | Cập nhật deal |
+| `DELETE` | `/api/deals/:id` | Bearer + Tenant | `DEAL:DELETE` | Soft delete |
+| `GET` | `/api/deals/:id/transitions` | Bearer + Tenant | `DEAL:READ` | Workflow transitions |
+| `POST` | `/api/deals/:id/transition` | Bearer + Tenant | `DEAL:UPDATE` | Chuyển trạng thái deal |
+| `GET` | `/api/deals/:id/activities` | Bearer + Tenant | `DEAL:READ` | Hoạt động deal |
+| `POST` | `/api/deals/:id/activities` | Bearer + Tenant | `DEAL:CREATE` | Thêm hoạt động |
+| `GET` | `/api/reservations` | Bearer + Tenant | `DEAL:READ` | List giữ chỗ (SOFT/HARD) |
+| `POST` | `/api/reservations` | Bearer + Tenant | `DEAL:CREATE` | Tạo giữ chỗ |
+| `PATCH` | `/api/reservations/:id/approve` | Bearer + Tenant | `DEAL:APPROVE` | Duyệt giữ chỗ |
+| `PATCH` | `/api/reservations/:id/reject` | Bearer + Tenant | `DEAL:APPROVE` | Từ chối giữ chỗ |
 
 **Appointment types:** `MEETING`, `CALL`, `SITE_VISIT`, `SIGNING`
 
@@ -818,13 +967,21 @@ Permission theo format `module:action`, hỗ trợ wildcard:
 
 | Method | Endpoint | Auth | Permission | Mô tả |
 |--------|----------|------|------------|-------|
-| `GET` | `/api/commission/plans` | Bearer + Tenant | `commission:read` | List kế hoạch hoa hồng |
-| `GET` | `/api/commission/plans/:id` | Bearer + Tenant | `commission:read` | Chi tiết plan |
-| `POST` | `/api/commission/plans` | Bearer + Tenant | `commission:write` | Tạo plan (kèm rules + splits) |
-| `PATCH` | `/api/commission/plans/:id/status` | Bearer + Tenant | `commission:approve` | Duyệt/đổi trạng thái plan |
-| `GET` | `/api/commission/deals` | Bearer + Tenant | `commission:read` | List deal commissions |
-| `GET` | `/api/commission/deals/:id` | Bearer + Tenant | `commission:read` | Chi tiết deal commission |
-| `POST` | `/api/commission/estimate` | Bearer + Tenant | `commission:read` | Ước tính hoa hồng |
+| `GET` | `/api/commission/plans` | Bearer + Tenant | `COMMISSION:READ` | List kế hoạch hoa hồng |
+| `GET` | `/api/commission/plans/:id` | Bearer + Tenant | `COMMISSION:READ` | Chi tiết plan |
+| `POST` | `/api/commission/plans` | Bearer + Tenant | `COMMISSION:CREATE` | Tạo plan (kèm rules + splits) |
+| `PATCH` | `/api/commission/plans/:id` | Bearer + Tenant | `COMMISSION:CREATE` | Cập nhật plan |
+| `PATCH` | `/api/commission/plans/:id/status` | Bearer + Tenant | `COMMISSION:APPROVE` | Duyệt/đổi trạng thái plan |
+| `DELETE` | `/api/commission/plans/:id` | Bearer + Tenant | `COMMISSION:APPROVE` | Xóa plan |
+| `GET` | `/api/commission/deals` | Bearer + Tenant | `COMMISSION:READ` | List deal commissions |
+| `GET` | `/api/commission/deals/:id` | Bearer + Tenant | `COMMISSION:READ` | Chi tiết deal commission |
+| `POST` | `/api/commission/deals` | Bearer + Tenant | `COMMISSION:CREATE` | Tạo deal commission (**estimate** theo plan đang active) |
+| `PATCH` | `/api/commission/deals/:id` | Bearer + Tenant | `COMMISSION:APPROVE` | Điều chỉnh deal commission |
+| `DELETE` | `/api/commission/deals/:id` | Bearer + Tenant | `COMMISSION:APPROVE` | Xóa deal commission |
+| `POST` | `/api/commission/deals/:id/confirm` | Bearer + Tenant | `COMMISSION:APPROVE` | Xác nhận hoa hồng |
+| `POST` | `/api/commission/deals/:id/approve` | Bearer + Tenant | `COMMISSION:APPROVE` | Duyệt hoa hồng |
+| `POST` | `/api/commission/deals/:id/reject` | Bearer + Tenant | `COMMISSION:APPROVE` | Từ chối hoa hồng |
+| `POST` | `/api/commission/deals/:id/mark-paid` | Bearer + Tenant | `COMMISSION:APPROVE` | Đánh dấu đã chi (ghi nhận thủ công, không payout online) |
 
 **Plan statuses:** `DRAFT`, `PENDING_APPROVAL`, `ACTIVE`, `ARCHIVED`
 
@@ -838,22 +995,28 @@ Permission theo format `module:action`, hỗ trợ wildcard:
 
 | Method | Endpoint | Auth | Permission | Mô tả |
 |--------|----------|------|------------|-------|
-| `GET` | `/api/workflows` | Bearer + Tenant | `workflows:read` | List workflow definitions |
-| `GET` | `/api/workflows/:id` | Bearer + Tenant | `workflows:read` | Chi tiết workflow |
-| `POST` | `/api/workflows` | Bearer + Tenant | `workflows:write` | Tạo workflow (states + transitions) |
-| `GET` | `/api/workflows/:id/transitions/:currentStateCode` | Bearer + Tenant | `workflows:read` | Transitions khả dụng từ state hiện tại |
+| `GET` | `/api/workflows` | Bearer + Tenant | `WORKFLOW:READ` | List workflow definitions |
+| `GET` | `/api/workflows/entity-status-fields` | Bearer + Tenant | `WORKFLOW:READ` | Trường status của từng entity |
+| `GET` | `/api/workflows/:id` | Bearer + Tenant | `WORKFLOW:READ` | Chi tiết workflow |
+| `POST` | `/api/workflows` | Bearer + Tenant | `WORKFLOW:CREATE` | Tạo workflow (states + transitions) |
+| `PUT` | `/api/workflows/:id` | Bearer + Tenant | `WORKFLOW:UPDATE` | Cập nhật workflow |
+| `DELETE` | `/api/workflows/:id` | Bearer + Tenant | `WORKFLOW:DELETE` | Xóa workflow |
 
 ### 5.10 File Upload
 
 | Method | Endpoint | Auth | Permission | Mô tả |
 |--------|----------|------|------------|-------|
-| `POST` | `/api/files/upload` | Bearer + Tenant | `files:write` | Upload 1 file (multipart/form-data) |
-| `POST` | `/api/files/upload-multiple` | Bearer + Tenant | `files:write` | Upload nhiều file (tối đa 10) |
-| `GET` | `/api/files` | Bearer + Tenant | `files:read` | List files (filter: ownerType, ownerId, visibility) |
-| `GET` | `/api/files/:id` | Bearer + Tenant | `files:read` | Metadata file |
-| `GET` | `/api/files/:id/download` | Bearer + Tenant | `files:read` | Presigned download URL |
-| `PATCH` | `/api/files/:id/visibility` | Bearer + Tenant | `files:write` | Đổi visibility |
-| `DELETE` | `/api/files/:id` | Bearer + Tenant | `files:delete` | Soft delete |
+| `POST` | `/api/files/upload` | Bearer + Tenant | `FILE:CREATE` | Upload 1 file (multipart/form-data) |
+| `POST` | `/api/files/upload-multiple` | Bearer + Tenant | `FILE:CREATE` | Upload nhiều file (tối đa 10) |
+| `POST` | `/api/files/temp-upload` | Bearer + Tenant | `FILE:CREATE` | Upload tạm (chưa gắn owner) |
+| `POST` | `/api/files/:id/confirm` | Bearer + Tenant | `FILE:CREATE` | Confirm file tạm → chính thức |
+| `DELETE` | `/api/files/:id/abort` | Bearer + Tenant | `FILE:DELETE` | Hủy file tạm |
+| `GET` | `/api/files` | Bearer + Tenant | `FILE:READ` | List files (filter: ownerType, ownerId, visibility) |
+| `GET` | `/api/files/admin` | Bearer + Tenant | `FILE:READ` | List files (admin view) |
+| `GET` | `/api/files/:id` | Bearer + Tenant | `FILE:READ` | Metadata file |
+| `GET` | `/api/files/:id/download` | Bearer + Tenant | `FILE:READ` | Presigned download URL |
+| `PATCH` | `/api/files/:id/visibility` | Bearer + Tenant | `FILE:UPDATE` | Đổi visibility |
+| `DELETE` | `/api/files/:id` | Bearer + Tenant | `FILE:DELETE` | Soft delete |
 
 **File visibility levels:** `PUBLIC`, `TENANT`, `ASSIGNED`, `PRIVATE`, `SENSITIVE`
 
@@ -865,41 +1028,137 @@ Permission theo format `module:action`, hỗ trợ wildcard:
 
 | Method | Endpoint | Auth | Permission | Mô tả |
 |--------|----------|------|------------|-------|
-| `GET` | `/api/lead-protection/policies` | Bearer + Tenant | `leads:read` | List chính sách bảo hộ |
-| `GET` | `/api/lead-protection/policies/:id` | Bearer + Tenant | `leads:read` | Chi tiết policy |
-| `POST` | `/api/lead-protection/policies` | Bearer + Tenant | `leads:write` | Tạo policy |
-| `PATCH` | `/api/lead-protection/policies/:id` | Bearer + Tenant | `leads:write` | Cập nhật |
-| `DELETE` | `/api/lead-protection/policies/:id` | Bearer + Tenant | `leads:delete` | Xóa policy |
-| `GET` | `/api/lead-protection/check/:leadId` | Bearer + Tenant | `leads:read` | Kiểm tra bảo hộ lead |
-| `POST` | `/api/lead-protection/disputes` | Bearer + Tenant | `leads:write` | Tạo tranh chấp |
-| `GET` | `/api/lead-protection/disputes` | Bearer + Tenant | `leads:read` | List tranh chấp |
-| `PATCH` | `/api/lead-protection/disputes/:id/resolve` | Bearer + Tenant | `leads:approve` | Giải quyết tranh chấp |
+| `GET` | `/api/lead-protection/policies` | Bearer + Tenant | `LEAD:READ` | List chính sách bảo hộ |
+| `GET` | `/api/lead-protection/policies/:id` | Bearer + Tenant | `LEAD:READ` | Chi tiết policy |
+| `POST` | `/api/lead-protection/policies` | Bearer + Tenant | `LEAD:CREATE` | Tạo policy |
+| `PATCH` | `/api/lead-protection/policies/:id` | Bearer + Tenant | `LEAD:UPDATE` | Cập nhật |
+| `DELETE` | `/api/lead-protection/policies/:id` | Bearer + Tenant | `LEAD:DELETE` | Xóa policy |
+| `GET` | `/api/lead-protection/check/:leadId` | Bearer + Tenant | `LEAD:READ` | Kiểm tra bảo hộ lead |
+| `POST` | `/api/lead-protection/disputes` | Bearer + Tenant | `LEAD:CREATE` | Tạo tranh chấp |
+| `GET` | `/api/lead-protection/disputes` | Bearer + Tenant | `LEAD:READ` | List tranh chấp |
+| `PATCH` | `/api/lead-protection/disputes/:id/resolve` | Bearer + Tenant | `LEAD:APPROVE` ⚠️ | Giải quyết tranh chấp — ⚠️ `LEAD:APPROVE` chưa có trong permission config (chỉ SUPER_ADMIN `*` gọi được) |
 
 ### 5.12 Visibility Policies
 
 | Method | Endpoint | Auth | Permission | Mô tả |
 |--------|----------|------|------------|-------|
-| `GET` | `/api/visibility-policies` | Bearer + Tenant | `setting:read` | List policies |
-| `GET` | `/api/visibility-policies/:id` | Bearer + Tenant | `setting:read` | Chi tiết |
-| `POST` | `/api/visibility-policies` | Bearer + Tenant | `setting:write` | Tạo policy + rules |
-| `PATCH` | `/api/visibility-policies/:id` | Bearer + Tenant | `setting:write` | Cập nhật |
-| `DELETE` | `/api/visibility-policies/:id` | Bearer + Tenant | `setting:delete` | Xóa |
-| `POST` | `/api/visibility-policies/:id/rules` | Bearer + Tenant | `setting:write` | Thêm field rule |
-| `DELETE` | `/api/visibility-policies/rules/:ruleId` | Bearer + Tenant | `setting:delete` | Xóa field rule |
+| `GET` | `/api/visibility-policies` | Bearer + Tenant | `SETTING:READ` | List policies |
+| `GET` | `/api/visibility-policies/:id` | Bearer + Tenant | `SETTING:READ` | Chi tiết |
+| `POST` | `/api/visibility-policies` | Bearer + Tenant | `SETTING:CREATE` | Tạo policy + rules |
+| `PATCH` | `/api/visibility-policies/:id` | Bearer + Tenant | `SETTING:UPDATE` | Cập nhật |
+| `DELETE` | `/api/visibility-policies/:id` | Bearer + Tenant | `SETTING:DELETE` | Xóa |
+| `POST` | `/api/visibility-policies/:id/rules` | Bearer + Tenant | `SETTING:CREATE` | Thêm field rule |
+| `DELETE` | `/api/visibility-policies/rules/:ruleId` | Bearer + Tenant | `SETTING:DELETE` | Xóa field rule |
 
 ### 5.13 Dynamic Fields
 
 | Method | Endpoint | Auth | Permission | Mô tả |
 |--------|----------|------|------------|-------|
-| `GET` | `/api/dynamic-fields/groups` | Bearer + Tenant | `dynamic_fields:read` | List field groups |
-| `POST` | `/api/dynamic-fields/groups` | Bearer + Tenant | `dynamic_fields:write` | Tạo group |
-| `GET` | `/api/dynamic-fields/definitions` | Bearer + Tenant | `dynamic_fields:read` | List field definitions |
-| `POST` | `/api/dynamic-fields/definitions` | Bearer + Tenant | `dynamic_fields:write` | Tạo definition + options |
-| `PATCH` | `/api/dynamic-fields/definitions/:id` | Bearer + Tenant | `dynamic_fields:write` | Cập nhật |
-| `GET` | `/api/dynamic-fields/form-schemas` | Bearer + Tenant | `dynamic_fields:read` | List form schemas |
-| `POST` | `/api/dynamic-fields/form-schemas` | Bearer + Tenant | `dynamic_fields:write` | Tạo form schema |
+| `GET` | `/api/dynamic-fields/groups` | Bearer + Tenant | - | List field groups |
+| `POST` | `/api/dynamic-fields/groups` | Bearer + Tenant | `DYNAMIC_FIELD:CREATE` | Tạo group |
+| `PATCH`/`DELETE` | `/api/dynamic-fields/groups/:id` | Bearer + Tenant | `DYNAMIC_FIELD:UPDATE/DELETE` | Sửa/xóa group |
+| `PUT` | `/api/dynamic-fields/groups/:id/fields` | Bearer + Tenant | `DYNAMIC_FIELD:UPDATE` | Gán fields vào group |
+| `GET` | `/api/dynamic-fields/definitions` | Bearer + Tenant | - | List field definitions |
+| `POST` | `/api/dynamic-fields/definitions` | Bearer + Tenant | `DYNAMIC_FIELD:CREATE` | Tạo definition + options |
+| `PATCH`/`DELETE` | `/api/dynamic-fields/definitions/:id` | Bearer + Tenant | `DYNAMIC_FIELD:UPDATE/DELETE` | Sửa/xóa definition |
+| `GET` | `/api/dynamic-fields/form-schemas` | Bearer + Tenant | - | List form schemas (entityType: PROPERTY/LEAD/DEAL) |
+| `POST` | `/api/dynamic-fields/form-schemas` | Bearer + Tenant | `DYNAMIC_FIELD:CREATE` | Tạo form schema |
+| `PATCH`/`DELETE` | `/api/dynamic-fields/form-schemas/:id` | Bearer + Tenant | `DYNAMIC_FIELD:UPDATE/DELETE` | Sửa/xóa form schema |
 
-### 5.14 Health
+### 5.14 Projects
+
+| Method | Endpoint | Auth | Permission | Mô tả |
+|--------|----------|------|------------|-------|
+| `GET` | `/api/projects` | - (public) | - | List dự án |
+| `GET` | `/api/projects/:id` | - (public) | - | Chi tiết dự án |
+| `GET` | `/api/projects/code/:code` | - (public) | - | Chi tiết theo code (SEO URL) |
+| `POST` | `/api/projects` | Bearer + Tenant | `PROJECT:CREATE` | Tạo dự án |
+| `PATCH`/`DELETE` | `/api/projects/:id` | Bearer + Tenant | `PROJECT:UPDATE/DELETE` | Sửa/xóa dự án |
+| `GET`/`POST`/`PATCH`/`DELETE` | `/api/projects/:id/media[...]` | Bearer + Tenant | `PROJECT:UPDATE` | Media dự án |
+
+### 5.15 Assignments
+
+| Method | Endpoint | Auth | Permission | Mô tả |
+|--------|----------|------|------------|-------|
+| `GET` | `/api/assignments` | Bearer + Tenant | `ASSIGNMENT:READ` | List assignments |
+| `GET` | `/api/assignments/mine` | Bearer + Tenant | `ASSIGNMENT:READ` | Sản phẩm tôi phụ trách |
+| `GET` | `/api/assignments/expired` | Bearer + Tenant | `ASSIGNMENT:READ` | Assignment hết hạn |
+| `GET` | `/api/assignments/:id` | Bearer + Tenant | `ASSIGNMENT:READ` | Chi tiết |
+| `POST` | `/api/assignments` | Bearer + Tenant | `ASSIGNMENT:CREATE` | Nhận phụ trách (tạo `publicLinkCode`) |
+| `GET` | `/api/assignments/:id/qr` | Bearer + Tenant | `ASSIGNMENT:READ` | QR SVG cho public link (CTV/sales chia sẻ) |
+| `GET` | `/api/assignments/link/:code` | - (public) | - | Resolve assignment theo public link |
+| `PATCH` | `/api/assignments/:id/revoke` | Bearer + Tenant | `ASSIGNMENT:UPDATE` | Thu hồi phụ trách |
+| `PATCH` | `/api/assignments/:id/extend` | Bearer + Tenant | `ASSIGNMENT:UPDATE` | Gia hạn |
+| `POST` | `/api/assignments/expire` | Bearer + Tenant | `ASSIGNMENT:UPDATE` | Expire thủ công |
+| `GET`/`POST`/`PATCH`/`DELETE` | `/api/assignments/policies[...]` | Bearer + Tenant | `SETTING:*` | Assignment policies (max sales, thời hạn, expire behavior) |
+
+### 5.16 Revalidation
+
+| Method | Endpoint | Auth | Permission | Mô tả |
+|--------|----------|------|------------|-------|
+| `GET`/`POST`/`PATCH`/`DELETE` | `/api/revalidation/policies[...]` | Bearer + Tenant | `SETTING:*` | Revalidation policies |
+| `GET` | `/api/revalidation/tasks` | Bearer + Tenant | `PROPERTY:READ` | List revalidation tasks |
+| `POST` | `/api/revalidation/tasks` | Bearer + Tenant | `PROPERTY:CREATE` | Tạo task |
+| `PATCH` | `/api/revalidation/tasks/:id/complete` | Bearer + Tenant | `PROPERTY:UPDATE` | Hoàn thành task |
+| `POST` | `/api/revalidation/expire-overdue` | Bearer + Tenant | `PROPERTY:UPDATE` | Expire sản phẩm quá hạn |
+| `GET` | `/api/properties/:propertyId/price-history` | Bearer + Tenant | `PROPERTY:READ` | Lịch sử giá |
+| `GET` | `/api/properties/:propertyId/status-history` | Bearer + Tenant | `PROPERTY:READ` | Lịch sử trạng thái |
+
+> ✅ FE đã có settings page `settings/revalidation` (list + create/edit dialog + delete confirm).
+
+### 5.17 SEO
+
+| Method | Endpoint | Auth | Permission | Mô tả |
+|--------|----------|------|------------|-------|
+| `GET` | `/api/seo/resolve` | - (public) | - | Resolve SEO metadata động theo pageType + context |
+| `GET`/`POST`/`PATCH`/`DELETE` | `/api/seo/templates[...]` | Bearer + Tenant | `SETTING:*` | SEO templates CRUD |
+
+### 5.18 Notifications
+
+| Method | Endpoint | Auth | Permission | Mô tả |
+|--------|----------|------|------------|-------|
+| `GET` | `/api/notifications` | Bearer + Tenant | - | List notification của tôi |
+| `GET` | `/api/notifications/unread-count` | Bearer + Tenant | - | Số chưa đọc |
+| `PATCH` | `/api/notifications/:id/read` | Bearer + Tenant | - | Đánh dấu đã đọc |
+| `POST` | `/api/notifications/mark-all-read` | Bearer + Tenant | - | Đọc tất cả |
+| `GET`/`POST`/`PATCH`/`DELETE` | `/api/notifications/rules[...]` | Bearer + Tenant | `SETTING:*` | Notification rules |
+| `GET`/`POST`/`PATCH`/`DELETE` | `/api/notifications/templates[...]` | Bearer + Tenant | `SETTING:*` | Notification templates |
+
+### 5.19 News
+
+| Method | Endpoint | Auth | Permission | Mô tả |
+|--------|----------|------|------------|-------|
+| `GET` | `/api/news` | - (public) | - | List tin tức |
+| `GET` | `/api/news/:id`, `/slug/:slug`, `/category/:code` | - (public) | - | Chi tiết/theo slug/theo category |
+| `POST`/`PATCH`/`DELETE` | `/api/news[...]` | Bearer + Tenant | `NEWS:*` | Admin CRUD tin tức |
+| `GET`/`POST`/`PATCH`/`DELETE` | `/api/news-categories[...]` | Bearer + Tenant | `NEWS:*` | CRUD danh mục |
+
+### 5.20 Reports / Dashboard / Audit / Import-Export
+
+| Method | Endpoint | Auth | Permission | Mô tả |
+|--------|----------|------|------------|-------|
+| `GET` | `/api/reports/sales` | Bearer + Tenant | `REPORT:READ` | Báo cáo sales |
+| `GET` | `/api/reports/commission` | Bearer + Tenant | `REPORT:READ` | Báo cáo hoa hồng |
+| `GET` | `/api/reports/properties` | Bearer + Tenant | `REPORT:READ` | Báo cáo sản phẩm |
+| `GET` | `/api/reports/team-performance` | Bearer + Tenant | `REPORT:READ` | Hiệu suất team |
+| `GET` | `/api/dashboard/summary`, `/recent-leads`, `/charts` | Bearer + Tenant | - | Dashboard data |
+| `GET` | `/api/dashboard/public-stats` | - (public) | - | Stats trang chủ public |
+| `GET` | `/api/audit-logs`, `/summary`, `/:id` | Bearer + Tenant | `AUDIT:READ` | Audit log query |
+| `GET`/`POST`/`PATCH` | `/api/imports[...]` | Bearer + Tenant | `IMPORT:*` | Import jobs |
+| `GET`/`POST`/`PATCH` | `/api/exports[...]` | Bearer + Tenant | `EXPORT:*` | Export jobs |
+
+### 5.21 Roles & Permissions
+
+| Method | Endpoint | Auth | Permission | Mô tả |
+|--------|----------|------|------------|-------|
+| `GET` | `/api/roles` | Bearer + Tenant | `ROLE:READ` | List roles |
+| `GET` | `/api/roles/:id` | Bearer + Tenant | `ROLE:READ` | Chi tiết role |
+| `POST`/`PATCH`/`DELETE` | `/api/roles[...]` | Bearer + Tenant | `ROLE:CREATE/UPDATE/DELETE` | CRUD role |
+| `PUT` | `/api/roles/:id/permissions` | Bearer + Tenant | `ROLE:UPDATE` | Gán permissions cho role |
+| `GET`/`POST`/`DELETE` | `/api/roles/:id/users[...]` | Bearer + Tenant | `ROLE:READ/UPDATE` | User ↔ role |
+| `GET` | `/api/permissions` | Bearer + Tenant | `TENANT:READ` | Permission matrix 28 modules |
+
+### 5.22 Health
 
 | Method | Endpoint | Auth | Mô tả |
 |--------|----------|------|-------|
@@ -907,6 +1166,8 @@ Permission theo format `module:action`, hỗ trợ wildcard:
 | `GET` | `/api/health/live` | - | Liveness probe |
 | `GET` | `/api/health/ready` | - | Readiness probe (DB + Redis) |
 | `GET` | `/api/health/metrics` | - | Process metrics |
+
+> Tổng ~**284 endpoints** — luôn đối chiếu Swagger `/api/docs` cho schema mới nhất.
 
 ---
 
@@ -942,7 +1203,7 @@ BE tự động **mask dữ liệu nhạy cảm** dựa trên role thông qua `D
 ┌──────────────────────────────────────────────────────────────┐
 │  FE                                                          │
 │                                                              │
-│  1. User nhập email + password + tenant code                 │
+│  1. User nhập identifier (email/username/SĐT) + password    │
 │  2. POST /api/auth/login                                     │
 │     → Nhận { accessToken, refreshToken, user }              │
 │  3. Lưu tokens:                                              │
@@ -1020,34 +1281,53 @@ apiClient.interceptors.response.use(
 
 ### 8.2 Các trang chính
 
+> Route thực tế: `/{locale}/{portal}/...` với `portal ∈ {dashboard, sales-portal, owner-portal, customer-portal}` (dynamic segment `[portal]`, config `config/portal-entry.ts` — CUSTOMER resolve về `customer-portal`). Bảng dưới viết tắt prefix `[portal]/`.
+
 | Trang | Route (FE) | Module BE | UI chính |
 |-------|------------|-----------|----------|
-| **Dashboard** | `/` | - | Stats cards, charts (deals, revenue, leads) |
-| **Login** | `/login` | Auth | Form login, tenant code input |
-| **Register** | `/register` | Auth | Form đăng ký |
-| **Properties** | `/properties` | Properties | DataGrid + filter sidebar + map view toggle |
-| **Property Detail** | `/properties/:id` | Properties | Tabs: Info, Media, Documents, History |
-| **Property Form** | `/properties/new` | Properties + Dynamic Fields | Dynamic form từ FormSchema API |
-| **Projects** | `/projects` | Projects | DataGrid + search + developer filter |
-| **Project Detail** | `/projects/:id` | Projects | Info + danh sách BĐS thuộc dự án |
-| **Project Form** | `/projects/new` | Projects | Form tạo dự án (tên, mã, chủ đầu tư, khu vực) |
-| **Customers** | `/customers` | CRM | DataGrid + search + type filter |
-| **Customer Detail** | `/customers/:id` | CRM | Tabs: Info, Needs, Leads, Activities |
-| **Leads** | `/leads` | CRM | Kanban board (theo status) + list view toggle |
-| **Lead Detail** | `/leads/:id` | CRM + Lead Protection | Tabs: Info, Activities, Protection, Disputes |
-| **Appointments** | `/appointments` | Appointments | Calendar view + list view |
-| **Deals** | `/deals` | Deals + Workflow | Kanban theo workflow state + detail drawer |
-| **Deal Detail** | `/deals/:id` | Deals + Commission | Tabs: Info, Activities, Reservation, Commission |
-| **Commission Plans** | `/commission/plans` | Commission | Table + form tạo plan (rules + splits) |
-| **Commission Report** | `/commission/reports` | Commission | Charts + table theo sales/time |
-| **Workflows** | `/settings/workflows` | Workflow | Visual workflow editor (state diagram) |
-| **Locations** | `/settings/locations` | Locations | Tree view + CRUD modal |
-| **Dynamic Fields** | `/settings/dynamic-fields` | Dynamic Fields | Groups + definitions + form schema builder |
-| **Visibility Policies** | `/settings/visibility` | Visibility | Policy list + rule editor |
-| **Lead Protection** | `/settings/lead-protection` | Lead Protection | Policy list + dispute queue |
-| **Files** | `/files` | Files | File manager grid/list view |
-| **Settings** | `/settings` | Tenants | Tenant settings, feature flags, branding |
-| **User Profile** | `/profile` | Users | Avatar, info, password change |
+| **Dashboard** | `[portal]/` | Dashboard | Stats cards + Recharts, recent leads, portal-aware |
+| **Login** | `/login` | Auth | Form login (identifier: email/username/SĐT) |
+| **Register** | `/register` | Auth | Form đăng ký → OTP |
+| **Verify OTP** | `/verify-otp` | Auth | Nhập OTP xác thực email |
+| **Forgot Password** | `/forgot-password` | Auth | Gửi link reset + form reset |
+| **Properties** | `[portal]/properties` | Properties | List/new/detail/edit + workflow + submit-verification |
+| **Projects** | `[portal]/projects` | Projects | List/new/detail/edit |
+| **Customers** | `[portal]/customers` | CRM | List/new/detail/edit + workflow actions |
+| **Leads** | `[portal]/leads` | CRM | Kanban + list toggle + dynamic values section |
+| **Lead Pool** | `[portal]/pool` | Leads (POOL) | Unassigned leads + claim (`POOL:CLAIM`) |
+| **Phân bổ lead** | `[portal]/pool-assign` | Leads (POOL) | Assign pool lead → sales/team (`POOL:ASSIGN`) |
+| **Teams** | `[portal]/teams` + `/teams/:id` | Teams | Card grid + members (TEAM:MANAGE_MEMBERS) |
+| **Appointments** | `[portal]/appointments` | Appointments | List/new/detail/edit |
+| **Deals** | `[portal]/deals` | Deals + Workflow | Kanban + list + reservation + dynamic values |
+| **Commission** | `[portal]/commission` | Commission | → deals estimate; báo cáo gom vào `/reports?tab=commission` |
+| **Commission Settings** | `[portal]/settings/commissions` | Commission | Plan + rule + split + status workflow |
+| **Consultations** | `[portal]/consultations` | Property Contacts | Inbox liên hệ |
+| **Contact Requests** | `[portal]/contact-requests` | Contact Requests | List + filter + detail dialog |
+| **My Properties** | `[portal]/my-properties` | Properties | Owner view |
+| **Available Properties** | `[portal]/available-properties` | Assignments | Sales view + nhận phụ trách |
+| **Favorites** | `[portal]/favorites` | Favorites | BĐS đã lưu (customer portal) |
+| **My Needs** | `[portal]/my-needs` | Customers /me | Nhu cầu của tôi + create dialog |
+| **My Deals** | `[portal]/my-deals` | Customers /me | Giao dịch của tôi (track status) |
+| **My Contacts** | `[portal]/my-contacts` | Customers /me | Yêu cầu tư vấn đã gửi |
+| **Verification** | `[portal]/verification` | Properties | Duyệt BĐS (`PROPERTY:APPROVE_VIEW`) |
+| **Files** | `[portal]/files` | Files | File manager grid + file-card |
+| **News** | `[portal]/news` | News | List + categories + Jodit editor + thumbnail |
+| **Roles** | `[portal]/roles` | Roles | List + permission dialog + users tab |
+| **Users** | `[portal]/users` | Users | List + create/edit dialog |
+| **Tenants** | `[portal]/tenants` | Tenants | DataTable + detail dialog (domains, features, settings, branding) |
+| **Audit Logs** | `[portal]/audit-logs` | Audit | DataTable + filters + before/after JSON |
+| **Reports** | `[portal]/reports` | Reports | 4 tabs: sales, commission, properties, team |
+| **Workflows** | `[portal]/settings/workflows` | Workflow | Card + dialog form (chưa có drag-drop editor) |
+| **Locations** | `[portal]/settings/locations` | Locations | Tree + CRUD |
+| **Dynamic Fields** | `[portal]/settings/dynamic-fields` | Dynamic Fields | definitions/groups/form-schemas (PROPERTY/LEAD/DEAL) |
+| **Visibility Policies** | `[portal]/settings/visibility` | Visibility | Policy list + rule editor |
+| **Lead Protection** | `[portal]/settings/lead-protection` | Lead Protection | Policy + disputes (đang ẩn trong settings index) |
+| **Assignment Policies** | `[portal]/settings/assignment-policies` | Assignments | Policy card + form dialog |
+| **SEO Templates** | `[portal]/settings/seo` | SEO | DataTable + edit dialog + context registry |
+| **Notification Rules** | `[portal]/settings/notifications` | Notifications | Rules + templates tabs |
+| **Revalidation Policies** | `[portal]/settings/revalidation` | Revalidation | Policy list + create/edit dialog + delete confirm |
+| **Settings** | `[portal]/settings` | Tenants | Index các trang cài đặt |
+| **User Profile** | `[portal]/profile` | Auth | Info + summary + change password |
 
 ### 8.3 UI Components đặc thù
 
@@ -1058,9 +1338,12 @@ apiClient.interceptors.response.use(
 
 **Property Filter Sidebar:**
 - Cascading select: Tỉnh → Quận → Phường (gọi `/api/locations` với parentId)
-- Range slider cho giá/diện tích
-- Checkbox cho transactionType, businessStatus
-- Toggle Map/List view
+- Range slider cho giá (dual-thumb `price-range-slider.tsx`) + input diện tích (minArea/maxArea)
+- Select dự án (`GET /api/projects` public → `projectId` param)
+- Checkbox cho transactionType, property types
+- Toggle Map/List view (`listings-map-view.tsx`, Leaflet `ssr: false`)
+
+**Favorites:** `FavoriteButton` overlay trên `PropertyCard` (top-right heart, chỉ render khi `isAuthenticated`) + trang `[portal]/favorites`.
 
 **Dynamic Form Renderer:**
 - Fetch `/api/dynamic-fields/form-schemas?entityType=PROPERTY`
@@ -1069,7 +1352,7 @@ apiClient.interceptors.response.use(
 
 **Commission Calculator:**
 - Form nhập dealId, propertyId, transactionValueEstimated
-- Gọi `POST /api/commission/estimate`
+- Gọi `POST /api/commission/deals` (tạo deal commission = estimate theo plan đang active)
 - Hiển thị breakdown: total commission → splits per role
 
 **Workflow Visual Editor:**
@@ -1090,7 +1373,7 @@ apiClient.interceptors.response.use(
 - **Tablet** (768-1279px): Collapsible sidebar, content full width
 - **Mobile** (<768px): Bottom navigation, stacked layout, drawer cho filters
 - **Dark mode**: shadcn/ui hỗ trợ sẵn, toggle trong user menu
-- **Branding**: Dùng `primaryColor` và `logoUrl` từ tenant settings để dynamic theme
+- **Branding**: `TenantBranding` (`components/shared/tenant-branding.tsx`) fetch tenant qua public endpoint `GET /api/tenants/code/:code` → apply `primaryColor` lên CSS var `--primary`; `logoUrl` dùng cho header/footer branding
 
 ---
 
@@ -1100,38 +1383,57 @@ apiClient.interceptors.response.use(
 src/
 ├── app/                    # Next.js App Router
 │   ├── [locale]/           # i18n locale segment (next-intl)
-│   │   ├── (auth)/         # Auth pages (login, register, forgot-password)
-│   │   ├── (public)/       # Public marketing pages (home, about, listings, ...)
-│   │   └── dashboard/      # Protected pages (sidebar + topbar layout)
+│   │   ├── (auth)/         # Auth pages (login, register, verify-otp, forgot-password)
+│   │   ├── (public)/       # Public marketing pages (home, about, contact, listings, news, projects)
+│   │   └── [portal]/       # Protected pages — dynamic portal segment
+│   │       │               #   portal ∈ {dashboard, sales-portal, owner-portal, customer-portal}
+│   │       │               #   (config/portal-entry.ts — sidebar theo role + permission)
 │   │       ├── (dashboard)/# Dashboard home (stats cards, charts)
 │   │       ├── properties/ # Bất động sản (list + new + [id] + [id]/edit)
-│   │       ├── projects/   # Dự án (list + new + [id] + [id]/edit)
+│   │       ├── projects/   # Dự án
 │   │       ├── customers/  # Khách hàng
 │   │       ├── leads/      # Leads (Kanban)
+│   │       ├── pool/       # Lead pool (claim)
+│   │       ├── pool-assign/# Phân bổ lead → sales/team
+│   │       ├── teams/      # Teams (+ [id] detail, members)
 │   │       ├── appointments/ # Lịch hẹn
-│   │       ├── deals/      # Giao dịch
-│   │       ├── commission/ # Hoa hồng (plans + reports)
+│   │       ├── deals/      # Giao dịch (Kanban + reservation)
+│   │       ├── commission/ # Hoa hồng (→ deals estimate)
+│   │       ├── consultations/ # Inbox liên hệ (property-contacts)
+│   │       ├── contact-requests/ # Yêu cầu liên hệ
+│   │       ├── my-properties/   # Owner view
+│   │       ├── available-properties/ # Sales view (nhận phụ trách)
+│   │       ├── favorites/  # BĐS đã lưu (customer)
+│   │       ├── my-needs/   # Nhu cầu của tôi (customer)
+│   │       ├── my-deals/   # Giao dịch của tôi (customer)
+│   │       ├── my-contacts/# Yêu cầu tư vấn đã gửi (customer)
+│   │       ├── verification/    # Duyệt BĐS
 │   │       ├── news/       # Tin tức (news + categories)
+│   │       ├── roles/      # Roles + permission matrix
+│   │       ├── users/      # Users
+│   │       ├── tenants/    # Tenants (domains, features, settings, branding)
+│   │       ├── audit-logs/ # Audit log
+│   │       ├── reports/    # Báo cáo (4 tabs)
 │   │       ├── files/      # Tài liệu
 │   │       ├── profile/    # Hồ sơ người dùng
-│   │       └── settings/   # Cài đặt (workflows, locations, dynamic-fields, visibility, lead-protection)
+│   │       └── settings/   # Cài đặt (workflows, locations, dynamic-fields, visibility,
+│   │                       #   lead-protection, assignment-policies, commissions,
+│   │                       #   seo, notifications, revalidation)
 │   ├── layout.tsx          # Root layout
 │   └── globals.css         # Global styles + CSS variables
 ├── components/
 │   ├── ui/                 # Base primitives (button, card, input, ...)
-│   ├── layout/             # Layout components (sidebar, topbar, footer)
+│   ├── layout/             # Layout components (sidebar, topbar, footer, 4 portal configs)
 │   ├── sections/           # Landing page sections (hero, featured, ...)
 │   └── shared/             # Shared business components
 ├── lib/
-│   ├── api/                # API client, interceptors, endpoints
-│   ├── stores/             # Zustand stores (auth, ui, tenant)
-│   ├── hooks/              # Custom hooks (useAuth, usePermission, ...)
-│   ├── utils/              # Utilities (cn, formatters, ...)
-│   ├── types/              # TypeScript types & enums
-│   └── mock/               # Mock data
-├── i18n/                   # next-intl config (routing, navigation, request)
-├── providers/              # Context providers (react-query, ...)
-└── config/                 # App config (nav items, env, constants)
+│   ├── api/                # Orval generated: endpoints/ + models/ + mutator/custom-instance.ts
+│   ├── stores/             # Zustand stores (auth, user)
+│   ├── hooks/              # Custom hooks (useTheme, use-sync-profile, ...)
+│   └── utils/              # Utilities (cn, formatters, seo-context, ...)
+├── i18n/                   # next-intl config + messages/ (27 namespaces, en/vi)
+├── providers/              # Context providers (react-query, ability, ...)
+└── config/                 # App config (nav items, portal-entry, casl/ability, permissions)
 ```
 
 ---
@@ -1197,7 +1499,7 @@ NEXT_PUBLIC_SWAGGER_URL=http://localhost:3001/api/docs
 
 7. **File upload** — Dùng `multipart/form-data`, field name là `file` (single) hoặc `files` (multiple). Tối đa 10 files/request, 50MB/file.
 
-8. **Permission-based UI** — Ẩn/hiện button, menu item dựa trên permission của user. Lấy từ `GET /api/users/me` (response bao gồm `permissions` array).
+8. **Permission-based UI** — Ẩn/hiện button, menu item dựa trên permission của user. Lấy từ `GET /api/auth/me` (response bao gồm `permissions` array, format `MODULE:ACTION` — xem §4.8).
 
 9. **Pagination** — Tất cả endpoint list dùng `limit` + `offset` (không phải page/pageSize). Response không trả total count — FE cần dùng infinite scroll hoặc estimated pagination.
 

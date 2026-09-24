@@ -12,6 +12,7 @@ import { use } from "react";
 import { DashboardLayout } from "@/components/layout/portal/dashboard";
 import { SalesPortalLayout } from "@/components/layout/portal/sales";
 import { OwnerPortalLayout } from "@/components/layout/portal/owner";
+import { CustomerPortalLayout } from "@/components/layout/portal/customer";
 
 export default function PortalLayout({ children, params }: {
   children: ReactNode;
@@ -58,6 +59,10 @@ export default function PortalLayout({ children, params }: {
         {
           portal === portalEntries["owner-portal"].slug &&
           <OwnerPortalLayout>{children}</OwnerPortalLayout>
+        }
+        {
+          portal === portalEntries["customer-portal"].slug &&
+          <CustomerPortalLayout>{children}</CustomerPortalLayout>
         }
       </AbilityProvider>
     </AuthGuard>

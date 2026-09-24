@@ -13,17 +13,27 @@ type PropertyType = {
 interface ListingsFilterSectionProps {
   currentTransactionType: string;
   currentProvinceId: string;
+  currentDistrictId: string;
+  currentWardId: string;
   currentTypes: string[];
   currentPriceFrom: string;
   currentPriceTo: string;
+  currentMinArea: string;
+  currentMaxArea: string;
+  currentProjectId: string;
 }
 
 export async function ListingsFilterSection({
   currentTransactionType,
   currentProvinceId,
+  currentDistrictId,
+  currentWardId,
   currentTypes,
   currentPriceFrom,
   currentPriceTo,
+  currentMinArea,
+  currentMaxArea,
+  currentProjectId,
 }: ListingsFilterSectionProps) {
   const [propertyTypesRes, provincesRes] = await Promise.all([
     getApiPropertyTypes(),
@@ -41,9 +51,14 @@ export async function ListingsFilterSection({
       provinces={provinces}
       currentTransactionType={currentTransactionType}
       currentProvinceId={currentProvinceId}
+      currentDistrictId={currentDistrictId}
+      currentWardId={currentWardId}
       currentTypes={currentTypes}
       currentPriceFrom={currentPriceFrom}
       currentPriceTo={currentPriceTo}
+      currentMinArea={currentMinArea}
+      currentMaxArea={currentMaxArea}
+      currentProjectId={currentProjectId}
     />
   );
 }

@@ -2,6 +2,7 @@ import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
 import { setRequestLocale, getMessages } from "next-intl/server";
+import { TenantBranding } from "@/components/shared/tenant-branding";
 
 type Props = {
   children: React.ReactNode;
@@ -24,6 +25,7 @@ export default async function LocaleLayout({ children, params }: Props) {
 
   return (
     <NextIntlClientProvider locale={locale} messages={messages}>
+      <TenantBranding />
       {children}
     </NextIntlClientProvider>
   );

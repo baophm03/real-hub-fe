@@ -52,7 +52,7 @@ export const sellingModeLabel: Record<string, string> = {
   SALES_DISTRIBUTION: "Phân phối sales",
   HYBRID: "Hybrid",
   INTERNAL_ONLY: "Nội bộ",
-  AGENCY_DISTRIBUTION: "Phân phối agency",
+  MARKETPLACE_PUBLIC: "Sàn công khai",
 };
 
 export const customerTypeLabel: Record<string, string> = {
