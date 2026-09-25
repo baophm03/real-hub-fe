@@ -6,14 +6,16 @@ import { useQueryClient } from "@tanstack/react-query";
 import { usePortalPath } from "@/lib/hooks/use-portal";
 import {
   ArrowLeft,
+  Banknote,
+  CircleDollarSign,
   Clock,
-  FileText,
   House,
-  Layers,
+  Info,
   MessageSquare,
   Pencil,
   Plus,
   SquareKanban,
+  Tag,
   Trash2,
   User,
 } from "lucide-react";
@@ -28,7 +30,6 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import {
   useGetApiDealId,
   useGetApiDealActivities,
-  usePatchApiDeal,
   useDeleteApiDeal,
   usePostApiDealActivity,
   useGetApiReservations,
@@ -38,7 +39,6 @@ import {
   getGetApiDealsQueryKey,
   getGetApiDealIdQueryKey,
 } from "@/lib/api/endpoints/deals-reservations";
-import type { UpdateDealDtoStatus } from "@/lib/api/models/updateDealDtoStatus";
 import { DeleteDealDialog } from "./_components/delete-deal-dialog";
 import { CreateReservationDialog } from "./_components/create-reservation-dialog";
 import { DealWorkflowActions } from "./_components/deal-workflow-actions";
@@ -122,24 +122,6 @@ const statusBorderClass: Record<string, string> = {
   red: "border-l-accent-red-text",
   default: "border-l-foreground-muted",
 };
-
-const statusLabel: Record<string, string> = {
-  SOFT_RESERVED: "Đặt cọc",
-  NEGOTIATING: "Đàm phán",
-  SUCCESS: "Thành công",
-  FAILED: "Thất bại",
-  CANCELLED: "Hủy",
-  DISPUTED: "Tranh chấp",
-};
-
-const statusOptions = [
-  { value: "SOFT_RESERVED", label: "Đặt cọc" },
-  { value: "NEGOTIATING", label: "Đàm phán" },
-  { value: "SUCCESS", label: "Thành công" },
-  { value: "FAILED", label: "Thất bại" },
-  { value: "CANCELLED", label: "Hủy" },
-  { value: "DISPUTED", label: "Tranh chấp" },
-];
 
 const activityTypeLabel: Record<string, string> = {
   NOTE: "Ghi chú",
@@ -276,26 +258,11 @@ export default function DealDetailPage() {
   });
   const reservations = ((reservationsData as unknown as { data: Reservation[] })?.data) || [];
 
-  const { mutateAsync: updateDeal, isPending: isUpdating } = usePatchApiDeal();
   const { mutateAsync: deleteDeal, isPending: isDeleting } = useDeleteApiDeal();
   const { mutateAsync: addActivity, isPending: isAddingActivity } = usePostApiDealActivity();
   const { mutateAsync: createReservation, isPending: isCreatingResv } = usePostApiReservation();
   const { mutateAsync: approveReservation } = usePatchApiApproveReservation();
   const { mutateAsync: rejectReservation } = usePatchApiRejectReservation();
-
-  const handleStatusChange = async (newStatus: string) => {
-    if (!deal || deal.status === newStatus) return;
-    try {
-      await updateDeal({ id, data: { status: newStatus as UpdateDealDtoStatus } });
-      toast.success("Đã cập nhật trạng thái");
-      void queryClient.invalidateQueries({ queryKey: getGetApiDealIdQueryKey(id) });
-      void queryClient.invalidateQueries({ queryKey: getGetApiDealsQueryKey() });
-      refetch();
-    } catch (err) {
-      toast.error((err as any)?.response?.data?.error?.message?.[0] || "Cập nhật trạng thái thất bại");
-      console.error(err);
-    }
-  };
 
   const handleDelete = async () => {
     try {
@@ -441,51 +408,26 @@ export default function DealDetailPage() {
         {/* Main info */}
         <div className="lg:col-span-2 flex flex-col gap-4">
           <div className="rounded-lg border border-border bg-surface p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <Badge variant="blue">{txLabel[deal.transactionType] ?? deal.transactionType}</Badge>
-              <Badge variant={statusVariant[deal.status] ?? "default"}>
-                {statusLabel[deal.status] ?? deal.status}
-              </Badge>
+            <div className="flex items-center gap-2 mb-4">
+              <Info size={16} className="text-foreground-muted" />
+              <h3 className="text-sm font-semibold">Thông tin</h3>
             </div>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="flex items-start gap-2">
-                <SquareKanban size={16} className="text-foreground-muted shrink-0 mt-0.5" />
+              <div className="flex items-center gap-2.5">
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-surface-muted text-foreground-muted">
+                  <SquareKanban size={16} />
+                </span>
                 <div className="flex flex-col">
-                  <span className="text-xs font-medium uppercase tracking-wide text-foreground-muted">Mã giao dịch</span>
                   <span className="text-sm font-medium tabular-nums">{deal.dealCode}</span>
+                  <span className="text-xs text-foreground-muted">Mã giao dịch</span>
                 </div>
               </div>
-              {deal.expectedValue && (
-                <div className="flex flex-col gap-1">
-                  <span className="text-xs font-medium uppercase tracking-wide text-foreground-muted">Giá trị dự kiến</span>
-                  <span className="text-sm tabular-nums font-medium">{formatPrice(deal.expectedValue)}</span>
-                </div>
-              )}
-              {deal.finalValue && (
-                <div className="flex flex-col gap-1">
-                  <span className="text-xs font-medium uppercase tracking-wide text-foreground-muted">Giá trị cuối</span>
-                  <span className="text-sm tabular-nums font-medium">{formatPrice(deal.finalValue)}</span>
-                </div>
-              )}
-              {deal.customer && (
-                <div className="flex items-start gap-2">
-                  <User size={16} className="text-foreground-muted shrink-0 mt-0.5" />
-                  <div className="flex flex-col">
-                    <span className="text-xs font-medium uppercase tracking-wide text-foreground-muted">Khách hàng</span>
-                    <button
-                      onClick={() => router.push(portalPath(`/customers/${deal.customer!.id}`))}
-                      className="text-left text-sm text-primary hover:underline"
-                    >
-                      {deal.customer.fullName}
-                    </button>
-                  </div>
-                </div>
-              )}
               {deal.property && (
-                <div className="flex items-start gap-2">
-                  <House size={16} className="text-foreground-muted shrink-0 mt-0.5" />
+                <div className="flex items-center gap-2.5">
+                  <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-accent-green text-accent-green-text">
+                    <House size={16} />
+                  </span>
                   <div className="flex flex-col">
-                    <span className="text-xs font-medium uppercase tracking-wide text-foreground-muted">BĐS</span>
                     <button
                       onClick={() => router.push(portalPath(`/properties/${deal.property!.id}`))}
                       className="text-left text-sm text-primary hover:underline"
@@ -496,28 +438,92 @@ export default function DealDetailPage() {
                   </div>
                 </div>
               )}
-              {deal.lead && (
-                <div className="flex items-start gap-2">
-                  <SquareKanban size={16} className="text-foreground-muted shrink-0 mt-0.5" />
+              {deal.customer && (
+                <div className="flex items-center gap-2.5">
+                  <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-accent-blue text-accent-blue-text">
+                    <User size={16} />
+                  </span>
                   <div className="flex flex-col">
-                    <span className="text-xs font-medium uppercase tracking-wide text-foreground-muted">Nguồn khách hàng</span>
+                    <button
+                      onClick={() => router.push(portalPath(`/customers/${deal.customer!.id}`))}
+                      className="text-left text-sm text-primary hover:underline"
+                    >
+                      {deal.customer.fullName}
+                    </button>
+                    <span className="text-xs text-foreground-muted">Khách hàng</span>
+                  </div>
+                </div>
+              )}
+              {deal.lead && (
+                <div className="flex items-center gap-2.5">
+                  <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-accent-purple text-accent-purple-text">
+                    <SquareKanban size={16} />
+                  </span>
+                  <div className="flex flex-col">
                     <button
                       onClick={() => router.push(portalPath(`/leads/${deal.lead!.id}`))}
                       className="text-left text-sm text-primary hover:underline"
                     >
                       {deal.lead.leadCode}
                     </button>
+                    <span className="text-xs text-foreground-muted">Nguồn khách hàng</span>
                   </div>
                 </div>
               )}
-              {deal.createdAt && (
-                <div className="flex items-start gap-2">
-                  <Clock size={16} className="text-foreground-muted shrink-0 mt-0.5" />
+              {deal.expectedValue && (
+                <div className="flex items-center gap-2.5">
+                  <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-accent-yellow text-accent-yellow-text">
+                    <Banknote size={16} />
+                  </span>
                   <div className="flex flex-col">
-                    <span className="text-xs font-medium uppercase tracking-wide text-foreground-muted">Ngày tạo</span>
+                    <span className="text-sm font-medium tabular-nums">{formatPrice(deal.expectedValue)}</span>
+                    <span className="text-xs text-foreground-muted">Giá trị dự kiến</span>
+                  </div>
+                </div>
+              )}
+              {deal.finalValue && (
+                <div className="flex items-center gap-2.5">
+                  <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-accent-green text-accent-green-text">
+                    <CircleDollarSign size={16} />
+                  </span>
+                  <div className="flex flex-col">
+                    <span className="text-sm font-medium tabular-nums">{formatPrice(deal.finalValue)}</span>
+                    <span className="text-xs text-foreground-muted">Giá trị cuối</span>
+                  </div>
+                </div>
+              )}
+              <div className="flex items-center gap-2.5">
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-surface-muted text-foreground-muted">
+                  <Tag size={16} />
+                </span>
+                <div className="flex flex-col">
+                  <Badge variant="blue" className="w-fit text-[10px]">
+                    {txLabel[deal.transactionType] ?? deal.transactionType}
+                  </Badge>
+                  <span className="text-xs text-foreground-muted">Loại giao dịch</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-2.5">
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-surface-muted text-foreground-muted">
+                  <Tag size={16} />
+                </span>
+                <div className="flex flex-col">
+                  <Badge variant={statusVariant[deal.status] ?? "default"} className="w-fit text-[10px]">
+                    {deal.status}
+                  </Badge>
+                  <span className="text-xs text-foreground-muted">Trạng thái</span>
+                </div>
+              </div>
+              {deal.createdAt && (
+                <div className="flex items-center gap-2.5">
+                  <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-surface-muted text-foreground-muted">
+                    <Clock size={16} />
+                  </span>
+                  <div className="flex flex-col">
                     <span className="text-sm tabular-nums">
                       {new Date(deal.createdAt).toLocaleDateString("vi-VN")}
                     </span>
+                    <span className="text-xs text-foreground-muted">Ngày tạo</span>
                   </div>
                 </div>
               )}
@@ -528,26 +534,6 @@ export default function DealDetailPage() {
             entityType="DEAL"
             values={deal.dynamicValuesJson}
           />
-
-          {/* Status update */}
-          <Can I="UPDATE_OWN" a="DEAL">
-            <div className="rounded-lg border border-border bg-surface p-6">
-              <h3 className="text-sm font-semibold mb-4">Cập nhật trạng thái</h3>
-              <div className="flex flex-wrap items-center gap-2">
-                {statusOptions.map((opt) => (
-                  <Button
-                    key={opt.value}
-                    variant={deal.status === opt.value ? "default" : "outline"}
-                    size="sm"
-                    disabled={isUpdating || deal.status === opt.value}
-                    onClick={() => handleStatusChange(opt.value)}
-                  >
-                    {opt.label}
-                  </Button>
-                ))}
-              </div>
-            </div>
-          </Can>
 
           {/* Reservations */}
           <div className="rounded-lg border border-border bg-surface p-6">
@@ -654,8 +640,8 @@ export default function DealDetailPage() {
                 {activities.map((act) => {
                   const isStatusChange = act.activityType === "STATUS_CHANGE";
                   const meta = act.metadataJson;
-                  const oldLabel = isStatusChange && meta ? (statusLabel[meta.oldStatus ?? ""] ?? meta.oldStatus ?? "—") : null;
-                  const newLabel = isStatusChange && meta ? (statusLabel[meta.newStatus ?? ""] ?? meta.newStatus ?? "—") : null;
+                  const oldLabel = isStatusChange && meta ? (meta.oldStatus ?? "—") : null;
+                  const newLabel = isStatusChange && meta ? (meta.newStatus ?? "—") : null;
                   return (
                     <div
                       key={act.id}
@@ -697,56 +683,16 @@ export default function DealDetailPage() {
           </div>
         </div>
 
-        {/* Commissions for this deal */}
-        <Can I="READ" a="COMMISSION">
-          <DealCommissionsSection dealId={id} />
-        </Can>
-
         {/* Sidebar */}
         <div className="flex flex-col gap-4">
           <DealWorkflowActions dealId={id} />
-          <div className="rounded-lg border border-border bg-surface overflow-hidden">
-            <div className="flex items-center gap-2 border-b border-border bg-surface-muted/30 px-4 py-3">
-              <Layers size={14} className="text-foreground-muted" />
-              <h3 className="text-sm font-semibold">Thông tin liên quan</h3>
-            </div>
-            <div className="flex flex-col divide-y divide-border">
-              <div className="flex items-center justify-between px-4 py-3">
-                <div className="flex items-center gap-2">
-                  <SquareKanban size={14} className="text-foreground-muted" />
-                  <span className="text-xs text-foreground-muted">Workflow state</span>
-                </div>
-                {deal.currentWorkflowState ? (
-                  <Badge variant="blue" className="text-[10px]">{deal.currentWorkflowState}</Badge>
-                ) : (
-                  <span className="text-xs text-foreground-muted">—</span>
-                )}
-              </div>
-              <div className="grid grid-cols-2 divide-x divide-border">
-                <div className="flex flex-col items-center gap-1 px-3 py-3">
-                  <MessageSquare size={14} className="text-foreground-muted" />
-                  <span className="text-[10px] uppercase tracking-wide text-foreground-muted">Hoạt động</span>
-                  <span className="text-sm font-semibold tabular-nums">{activities.length}</span>
-                </div>
-                <div className="flex flex-col items-center gap-1 px-3 py-3">
-                  <FileText size={14} className="text-foreground-muted" />
-                  <span className="text-[10px] uppercase tracking-wide text-foreground-muted">Đặt cọc</span>
-                  <span className="text-sm font-semibold tabular-nums">{reservations.length}</span>
-                </div>
-              </div>
-              <div className="flex items-center justify-between px-4 py-3">
-                <div className="flex items-center gap-2">
-                  <Clock size={14} className="text-foreground-muted" />
-                  <span className="text-xs text-foreground-muted">Ngày tạo</span>
-                </div>
-                <span className="text-xs font-medium tabular-nums">
-                  {deal.createdAt ? new Date(deal.createdAt).toLocaleDateString("vi-VN") : "—"}
-                </span>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
+
+      {/* Commissions for this deal */}
+      <Can I="READ" a="COMMISSION">
+        <DealCommissionsSection dealId={id} />
+      </Can>
 
       {/* Delete dialog */}
       <DeleteDealDialog

@@ -9,6 +9,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { useAuthStore } from "@/lib/stores/auth-store";
+import { useUserStore } from "@/lib/stores/user-store";
+import { usePostApiSubscribe } from "@/lib/api/endpoints/subscribers";
+import { toast } from "sonner";
 import { useGetApiLocations } from "@/lib/api/endpoints/locations";
 import { useGetApiProjects } from "@/lib/api/endpoints/projects";
 import type { Location } from "@/lib/api/types/locations";
@@ -62,6 +65,11 @@ export function ListingsFilter({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const user = useUserStore((s) => s.user);
+  const tf = useTranslations("public.footer");
+  const [alertEmailOpen, setAlertEmailOpen] = useState(false);
+  const [alertEmail, setAlertEmail] = useState("");
+  const { mutateAsync: subscribe, isPending: isSubscribing } = usePostApiSubscribe();
 
   // Draft state initialized from current searchParams
   const [draftTransactionType, setDraftTransactionType] = useState<"ALL" | "SALE" | "RENT">(
@@ -174,10 +182,30 @@ export function ListingsFilter({
     router.push(buildUrl());
   };
 
-  const handleAlertSubscribe = () => {
-    if (!isAuthenticated) {
-      router.push("/login");
+  const submitSubscribe = async (email: string) => {
+    const value = email.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+      toast.error(tf("newsletterInvalid"));
+      return;
     }
+    try {
+      await subscribe({ data: { email: value } });
+      toast.success(tf("newsletterSuccess"));
+      setAlertEmail("");
+      setAlertEmailOpen(false);
+    } catch (err) {
+      toast.error(
+        (err as any)?.response?.data?.error?.message?.[0] || tf("newsletterError"),
+      );
+    }
+  };
+
+  const handleAlertSubscribe = () => {
+    if (isAuthenticated && user?.email) {
+      void submitSubscribe(user.email);
+      return;
+    }
+    setAlertEmailOpen((o) => !o);
   };
 
   const clearFilters = () => {
@@ -435,12 +463,35 @@ export function ListingsFilter({
         <p className="text-sm text-white/80">
           {t("alertDesc")}
         </p>
-        <Button
-          onClick={handleAlertSubscribe}
-          className="w-full mt-2 py-2 bg-surface text-[#072707] rounded-lg text-xs font-semibold uppercase tracking-wide hover:bg-surface-muted transition-colors"
-        >
-          {t("alertSubscribe")}
-        </Button>
+        {alertEmailOpen && !user?.email ? (
+          <div className="w-full mt-2 flex flex-col gap-2">
+            <Input
+              type="email"
+              value={alertEmail}
+              onChange={(e) => setAlertEmail(e.target.value)}
+              placeholder={tf("newsletterPlaceholder")}
+              className="h-9 bg-white text-sm"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") void submitSubscribe(alertEmail);
+              }}
+            />
+            <Button
+              onClick={() => void submitSubscribe(alertEmail)}
+              disabled={isSubscribing}
+              className="w-full py-2 bg-surface text-[#072707] rounded-lg text-xs font-semibold uppercase tracking-wide hover:bg-surface-muted transition-colors"
+            >
+              {t("alertSubscribe")}
+            </Button>
+          </div>
+        ) : (
+          <Button
+            onClick={handleAlertSubscribe}
+            disabled={isSubscribing}
+            className="w-full mt-2 py-2 bg-surface text-[#072707] rounded-lg text-xs font-semibold uppercase tracking-wide hover:bg-surface-muted transition-colors"
+          >
+            {t("alertSubscribe")}
+          </Button>
+        )}
       </div>
     </div>
   );

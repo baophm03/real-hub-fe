@@ -13,11 +13,18 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { PaginationBar } from "@/components/shared/pagination-bar";
 import { usePagination } from "@/lib/hooks/use-pagination";
 import { KanbanBoard, type KanbanColumn } from "@/components/shared/kanban-board";
+import { LeadTransitionDialog, type LeadTransition } from "./_components/lead-transition-dialog";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import {
   useGetApiLeadsAdmin,
   usePatchApiLead,
+  getApiLeadTransitions,
+  usePostApiLeadTransition,
 } from "@/lib/api/endpoints/leads";
+import {
+  useGetApiWorkflows,
+  useGetApiWorkflowIdStates,
+} from "@/lib/api/endpoints/workflow";
 import type { GetApiLeadsStatus } from "@/lib/api/models/getApiLeadsStatus";
 import type { GetApiLeadsSource } from "@/lib/api/models/getApiLeadsSource";
 import type { UpdateLeadDtoStatus } from "@/lib/api/models/updateLeadDtoStatus";
@@ -25,6 +32,7 @@ import {
   DeleteLeadDialog,
   type LeadDeleteTarget,
 } from "./_components/delete-lead-dialog";
+import { sourceOptions, type WorkflowState } from "./_components/type";
 
 interface LeadProperty {
   id: string;
@@ -79,48 +87,29 @@ const statusLabel: Record<string, string> = {
   RECYCLED: "Khách cũ",
 };
 
-const sourceLabel: Record<string, string> = {
-  WEBSITE: "Website",
-  PROPERTY_DETAIL: "Trang BĐS",
-  OWNER_PAGE: "Trang chủ",
-  SALES_LINK: "Link sales",
-  CTV_LINK: "Link CTV",
-  AGENCY_MARKETING: "Marketing",
-  MANUAL_INPUT: "Nhập tay",
-  LEAD_POOL: "Lead pool",
-  IMPORT: "Nhập file",
+const sourceLabel = Object.fromEntries(
+  sourceOptions.map((o) => [o.value, o.label]),
+);
+
+// ── Workflow-driven kanban ─────────────────────────────
+
+const stateColorVariant: Record<string, KanbanColumn<Lead>["variant"]> = {
+  "#6b7280": "default",
+  "#3b82f6": "blue",
+  "#10b981": "green",
+  "#f59e0b": "yellow",
+  "#ef4444": "red",
+  "#8b5cf6": "purple",
+  "#ec4899": "purple",
+  "#14b8a6": "green",
 };
-
-const statusFilters: { value: GetApiLeadsStatus | "ALL"; label: string }[] = [
-  { value: "ALL", label: "Tất cả trạng thái" },
-  { value: "NEW", label: "Mới" },
-  { value: "CONTACTED", label: "Đã liên hệ" },
-  { value: "INTERESTED", label: "Quan tâm" },
-  { value: "NEGOTIATING", label: "Đàm phán" },
-  { value: "CONVERTED", label: "Chuyển đổi" },
-  { value: "LOST", label: "Mất" },
-  { value: "RECYCLED", label: "Khách cũ" },
-];
-
-const sourceFilters: { value: GetApiLeadsSource | "ALL"; label: string }[] = [
-  { value: "ALL", label: "Tất cả nguồn" },
-  { value: "WEBSITE", label: "Website" },
-  { value: "PROPERTY_DETAIL", label: "Trang BĐS" },
-  { value: "OWNER_PAGE", label: "Trang chủ" },
-  { value: "SALES_LINK", label: "Link sales" },
-  { value: "CTV_LINK", label: "Link CTV" },
-  { value: "AGENCY_MARKETING", label: "Marketing" },
-  { value: "MANUAL_INPUT", label: "Nhập tay" },
-  { value: "LEAD_POOL", label: "Lead pool" },
-  { value: "IMPORT", label: "Nhập file" },
-];
 
 export default function LeadsPage() {
   const router = useRouter();
   const portalPath = usePortalPath();
   const [view, setView] = useState<"kanban" | "list">("kanban");
-  const [statusFilter, setStatusFilter] = useState<GetApiLeadsStatus | "ALL">("ALL");
-  const [sourceFilter, setSourceFilter] = useState<GetApiLeadsSource | "ALL">("ALL");
+  const [statusFilter, setStatusFilter] = useState<string>("ALL");
+  const [sourceFilter, setSourceFilter] = useState<string>("ALL");
   const [search, setSearch] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<Lead | null>(null);
   const pagination = usePagination(10);
@@ -140,8 +129,93 @@ export default function LeadsPage() {
     Math.max(1, Math.ceil(totalCount / pagination.pageSize));
 
   const { mutateAsync: updateLead } = usePatchApiLead();
+  const { mutateAsync: executeTransition } = usePostApiLeadTransition();
+  const [pendingTransition, setPendingTransition] = useState<{
+    lead: Lead;
+    transition: LeadTransition;
+  } | null>(null);
+  const [executing, setExecuting] = useState(false);
 
-  const handleDrop = async (lead: Lead, targetStatus: string) => {
+  // Active LEAD workflow → kanban columns from its states
+  const { data: workflowsRaw } = useGetApiWorkflows({
+    entityType: "LEAD" as any,
+    status: "ACTIVE" as any,
+  });
+  const workflows = Array.isArray(workflowsRaw)
+    ? workflowsRaw
+    : ((workflowsRaw as any)?.data ?? []);
+  const leadWorkflow = workflows[0];
+
+  const { data: wfStatesRaw } = useGetApiWorkflowIdStates(leadWorkflow?.id ?? "", {
+    query: { enabled: !!leadWorkflow },
+  });
+  const wfStates: WorkflowState[] = (Array.isArray(wfStatesRaw)
+    ? wfStatesRaw
+    : ((wfStatesRaw as any)?.data ?? [])
+  ).slice()
+    .sort((a: WorkflowState, b: WorkflowState) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+
+  const hasWorkflow = wfStates.length > 0;
+
+  // Filters: status from workflow states, source from shared options
+  const statusFilters = [
+    { value: "ALL", label: "Tất cả trạng thái" },
+    ...wfStates
+      .filter((s) => s.columnName === "status")
+      .map((s) => ({ value: s.stateName, label: s.stateName })),
+  ];
+  const sourceFilters = [
+    { value: "ALL", label: "Tất cả nguồn" },
+    ...sourceOptions,
+  ];
+
+  const runTransition = async (lead: Lead, t: LeadTransition, reasonText?: string) => {
+    await executeTransition({
+      id: lead.id,
+      data: { transitionId: t.transitionId, reason: reasonText || undefined },
+    });
+    toast.success(`Đã chuyển sang "${t.actionLabel}"`);
+    refetch();
+    router.refresh();
+  };
+
+  const handleDrop = async (lead: Lead, targetColumnId: string) => {
+    const target = columnStateMap.get(targetColumnId);
+    if (!target) return;
+    const currentValue = (lead as any)[target.columnName];
+    if (currentValue === target.stateName) return;
+    try {
+      const res = (await getApiLeadTransitions(lead.id)) as any;
+      const actions: LeadTransition[] = res?.data ?? res ?? [];
+      const t = actions.find(
+        (a) => a.toStateName === target.stateName && a.toColumnName === target.columnName,
+      );
+      if (!t) {
+        toast.error(
+          `Không thể chuyển từ "${currentValue ?? "—"}" sang "${target.stateName}"`,
+        );
+        return;
+      }
+      if (t.requireAttachment) {
+        toast.error("Hành động này yêu cầu đính kèm tệp — hãy thực hiện ở trang chi tiết");
+        return;
+      }
+      if (t.requireReason) {
+        setPendingTransition({ lead, transition: t });
+        return;
+      }
+      await runTransition(lead, t);
+    } catch (err) {
+      toast.error(
+        (err as any)?.response?.data?.message ||
+        (err as any)?.response?.data?.error?.message?.[0] ||
+        "Chuyển trạng thái thất bại",
+      );
+    }
+  };
+
+  // Legacy drop path (no workflow configured): PATCH status directly
+  const handleDropLegacy = async (lead: Lead, targetStatus: string) => {
     if (lead.status === targetStatus) return;
     try {
       await updateLead({ id: lead.id, data: { status: targetStatus as UpdateLeadDtoStatus } });
@@ -154,12 +228,24 @@ export default function LeadsPage() {
     }
   };
 
-  const columns: KanbanColumn<Lead>[] = statusConfig.map((status) => ({
-    id: status.id,
-    title: status.title,
-    variant: status.variant,
-    items: leads.filter((l) => l.status === status.id),
-  }));
+  const columnStateMap = new Map<string, WorkflowState>();
+  const columns: KanbanColumn<Lead>[] = hasWorkflow
+    ? wfStates.map((s) => {
+      const id = `${s.columnName}|${s.stateName}`;
+      columnStateMap.set(id, s);
+      return {
+        id,
+        title: s.stateName,
+        variant: stateColorVariant[(s.color ?? "").toLowerCase()] ?? "default",
+        items: leads.filter((l) => (l as any)[s.columnName] === s.stateName),
+      };
+    })
+    : statusConfig.map((status) => ({
+      id: status.id,
+      title: status.title,
+      variant: status.variant,
+      items: leads.filter((l) => l.status === status.id),
+    }));
 
   const renderLeadInfo = (lead: Lead) => (
     <div className="flex flex-col gap-2">
@@ -228,7 +314,7 @@ export default function LeadsPage() {
           <Select
             value={statusFilter}
             items={Object.fromEntries(statusFilters.map((f) => [f.value, f.label]))}
-            onValueChange={(v) => setStatusFilter((v ?? "ALL") as GetApiLeadsStatus | "ALL")}
+            onValueChange={(v) => setStatusFilter(v ?? "ALL")}
           >
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Tất cả trạng thái" />
@@ -244,7 +330,7 @@ export default function LeadsPage() {
           <Select
             value={sourceFilter}
             items={Object.fromEntries(sourceFilters.map((f) => [f.value, f.label]))}
-            onValueChange={(v) => setSourceFilter((v ?? "ALL") as GetApiLeadsSource | "ALL")}
+            onValueChange={(v) => setSourceFilter(v ?? "ALL")}
           >
             <SelectTrigger className="h-9 w-[180px]">
               <SelectValue placeholder="Tất cả nguồn" />
@@ -282,7 +368,7 @@ export default function LeadsPage() {
             <KanbanBoard
               columns={columns}
               onCardClick={(lead) => router.push(portalPath(`/leads/${lead.id}`))}
-              onDrop={handleDrop}
+              onDrop={hasWorkflow ? handleDrop : handleDropLegacy}
               renderCard={renderLeadInfo}
             />
           ) : (
@@ -356,6 +442,28 @@ export default function LeadsPage() {
           )}
         </>
       )}
+
+      {/* Reason dialog for transitions that require it */}
+      <LeadTransitionDialog
+        open={!!pendingTransition}
+        onOpenChange={(open) => !open && setPendingTransition(null)}
+        transition={pendingTransition?.transition}
+        executing={executing}
+        onConfirm={async (reasonText) => {
+          if (!pendingTransition) return;
+          setExecuting(true);
+          try {
+            await runTransition(pendingTransition.lead, pendingTransition.transition, reasonText);
+            setPendingTransition(null);
+          } catch (err) {
+            toast.error(
+              (err as any)?.response?.data?.message || "Chuyển trạng thái thất bại",
+            );
+          } finally {
+            setExecuting(false);
+          }
+        }}
+      />
 
       {/* Delete confirmation dialog */}
       <DeleteLeadDialog

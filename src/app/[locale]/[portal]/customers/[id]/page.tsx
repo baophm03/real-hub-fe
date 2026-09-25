@@ -5,7 +5,9 @@ import { useParams, useRouter } from "next/navigation";
 import { usePortalPath } from "@/lib/hooks/use-portal";
 import {
   ArrowLeft,
+  Clock,
   House,
+  Info,
   Mail,
   MapPin,
   Pencil,
@@ -14,6 +16,8 @@ import {
   SquareKanban,
   Tag,
   Trash2,
+  User,
+  Users,
 } from "lucide-react";
 import { formatBudget, formatPrice } from "@/utils";
 import { toast } from "sonner";
@@ -30,7 +34,6 @@ import {
   DialogOverlay,
 } from "@/components/ui/dialog";
 import { useGetApiCustomerId, useDeleteApiCustomer } from "@/lib/api/endpoints/customers";
-import { CustomerNeedWorkflowActions } from "../_components/customer-need-workflow-actions";
 
 interface CustomerType {
   id: string;
@@ -199,35 +202,77 @@ export default function CustomerDetailPage() {
 
       {/* Overview */}
       <div className="rounded-lg border border-border bg-surface p-6">
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge variant={statusCfg.variant}>{statusCfg.label}</Badge>
-            {(customer.types || []).map((t) => (
-              <Badge key={t.id} variant="blue">{typeLabel[t.type] ?? t.type}</Badge>
-            ))}
+        <div className="flex items-center gap-2 mb-4">
+          <Info size={16} className="text-foreground-muted" />
+          <h3 className="text-sm font-semibold">Thông tin cơ bản</h3>
+        </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="flex items-center gap-2.5">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-accent-blue text-accent-blue-text">
+              <User size={16} />
+            </span>
+            <div className="flex flex-col">
+              <span className="text-sm font-medium">{customer.fullName}</span>
+              <span className="text-xs text-foreground-muted">Họ và tên</span>
+            </div>
           </div>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="flex flex-col gap-1">
-              <span className="text-xs font-medium uppercase tracking-wide text-foreground-muted">Họ và tên</span>
-              <p className="text-sm font-medium">{customer.fullName}</p>
+          <div className="flex items-center gap-2.5">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-accent-yellow text-accent-yellow-text">
+              <Phone size={16} />
+            </span>
+            <div className="flex flex-col">
+              <span className="text-sm tabular-nums">{customer.phone || "—"}</span>
+              <span className="text-xs text-foreground-muted">Điện thoại</span>
             </div>
-            <div className="flex flex-col gap-1">
-              <span className="text-xs font-medium uppercase tracking-wide text-foreground-muted">Số điện thoại</span>
-              <div className="flex items-center gap-1.5 text-sm tabular-nums">
-                <Phone size={14} className="text-foreground-muted" />
-                {customer.phone || "—"}
+          </div>
+          <div className="flex items-center gap-2.5">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-accent-green text-accent-green-text">
+              <Mail size={16} />
+            </span>
+            <div className="flex flex-col">
+              <span className="text-sm">{customer.email || "—"}</span>
+              <span className="text-xs text-foreground-muted">Email</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-2.5">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-surface-muted text-foreground-muted">
+              <Tag size={16} />
+            </span>
+            <div className="flex flex-col">
+              <Badge variant={statusCfg.variant} className="w-fit text-[10px]">
+                {statusCfg.label}
+              </Badge>
+              <span className="text-xs text-foreground-muted">Trạng thái</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-2.5">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-accent-purple text-accent-purple-text">
+              <Users size={16} />
+            </span>
+            <div className="flex flex-col">
+              <div className="flex flex-wrap items-center gap-1">
+                {customer.types && customer.types.length > 0 ? (
+                  customer.types.map((t) => (
+                    <Badge key={t.id} variant="blue" className="text-[10px]">
+                      {typeLabel[t.type] ?? t.type}
+                    </Badge>
+                  ))
+                ) : (
+                  <span className="text-sm">—</span>
+                )}
               </div>
+              <span className="text-xs text-foreground-muted">Loại khách</span>
             </div>
-            <div className="flex flex-col gap-1">
-              <span className="text-xs font-medium uppercase tracking-wide text-foreground-muted">Email</span>
-              <div className="flex items-center gap-1.5 text-sm">
-                <Mail size={14} className="text-foreground-muted" />
-                {customer.email || "—"}
-              </div>
-            </div>
-            <div className="flex flex-col gap-1">
-              <span className="text-xs font-medium uppercase tracking-wide text-foreground-muted">Ngày tạo</span>
-              <p className="text-sm tabular-nums">{customer.createdAt ? new Date(customer.createdAt).toLocaleDateString("vi-VN") : "—"}</p>
+          </div>
+          <div className="flex items-center gap-2.5">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-surface-muted text-foreground-muted">
+              <Clock size={16} />
+            </span>
+            <div className="flex flex-col">
+              <span className="text-sm tabular-nums">
+                {customer.createdAt ? new Date(customer.createdAt).toLocaleDateString("vi-VN") : "—"}
+              </span>
+              <span className="text-xs text-foreground-muted">Ngày tạo</span>
             </div>
           </div>
         </div>
@@ -252,7 +297,6 @@ export default function CustomerDetailPage() {
                     )}
                   </div>
                   <div className="flex items-center gap-2">
-                    <CustomerNeedWorkflowActions needId={need.id} />
                     <span className="text-xs tabular-nums text-foreground-muted">
                       {new Date(need.createdAt).toLocaleDateString("vi-VN")}
                     </span>

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Link, usePathname } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
-import { Building2, Menu, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { useAuthStore } from "@/lib/stores/auth-store";
 import { useUserStore } from "@/lib/stores/user-store";
 import { HeaderDesktopNav, useNavLinks } from "./components/header-desktop-nav";
@@ -51,9 +51,11 @@ export function PublicHeader() {
         <div className="container mx-auto flex h-16 items-center justify-between">
           {/* Logo */}
           <Link href="/" className="group flex items-center gap-2.5">
-            <span className="flex size-9 items-center justify-center rounded-lg bg-[#092909] text-white transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:scale-105">
-              <Building2 size={22} className="text-white" />
-            </span>
+            <img
+              src="/logo.png"
+              alt="RealHub"
+              className="size-9 rounded-lg object-cover transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:scale-105"
+            />
             <div className="flex flex-col leading-none">
               <span className="font-serif text-lg font-semibold tracking-tight text-[#092909]">
                 RealHub
