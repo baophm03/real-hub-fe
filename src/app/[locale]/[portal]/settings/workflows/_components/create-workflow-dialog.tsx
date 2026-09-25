@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
@@ -24,29 +24,30 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import type { CreateWorkflowDto } from "@/lib/api/models/createWorkflowDto";
+import type { UpdateWorkflowDtoStatus } from "@/lib/api/models/updateWorkflowDtoStatus";
 import type { WorkflowStateDto } from "@/lib/api/models/workflowStateDto";
 import type { WorkflowTransitionDto } from "@/lib/api/models/workflowTransitionDto";
-import { useGetApiWorkflowEntityStatusFields } from "@/lib/api/endpoints/workflow";
+import {
+  useGetApiWorkflowEntityStatusFields,
+  useGetApiWorkflowIdStates,
+  useGetApiWorkflowIdTransitions,
+} from "@/lib/api/endpoints/workflow";
 import { useGetApiRoles } from "@/lib/api/endpoints/roles";
 import {
   entityTypeOptions,
+  statusFilters,
   emptyState,
   emptyTransition,
   roleLabel,
   stateColorPresets,
   type WorkflowDefinition,
+  type WorkflowState,
+  type WorkflowTransition,
 } from "./types";
-
-interface StatusFieldValue {
-  code: string;
-  label: string;
-  color?: string;
-}
 
 interface StatusField {
   fieldKey: string;
   label: string;
-  values: StatusFieldValue[];
 }
 
 interface RoleItem {
@@ -59,7 +60,7 @@ interface RoleItem {
 interface CreateWorkflowDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (dto: CreateWorkflowDto) => Promise<void>;
+  onSubmit: (dto: CreateWorkflowDto & { status?: UpdateWorkflowDtoStatus }) => Promise<void>;
   isSubmitting: boolean;
   /** When provided, dialog is in edit mode */
   initialData?: WorkflowDefinition | null;
@@ -73,8 +74,9 @@ export function CreateWorkflowDialog({
   initialData,
 }: CreateWorkflowDialogProps) {
   const [name, setName] = useState("");
-  const [entityType, setEntityType] = useState("DEAL");
+  const [entityType, setEntityType] = useState("LEAD");
   const [version, setVersion] = useState(1);
+  const [status, setStatus] = useState<UpdateWorkflowDtoStatus>("ACTIVE");
   const [states, setStates] = useState<WorkflowStateDto[]>([emptyState()]);
   const [transitions, setTransitions] = useState<WorkflowTransitionDto[]>([]);
 
@@ -95,15 +97,32 @@ export function CreateWorkflowDialog({
     .map((r) => ({ value: r.code, label: r.name || r.code }));
   for (const r of roleOptions) roleLabel[r.value] = r.label;
 
+  // Lazy-load states + transitions when editing
+  const { data: editStatesRaw } = useGetApiWorkflowIdStates(initialData?.id ?? "", {
+    query: { enabled: open && !!initialData },
+  });
+  const { data: editTransitionsRaw } = useGetApiWorkflowIdTransitions(initialData?.id ?? "", {
+    query: { enabled: open && !!initialData },
+  });
+
   // Load initial data when editing
   useEffect(() => {
     if (open && initialData) {
       setName(initialData.name);
       setEntityType(initialData.entityType);
       setVersion(initialData.version);
+      setStatus((initialData.status as UpdateWorkflowDtoStatus) ?? "ACTIVE");
+    }
+  }, [open, initialData]);
+
+  useEffect(() => {
+    if (open && initialData && editStatesRaw) {
+      const list: WorkflowState[] = Array.isArray(editStatesRaw)
+        ? editStatesRaw
+        : ((editStatesRaw as any)?.data ?? []);
       setStates(
-        initialData.states?.length
-          ? initialData.states.map((s) => ({
+        list.length
+          ? list.map((s) => ({
             id: s.id,
             stateName: s.stateName,
             columnName: s.columnName,
@@ -114,8 +133,16 @@ export function CreateWorkflowDialog({
           }))
           : [emptyState()],
       );
+    }
+  }, [open, initialData, editStatesRaw]);
+
+  useEffect(() => {
+    if (open && initialData && editTransitionsRaw) {
+      const list: WorkflowTransition[] = Array.isArray(editTransitionsRaw)
+        ? editTransitionsRaw
+        : ((editTransitionsRaw as any)?.data ?? []);
       setTransitions(
-        initialData.transitions?.map((t) => ({
+        list.map((t) => ({
           fromStateName: t.fromState.stateName,
           toStateName: t.toState.stateName,
           actionCode: t.actionCode,
@@ -125,15 +152,16 @@ export function CreateWorkflowDialog({
             : ([] as any),
           requireReason: t.requireReason,
           requireAttachment: t.requireAttachment,
-        })) ?? [],
+        })),
       );
     }
-  }, [open, initialData]);
+  }, [open, initialData, editTransitionsRaw]);
 
   const reset = () => {
     setName("");
-    setEntityType("DEAL");
+    setEntityType("LEAD");
     setVersion(1);
+    setStatus("ACTIVE");
     setStates([emptyState()]);
     setTransitions([]);
   };
@@ -161,17 +189,11 @@ export function CreateWorkflowDialog({
   const updateTransition = (idx: number, patch: Partial<WorkflowTransitionDto>) =>
     setTransitions((t) => t.map((tr, i) => (i === idx ? { ...tr, ...patch } : tr)));
 
-  // Build label lookup from registry
+  // Build label lookup from registry (column labels only — state values are free-form codes)
   const fieldLabelMap = new Map<string, string>(); // fieldKey → label
-  const valueLabelMap = new Map<string, Map<string, string>>(); // fieldKey → { code → label }
   for (const sf of statusFields) {
     fieldLabelMap.set(sf.fieldKey, sf.label);
-    const inner = new Map<string, string>();
-    for (const v of sf.values) inner.set(v.code, v.label);
-    valueLabelMap.set(sf.fieldKey, inner);
   }
-  const getStateLabel = (columnName: string, stateName: string) =>
-    valueLabelMap.get(columnName)?.get(stateName) ?? stateName;
   const getColumnLabel = (columnName: string) =>
     fieldLabelMap.get(columnName) ?? columnName;
 
@@ -179,9 +201,18 @@ export function CreateWorkflowDialog({
     .filter((s) => (s.stateName ?? "").trim())
     .map((s) => ({
       value: s.stateName,
-      label: getStateLabel(s.columnName ?? "", s.stateName),
+      label: s.stateName,
       columnLabel: getColumnLabel(s.columnName ?? ""),
     }));
+
+  // Duplicate state names (transitions reference states by name)
+  const nameCounts = new Map<string, number>();
+  for (const s of states) {
+    const n = s.stateName.trim();
+    if (n) nameCounts.set(n, (nameCounts.get(n) ?? 0) + 1);
+  }
+  const isDuplicateName = (name: string) =>
+    name.trim() !== "" && (nameCounts.get(name.trim()) ?? 0) > 1;
 
   const handleSubmit = async () => {
     if (!name.trim()) {
@@ -195,6 +226,11 @@ export function CreateWorkflowDialog({
     }
     if (!validStates.some((s) => s.isInitial)) {
       toast.error("Cần chọn 1 trạng thái làm trạng thái bắt đầu");
+      return;
+    }
+    const uniqueNames = new Set(validStates.map((s) => s.stateName.trim()));
+    if (uniqueNames.size !== validStates.length) {
+      toast.error("Tên trạng thái không được trùng nhau");
       return;
     }
 
@@ -219,10 +255,11 @@ export function CreateWorkflowDialog({
         stateNames.has(t.toStateName),
     );
 
-    const dto: CreateWorkflowDto = {
+    const dto: CreateWorkflowDto & { status?: UpdateWorkflowDtoStatus } = {
       name: name.trim(),
       entityType,
       version,
+      ...(initialData ? { status } : {}),
       states: statesWithOrder,
       transitions: validTransitions.map((t) => ({
         ...t,
@@ -241,7 +278,7 @@ export function CreateWorkflowDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-5xl h-[96vh] overflow-hidden flex flex-col">
+      <DialogContent className="sm:max-w-6xl h-[96vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>{initialData ? "Chỉnh sửa workflow" : "Tạo workflow"}</DialogTitle>
           <DialogDescription>
@@ -263,7 +300,7 @@ export function CreateWorkflowDialog({
             <FormField label="Đối tượng áp dụng" required>
               <Select
                 value={entityType}
-                onValueChange={(v) => !initialData && setEntityType((v as string) ?? "DEAL")}
+                onValueChange={(v) => !initialData && setEntityType((v as string) ?? "LEAD")}
                 disabled={!!initialData}
               >
                 <SelectTrigger className="w-full">
@@ -290,6 +327,31 @@ export function CreateWorkflowDialog({
                 onChange={(e) => setVersion(Number(e.target.value) || 1)}
               />
             </FormField>
+            {initialData && (
+              <FormField label="Trạng thái">
+                <Select
+                  value={status}
+                  onValueChange={(v) => setStatus((v as UpdateWorkflowDtoStatus) ?? "ACTIVE")}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Chọn trạng thái">
+                      {(value: string) =>
+                        statusFilters.find((s) => s.value === value)?.label || value
+                      }
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {statusFilters
+                      .filter((s) => s.value)
+                      .map((s) => (
+                        <SelectItem key={s.value} value={s.value} label={s.label}>
+                          {s.label}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </FormField>
+            )}
 
             {/* Quick stats */}
             <div className="mt-2 rounded-lg border border-border bg-surface-muted/30 p-3 text-xs text-foreground-muted">
@@ -350,41 +412,19 @@ export function CreateWorkflowDialog({
                         </SelectContent>
                       </Select>
                     </FormField>
-                    <FormField label="Trạng thái" required className="w-[160px]">
-                      <Select
-                        value={s.stateName || "__none__"}
-                        onValueChange={(v) => updateState(idx, { stateName: (v as string) === "__none__" ? "" : (v as string) })}
+                    <FormField
+                      label="Trạng thái"
+                      required
+                      className="w-[180px]"
+                      error={isDuplicateName(s.stateName) ? "Tên trạng thái bị trùng" : undefined}
+                    >
+                      <Input
+                        placeholder="VD: NEW, FOLLOW_UP..."
+                        value={s.stateName}
+                        onChange={(e) => updateState(idx, { stateName: e.target.value })}
                         disabled={!s.columnName}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Chọn trạng thái...">
-                            {(value: string) => {
-                              if (!value || value === "__none__") return "Chọn trạng thái...";
-                              const field = statusFields.find((sf) => sf.fieldKey === s.columnName);
-                              const opt = field?.values.find((o) => o.code === value);
-                              return opt?.label || value;
-                            }}
-                          </SelectValue>
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="__none__" label="— Chọn trạng thái —">— Chọn trạng thái —</SelectItem>
-                          {statusFields
-                            .find((sf) => sf.fieldKey === s.columnName)
-                            ?.values.map((opt) => (
-                              <SelectItem key={opt.code} value={opt.code} label={opt.label}>
-                                <span className="flex items-center gap-1.5">
-                                  {opt.color && (
-                                    <span
-                                      className="size-2.5 rounded-full"
-                                      style={{ backgroundColor: opt.color }}
-                                    />
-                                  )}
-                                  {opt.label}
-                                </span>
-                              </SelectItem>
-                            ))}
-                        </SelectContent>
-                      </Select>
+                        aria-invalid={isDuplicateName(s.stateName) || undefined}
+                      />
                     </FormField>
                     <FormField label="Màu" className="w-[135px]">
                       <Select

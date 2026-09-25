@@ -3,6 +3,8 @@ import type { WorkflowTransitionDto } from "@/lib/api/models/workflowTransitionD
 import { CircleDashed, CheckCircle2, Layers } from "lucide-react";
 
 // ── Types ────────────────────────────────────────────────
+// WorkflowState/WorkflowTransition: response shape of
+// GET /api/workflows/:id/states and /:id/transitions (lazy-loaded)
 
 export interface WorkflowState {
   id: string;
@@ -18,7 +20,6 @@ export interface WorkflowTransition {
   id: string;
   actionCode: string;
   actionLabel: string;
-  conditionJson?: unknown;
   requiredRoleJson?: unknown;
   requireReason: boolean;
   requireAttachment: boolean;
@@ -33,23 +34,21 @@ export interface WorkflowDefinition {
   name: string;
   version: number;
   status: string;
+  stateCount: number;
+  transitionCount: number;
   createdAt: string;
   updatedAt: string;
-  states: WorkflowState[];
-  transitions: WorkflowTransition[];
 }
 
 // ── Entity Type Labels ───────────────────────────────────
 
 export const entityTypeConfig: Record<
   string,
-  { label: string; description: string; icon: typeof Layers }
+  { label: string; icon: typeof Layers }
 > = {
-  PROPERTY: { label: "Sản phẩm BĐS", description: "Vòng đời tin đăng: nháp → duyệt → public → bán/cho thuê", icon: Layers },
-  LEAD: { label: "Lead / Khách hàng", description: "Pipeline chăm sóc: mới → phân bổ → liên hệ → chốt", icon: Layers },
-  DEAL: { label: "Giao dịch", description: "Pipeline deal: giữ chỗ → cọc → hợp đồng → hoàn thành", icon: Layers },
-  CUSTOMER: { label: "Khách hàng", description: "Trạng thái khách hàng tự phục vụ", icon: Layers },
-  OWNER_PROFILE: { label: "Hồ sơ chủ BĐS", description: "Trạng thái xác minh chủ nguồn", icon: Layers },
+  PROPERTY: { label: "Bất động sản", icon: Layers },
+  LEAD: { label: "Nguồn khách hàng", icon: Layers },
+  DEAL: { label: "Giao dịch", icon: Layers },
 };
 
 export const entityTypeOptions = Object.entries(entityTypeConfig).map(([value, cfg]) => ({

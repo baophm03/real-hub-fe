@@ -16,15 +16,23 @@ import { KanbanBoard, type KanbanColumn } from "@/components/shared/kanban-board
 import { PaginationBar } from "@/components/shared/pagination-bar";
 import { usePagination } from "@/lib/hooks/use-pagination";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import { DealTransitionDialog, type DealTransition } from "./_components/deal-transition-dialog";
 import {
   useGetApiDeals,
   usePatchApiDeal,
   useDeleteApiDeal,
+  getApiDealTransitions,
+  usePostApiDealTransition,
   getGetApiDealsQueryKey,
 } from "@/lib/api/endpoints/deals-reservations";
+import {
+  useGetApiWorkflows,
+  useGetApiWorkflowIdStates,
+} from "@/lib/api/endpoints/workflow";
 import type { GetApiDealsStatus } from "@/lib/api/models/getApiDealsStatus";
 import type { UpdateDealDtoStatus } from "@/lib/api/models/updateDealDtoStatus";
 import { DeleteDealDialog } from "./_components/delete-deal-dialog";
+import { txOptions, type WorkflowState } from "./_components/type";
 
 interface DealProperty {
   id: string;
@@ -81,28 +89,30 @@ const statusLabel: Record<string, string> = {
   DISPUTED: "Tranh chấp",
 };
 
-const txLabel: Record<string, string> = {
-  SALE: "Bán",
-  RENT: "Cho thuê",
-  TRANSFER: "Chuyển nhượng",
-};
+const txLabel = Object.fromEntries(
+  txOptions.map((o) => [o.value, o.label]),
+);
 
-const statusFilters: { value: GetApiDealsStatus | "ALL"; label: string }[] = [
-  { value: "ALL", label: "Tất cả trạng thái" },
-  { value: "SOFT_RESERVED", label: "Đặt cọc" },
-  { value: "NEGOTIATING", label: "Đàm phán" },
-  { value: "SUCCESS", label: "Thành công" },
-  { value: "FAILED", label: "Thất bại" },
-  { value: "CANCELLED", label: "Hủy" },
-  { value: "DISPUTED", label: "Tranh chấp" },
-];
+// ── Workflow-driven kanban ─────────────────────────────
+
+const stateColorVariant: Record<string, KanbanColumn<Deal>["variant"]> = {
+  "#6b7280": "default",
+  "#3b82f6": "blue",
+  "#10b981": "green",
+  "#f59e0b": "yellow",
+  "#ef4444": "red",
+  "#8b5cf6": "purple",
+  "#ec4899": "purple",
+  "#14b8a6": "green",
+};
 
 export default function DealsPage() {
   const router = useRouter();
   const portalPath = usePortalPath();
   const queryClient = useQueryClient();
   const [view, setView] = useState<"kanban" | "list">("kanban");
-  const [statusFilter, setStatusFilter] = useState<GetApiDealsStatus | "ALL">("ALL");
+  const [statusFilter, setStatusFilter] = useState<string>("ALL");
+  const [txFilter, setTxFilter] = useState<string>("ALL");
   const [deleteTarget, setDeleteTarget] = useState<Deal | null>(null);
   const pagination = usePagination(10);
 
@@ -112,7 +122,10 @@ export default function DealsPage() {
     limit: isList ? pagination.limit : "200",
     offset: isList ? pagination.offset : "0",
   });
-  const deals = ((dealsData as unknown as DealsResponse)?.data) || [];
+  const allDeals = ((dealsData as unknown as DealsResponse)?.data) || [];
+  const deals = txFilter === "ALL"
+    ? allDeals
+    : allDeals.filter((d) => d.transactionType === txFilter);
   const totalCount = (dealsData as unknown as DealsResponse)?.meta?.total ?? deals.length;
   const totalPages =
     (dealsData as unknown as DealsResponse)?.meta?.totalPages ??
@@ -120,8 +133,93 @@ export default function DealsPage() {
 
   const { mutateAsync: updateDeal } = usePatchApiDeal();
   const { mutateAsync: deleteDeal, isPending: isDeleting } = useDeleteApiDeal();
+  const { mutateAsync: executeTransition } = usePostApiDealTransition();
+  const [pendingTransition, setPendingTransition] = useState<{
+    deal: Deal;
+    transition: DealTransition;
+  } | null>(null);
+  const [executing, setExecuting] = useState(false);
 
-  const handleDrop = async (deal: Deal, targetStatus: string) => {
+  // Active DEAL workflow → kanban columns from its states
+  const { data: workflowsRaw } = useGetApiWorkflows({
+    entityType: "DEAL" as any,
+    status: "ACTIVE" as any,
+  });
+  const workflows = Array.isArray(workflowsRaw)
+    ? workflowsRaw
+    : ((workflowsRaw as any)?.data ?? []);
+  const dealWorkflow = workflows[0];
+
+  const { data: wfStatesRaw } = useGetApiWorkflowIdStates(dealWorkflow?.id ?? "", {
+    query: { enabled: !!dealWorkflow },
+  });
+  const wfStates: WorkflowState[] = (Array.isArray(wfStatesRaw)
+    ? wfStatesRaw
+    : ((wfStatesRaw as any)?.data ?? [])
+  ).slice()
+    .sort((a: WorkflowState, b: WorkflowState) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+
+  const hasWorkflow = wfStates.length > 0;
+
+  // Status filter options from workflow states
+  const statusFilters = [
+    { value: "ALL", label: "Tất cả trạng thái" },
+    ...wfStates
+      .filter((s) => s.columnName === "status")
+      .map((s) => ({ value: s.stateName, label: s.stateName })),
+  ];
+  const txFilters = [
+    { value: "ALL", label: "Tất cả loại GD" },
+    ...txOptions,
+  ];
+
+  const runTransition = async (deal: Deal, t: DealTransition, reasonText?: string) => {
+    await executeTransition({
+      id: deal.id,
+      data: { transitionId: t.transitionId, reason: reasonText || undefined },
+    });
+    toast.success(`Đã chuyển sang "${t.actionLabel}"`);
+    void queryClient.invalidateQueries({ queryKey: getGetApiDealsQueryKey() });
+    router.refresh();
+  };
+
+  const handleDrop = async (deal: Deal, targetColumnId: string) => {
+    const target = columnStateMap.get(targetColumnId);
+    if (!target) return;
+    const currentValue = (deal as any)[target.columnName];
+    if (currentValue === target.stateName) return;
+    try {
+      const res = (await getApiDealTransitions(deal.id)) as any;
+      const actions: DealTransition[] = res?.data ?? res ?? [];
+      const t = actions.find(
+        (a) => a.toStateName === target.stateName && a.toColumnName === target.columnName,
+      );
+      if (!t) {
+        toast.error(
+          `Không thể chuyển từ "${currentValue ?? "—"}" sang "${target.stateName}"`,
+        );
+        return;
+      }
+      if (t.requireAttachment) {
+        toast.error("Hành động này yêu cầu đính kèm tệp — hãy thực hiện ở trang chi tiết");
+        return;
+      }
+      if (t.requireReason) {
+        setPendingTransition({ deal, transition: t });
+        return;
+      }
+      await runTransition(deal, t);
+    } catch (err) {
+      toast.error(
+        (err as any)?.response?.data?.message ||
+        (err as any)?.response?.data?.error?.message?.[0] ||
+        "Chuyển trạng thái thất bại",
+      );
+    }
+  };
+
+  // Legacy drop path (no workflow configured): PATCH status directly
+  const handleDropLegacy = async (deal: Deal, targetStatus: string) => {
     if (deal.status === targetStatus) return;
     try {
       await updateDeal({ id: deal.id, data: { status: targetStatus as UpdateDealDtoStatus } });
@@ -148,12 +246,24 @@ export default function DealsPage() {
     }
   };
 
-  const columns: KanbanColumn<Deal>[] = statusConfig.map((status) => ({
-    id: status.id,
-    title: status.title,
-    variant: status.variant,
-    items: deals.filter((d) => d.status === status.id),
-  }));
+  const columnStateMap = new Map<string, WorkflowState>();
+  const columns: KanbanColumn<Deal>[] = hasWorkflow
+    ? wfStates.map((s) => {
+      const id = `${s.columnName}|${s.stateName}`;
+      columnStateMap.set(id, s);
+      return {
+        id,
+        title: s.stateName,
+        variant: stateColorVariant[(s.color ?? "").toLowerCase()] ?? "default",
+        items: deals.filter((d) => (d as any)[s.columnName] === s.stateName),
+      };
+    })
+    : statusConfig.map((status) => ({
+      id: status.id,
+      title: status.title,
+      variant: status.variant,
+      items: deals.filter((d) => d.status === status.id),
+    }));
 
   const renderDealInfo = (deal: Deal) => (
     <div className="flex flex-col gap-2">
@@ -215,9 +325,25 @@ export default function DealsPage() {
         </p>
         <div className="flex items-center gap-2">
           <Select
+            value={txFilter}
+            items={Object.fromEntries(txFilters.map((f) => [f.value, f.label]))}
+            onValueChange={(v) => setTxFilter(v ?? "ALL")}
+          >
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Tất cả loại GD" />
+            </SelectTrigger>
+            <SelectContent>
+              {txFilters.map((f) => (
+                <SelectItem key={f.value} value={f.value} label={f.label}>
+                  {f.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select
             value={statusFilter}
             items={Object.fromEntries(statusFilters.map((f) => [f.value, f.label]))}
-            onValueChange={(v) => setStatusFilter((v ?? "ALL") as GetApiDealsStatus | "ALL")}
+            onValueChange={(v) => setStatusFilter(v ?? "ALL")}
           >
             <SelectTrigger className="w-[200px]">
               <SelectValue placeholder="Tất cả trạng thái" />
@@ -255,7 +381,7 @@ export default function DealsPage() {
             <KanbanBoard
               columns={columns}
               onCardClick={(deal) => router.push(portalPath(`/deals/${deal.id}`))}
-              onDrop={handleDrop}
+              onDrop={hasWorkflow ? handleDrop : handleDropLegacy}
               renderCard={renderDealInfo}
             />
           ) : (
@@ -329,6 +455,28 @@ export default function DealsPage() {
           )}
         </>
       )}
+
+      {/* Reason dialog for transitions that require it */}
+      <DealTransitionDialog
+        open={!!pendingTransition}
+        onOpenChange={(open) => !open && setPendingTransition(null)}
+        transition={pendingTransition?.transition}
+        executing={executing}
+        onConfirm={async (reasonText) => {
+          if (!pendingTransition) return;
+          setExecuting(true);
+          try {
+            await runTransition(pendingTransition.deal, pendingTransition.transition, reasonText);
+            setPendingTransition(null);
+          } catch (err) {
+            toast.error(
+              (err as any)?.response?.data?.message || "Chuyển trạng thái thất bại",
+            );
+          } finally {
+            setExecuting(false);
+          }
+        }}
+      />
 
       {/* Delete confirmation dialog */}
       <DeleteDealDialog

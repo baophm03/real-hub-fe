@@ -812,4 +812,389 @@ export const useDeleteApiWorkflowId = <TError = unknown,
 
       return useMutation(mutationOptions, queryClient);
     }
+    /**
+ * @summary Get states of a workflow definition
+ */
+export const getApiWorkflowIdStates = (
+    id: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<unknown>(
+      {url: `/api/workflows/${id}/states`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getGetApiWorkflowIdStatesInfiniteQueryKey = (id?: string,) => {
+    return [
+    'infinite', `/api/workflows/${id}/states`
+    ] as const;
+    }
+
+export const getGetApiWorkflowIdStatesQueryKey = (id?: string,) => {
+    return [
+    `/api/workflows/${id}/states`
+    ] as const;
+    }
+
     
+export const getGetApiWorkflowIdStatesInfiniteQueryOptions = <TData = InfiniteData<Awaited<ReturnType<typeof getApiWorkflowIdStates>>>, TError = unknown>(id: string, options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiWorkflowIdStates>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiWorkflowIdStatesInfiniteQueryKey(id);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiWorkflowIdStates>>> = ({ signal }) => getApiWorkflowIdStates(id, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(id),  retry: 3, retryDelay: 1000,  ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiWorkflowIdStates>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiWorkflowIdStatesInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getApiWorkflowIdStates>>>
+export type GetApiWorkflowIdStatesInfiniteQueryError = unknown
+
+
+export function useGetApiWorkflowIdStatesInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getApiWorkflowIdStates>>>, TError = unknown>(
+ id: string, options: { query:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiWorkflowIdStates>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiWorkflowIdStates>>,
+          TError,
+          Awaited<ReturnType<typeof getApiWorkflowIdStates>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiWorkflowIdStatesInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getApiWorkflowIdStates>>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiWorkflowIdStates>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiWorkflowIdStates>>,
+          TError,
+          Awaited<ReturnType<typeof getApiWorkflowIdStates>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiWorkflowIdStatesInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getApiWorkflowIdStates>>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiWorkflowIdStates>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get states of a workflow definition
+ */
+
+export function useGetApiWorkflowIdStatesInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getApiWorkflowIdStates>>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiWorkflowIdStates>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiWorkflowIdStatesInfiniteQueryOptions(id,options)
+
+  const query = useInfiniteQuery(queryOptions, queryClient) as  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+/**
+ * @summary Get states of a workflow definition
+ */
+export const prefetchGetApiWorkflowIdStatesInfiniteQuery = async <TData = Awaited<ReturnType<typeof getApiWorkflowIdStates>>, TError = unknown>(
+ queryClient: QueryClient, id: string, options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiWorkflowIdStates>>, TError, TData>>, }
+
+  ): Promise<QueryClient> => {
+
+  const queryOptions = getGetApiWorkflowIdStatesInfiniteQueryOptions(id,options)
+
+  await queryClient.prefetchInfiniteQuery(queryOptions);
+
+  return queryClient;
+}
+
+
+
+export const getGetApiWorkflowIdStatesQueryOptions = <TData = Awaited<ReturnType<typeof getApiWorkflowIdStates>>, TError = unknown>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiWorkflowIdStates>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiWorkflowIdStatesQueryKey(id);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiWorkflowIdStates>>> = ({ signal }) => getApiWorkflowIdStates(id, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(id),  retry: 3, retryDelay: 1000,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiWorkflowIdStates>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiWorkflowIdStatesQueryResult = NonNullable<Awaited<ReturnType<typeof getApiWorkflowIdStates>>>
+export type GetApiWorkflowIdStatesQueryError = unknown
+
+
+export function useGetApiWorkflowIdStates<TData = Awaited<ReturnType<typeof getApiWorkflowIdStates>>, TError = unknown>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiWorkflowIdStates>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiWorkflowIdStates>>,
+          TError,
+          Awaited<ReturnType<typeof getApiWorkflowIdStates>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiWorkflowIdStates<TData = Awaited<ReturnType<typeof getApiWorkflowIdStates>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiWorkflowIdStates>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiWorkflowIdStates>>,
+          TError,
+          Awaited<ReturnType<typeof getApiWorkflowIdStates>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiWorkflowIdStates<TData = Awaited<ReturnType<typeof getApiWorkflowIdStates>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiWorkflowIdStates>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get states of a workflow definition
+ */
+
+export function useGetApiWorkflowIdStates<TData = Awaited<ReturnType<typeof getApiWorkflowIdStates>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiWorkflowIdStates>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiWorkflowIdStatesQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+/**
+ * @summary Get states of a workflow definition
+ */
+export const prefetchGetApiWorkflowIdStatesQuery = async <TData = Awaited<ReturnType<typeof getApiWorkflowIdStates>>, TError = unknown>(
+ queryClient: QueryClient, id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiWorkflowIdStates>>, TError, TData>>, }
+
+  ): Promise<QueryClient> => {
+
+  const queryOptions = getGetApiWorkflowIdStatesQueryOptions(id,options)
+
+  await queryClient.prefetchQuery(queryOptions);
+
+  return queryClient;
+}
+
+
+
+/**
+ * @summary Get transitions of a workflow definition
+ */
+export const getApiWorkflowIdTransitions = (
+    id: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<unknown>(
+      {url: `/api/workflows/${id}/transitions`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getGetApiWorkflowIdTransitionsInfiniteQueryKey = (id?: string,) => {
+    return [
+    'infinite', `/api/workflows/${id}/transitions`
+    ] as const;
+    }
+
+export const getGetApiWorkflowIdTransitionsQueryKey = (id?: string,) => {
+    return [
+    `/api/workflows/${id}/transitions`
+    ] as const;
+    }
+
+    
+export const getGetApiWorkflowIdTransitionsInfiniteQueryOptions = <TData = InfiniteData<Awaited<ReturnType<typeof getApiWorkflowIdTransitions>>>, TError = unknown>(id: string, options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiWorkflowIdTransitions>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiWorkflowIdTransitionsInfiniteQueryKey(id);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiWorkflowIdTransitions>>> = ({ signal }) => getApiWorkflowIdTransitions(id, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(id),  retry: 3, retryDelay: 1000,  ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiWorkflowIdTransitions>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiWorkflowIdTransitionsInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getApiWorkflowIdTransitions>>>
+export type GetApiWorkflowIdTransitionsInfiniteQueryError = unknown
+
+
+export function useGetApiWorkflowIdTransitionsInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getApiWorkflowIdTransitions>>>, TError = unknown>(
+ id: string, options: { query:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiWorkflowIdTransitions>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiWorkflowIdTransitions>>,
+          TError,
+          Awaited<ReturnType<typeof getApiWorkflowIdTransitions>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiWorkflowIdTransitionsInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getApiWorkflowIdTransitions>>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiWorkflowIdTransitions>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiWorkflowIdTransitions>>,
+          TError,
+          Awaited<ReturnType<typeof getApiWorkflowIdTransitions>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiWorkflowIdTransitionsInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getApiWorkflowIdTransitions>>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiWorkflowIdTransitions>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get transitions of a workflow definition
+ */
+
+export function useGetApiWorkflowIdTransitionsInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getApiWorkflowIdTransitions>>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiWorkflowIdTransitions>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiWorkflowIdTransitionsInfiniteQueryOptions(id,options)
+
+  const query = useInfiniteQuery(queryOptions, queryClient) as  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+/**
+ * @summary Get transitions of a workflow definition
+ */
+export const prefetchGetApiWorkflowIdTransitionsInfiniteQuery = async <TData = Awaited<ReturnType<typeof getApiWorkflowIdTransitions>>, TError = unknown>(
+ queryClient: QueryClient, id: string, options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiWorkflowIdTransitions>>, TError, TData>>, }
+
+  ): Promise<QueryClient> => {
+
+  const queryOptions = getGetApiWorkflowIdTransitionsInfiniteQueryOptions(id,options)
+
+  await queryClient.prefetchInfiniteQuery(queryOptions);
+
+  return queryClient;
+}
+
+
+
+export const getGetApiWorkflowIdTransitionsQueryOptions = <TData = Awaited<ReturnType<typeof getApiWorkflowIdTransitions>>, TError = unknown>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiWorkflowIdTransitions>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiWorkflowIdTransitionsQueryKey(id);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiWorkflowIdTransitions>>> = ({ signal }) => getApiWorkflowIdTransitions(id, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(id),  retry: 3, retryDelay: 1000,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiWorkflowIdTransitions>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiWorkflowIdTransitionsQueryResult = NonNullable<Awaited<ReturnType<typeof getApiWorkflowIdTransitions>>>
+export type GetApiWorkflowIdTransitionsQueryError = unknown
+
+
+export function useGetApiWorkflowIdTransitions<TData = Awaited<ReturnType<typeof getApiWorkflowIdTransitions>>, TError = unknown>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiWorkflowIdTransitions>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiWorkflowIdTransitions>>,
+          TError,
+          Awaited<ReturnType<typeof getApiWorkflowIdTransitions>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiWorkflowIdTransitions<TData = Awaited<ReturnType<typeof getApiWorkflowIdTransitions>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiWorkflowIdTransitions>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiWorkflowIdTransitions>>,
+          TError,
+          Awaited<ReturnType<typeof getApiWorkflowIdTransitions>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiWorkflowIdTransitions<TData = Awaited<ReturnType<typeof getApiWorkflowIdTransitions>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiWorkflowIdTransitions>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get transitions of a workflow definition
+ */
+
+export function useGetApiWorkflowIdTransitions<TData = Awaited<ReturnType<typeof getApiWorkflowIdTransitions>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiWorkflowIdTransitions>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiWorkflowIdTransitionsQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+/**
+ * @summary Get transitions of a workflow definition
+ */
+export const prefetchGetApiWorkflowIdTransitionsQuery = async <TData = Awaited<ReturnType<typeof getApiWorkflowIdTransitions>>, TError = unknown>(
+ queryClient: QueryClient, id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiWorkflowIdTransitions>>, TError, TData>>, }
+
+  ): Promise<QueryClient> => {
+
+  const queryOptions = getGetApiWorkflowIdTransitionsQueryOptions(id,options)
+
+  await queryClient.prefetchQuery(queryOptions);
+
+  return queryClient;
+}
+
+
+

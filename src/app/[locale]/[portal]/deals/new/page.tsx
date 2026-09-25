@@ -16,19 +16,14 @@ import { FormSection, FormField } from "@/components/shared/form-section";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { usePostApiDeal, getGetApiDealsQueryKey } from "@/lib/api/endpoints/deals-reservations";
 import { useGetApiLeadsAdmin } from "@/lib/api/endpoints/leads";
+import { txOptions } from "../_components/type";
 import { DynamicFieldsSection } from "@/components/shared/dynamic-fields-section";
 import { useUserStore } from "@/lib/stores/user-store";
 import type { GetLeadsResponse, Lead } from "@/lib/api/types/leads";
 
-const txOptions = [
-  { value: "SALE", label: "Bán" },
-  { value: "RENT", label: "Cho thuê" },
-  { value: "TRANSFER", label: "Chuyển nhượng" },
-];
-
 const dealSchema = z.object({
   leadId: z.string().min(1, "Vui lòng chọn nguồn khách hàng"),
-  transactionType: z.enum(["SALE", "RENT", "TRANSFER"]),
+  transactionType: z.string(),
   expectedValue: z.string().optional(),
 });
 

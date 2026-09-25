@@ -5,7 +5,7 @@ import { Send } from "lucide-react";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
-import { usePostApiContactRequests } from "@/lib/api/endpoints/contact-requests";
+import { usePostApiSubscribe } from "@/lib/api/endpoints/subscribers";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -13,7 +13,7 @@ export function NewsletterForm() {
   const t = useTranslations("public.footer");
   const [email, setEmail] = useState("");
 
-  const { mutateAsync: subscribe, isPending } = usePostApiContactRequests({
+  const { mutateAsync: subscribe, isPending } = usePostApiSubscribe({
     mutation: {
       onSuccess: () => {
         toast.success(t("newsletterSuccess"));
@@ -35,14 +35,7 @@ export function NewsletterForm() {
       return;
     }
     try {
-      await subscribe({
-        data: {
-          fullName: value,
-          email: value,
-          phone: "-",
-          subject: "NEWSLETTER",
-        },
-      });
+      await subscribe({ data: { email: value } });
     } catch (err) {
       console.error(err);
     }
@@ -64,12 +57,12 @@ export function NewsletterForm() {
         />
         <Button
           type="submit"
-          size="lg"
+          size="icon-lg"
           loading={isPending}
-          className="h-10 shrink-0"
-          leftIcon={<Send size={14} />}
+          aria-label={t("newsletterButton")}
+          className="shrink-0"
         >
-          {t("newsletterButton")}
+          <Send size={14} />
         </Button>
       </div>
     </form>

@@ -6,9 +6,9 @@ import { usePortalPath } from "@/lib/hooks/use-portal";
 import {
   ArrowLeft,
   Clock,
-  FileText,
+  Globe,
   House,
-  Layers,
+  Info,
   MessageSquare,
   Pencil,
   Phone,
@@ -27,11 +27,9 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import {
   useGetApiLeadId,
   useGetApiLeadActivities,
-  usePatchApiLead,
   useDeleteApiLead,
   usePostApiLeadActivity,
 } from "@/lib/api/endpoints/leads";
-import type { UpdateLeadDtoStatus } from "@/lib/api/models/updateLeadDtoStatus";
 import { DeleteLeadDialog } from "./_components/delete-lead-dialog";
 import { LeadWorkflowActions } from "./_components/lead-workflow-actions";
 import { DynamicValuesDisplay } from "@/components/shared/dynamic-values-display";
@@ -101,16 +99,6 @@ const statusBorderClass: Record<string, string> = {
   default: "border-l-foreground-muted",
 };
 
-const statusLabel: Record<string, string> = {
-  NEW: "Mới",
-  CONTACTED: "Đã liên hệ",
-  INTERESTED: "Quan tâm",
-  NEGOTIATING: "Đàm phán",
-  CONVERTED: "Chuyển đổi",
-  LOST: "Mất",
-  RECYCLED: "Khách cũ",
-};
-
 const sourceLabel: Record<string, string> = {
   WEBSITE: "Website",
   PROPERTY_DETAIL: "Trang BĐS",
@@ -122,16 +110,6 @@ const sourceLabel: Record<string, string> = {
   LEAD_POOL: "Lead pool",
   IMPORT: "Nhập file",
 };
-
-const statusOptions = [
-  { value: "NEW", label: "Mới" },
-  { value: "CONTACTED", label: "Đã liên hệ" },
-  { value: "INTERESTED", label: "Quan tâm" },
-  { value: "NEGOTIATING", label: "Đàm phán" },
-  { value: "CONVERTED", label: "Chuyển đổi" },
-  { value: "LOST", label: "Mất" },
-  { value: "RECYCLED", label: "Khách cũ" },
-];
 
 const activityTypeLabel: Record<string, string> = {
   CALL: "Gọi điện",
@@ -158,21 +136,8 @@ export default function LeadDetailPage() {
   const { data: activitiesData, refetch: refetchActivities } = useGetApiLeadActivities(id);
   const activities = ((activitiesData as unknown as { data: LeadActivity[] })?.data) || [];
 
-  const { mutateAsync: updateLead, isPending: isUpdating } = usePatchApiLead();
   const { mutateAsync: deleteLead, isPending: isDeleting } = useDeleteApiLead();
   const { mutateAsync: addActivity, isPending: isAddingActivity } = usePostApiLeadActivity();
-
-  const handleStatusChange = async (newStatus: string) => {
-    if (!lead || lead.status === newStatus) return;
-    try {
-      await updateLead({ id, data: { status: newStatus as UpdateLeadDtoStatus } });
-      toast.success("Đã cập nhật trạng thái");
-      refetch();
-    } catch (err) {
-      toast.error((err as any)?.response?.data?.error?.message?.[0] || "Cập nhật trạng thái thất bại");
-      console.error(err);
-    }
-  };
 
   const handleDelete = async () => {
     try {
@@ -267,35 +232,26 @@ export default function LeadDetailPage() {
         {/* Main info */}
         <div className="lg:col-span-2 flex flex-col gap-4">
           <div className="rounded-lg border border-border bg-surface p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <Badge variant={statusVariant[lead.status] ?? "default"}>
-                {statusLabel[lead.status] ?? lead.status}
-              </Badge>
-              <Badge variant="blue">{sourceLabel[lead.source] ?? lead.source}</Badge>
+            <div className="flex items-center gap-2 mb-4">
+              <Info size={16} className="text-foreground-muted" />
+              <h3 className="text-sm font-semibold">Thông tin</h3>
             </div>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              {lead.customer && (
-                <div className="flex items-start gap-2">
-                  <User size={16} className="text-foreground-muted shrink-0 mt-0.5" />
-                  <div className="flex flex-col">
-                    <span className="text-xs font-medium uppercase tracking-wide text-foreground-muted">Khách hàng</span>
-                    <button
-                      onClick={() => router.push(portalPath(`/customers/${lead.customer!.id}`))}
-                      className="text-left text-sm text-primary hover:underline"
-                    >
-                      {lead.customer.fullName}
-                    </button>
-                    {lead.customer.phone && (
-                      <span className="text-xs text-foreground-muted tabular-nums">{lead.customer.phone}</span>
-                    )}
-                  </div>
+              <div className="flex items-center gap-2.5">
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-surface-muted text-foreground-muted">
+                  <SquareKanban size={16} />
+                </span>
+                <div className="flex flex-col">
+                  <span className="text-sm font-medium tabular-nums">{lead.leadCode}</span>
+                  <span className="text-xs text-foreground-muted">Mã định danh</span>
                 </div>
-              )}
+              </div>
               {lead.property && (
-                <div className="flex items-start gap-2">
-                  <House size={16} className="text-foreground-muted shrink-0 mt-0.5" />
+                <div className="flex items-center gap-2.5">
+                  <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-accent-green text-accent-green-text">
+                    <House size={16} />
+                  </span>
                   <div className="flex flex-col">
-                    <span className="text-xs font-medium uppercase tracking-wide text-foreground-muted">BĐS</span>
                     <button
                       onClick={() => router.push(portalPath(`/properties/${lead.property!.id}`))}
                       className="text-left text-sm text-primary hover:underline"
@@ -306,11 +262,39 @@ export default function LeadDetailPage() {
                   </div>
                 </div>
               )}
-              {lead.assignedSales && (
-                <div className="flex items-start gap-2">
-                  <User size={16} className="text-foreground-muted shrink-0 mt-0.5" />
+              {lead.customer && (
+                <div className="flex items-center gap-2.5">
+                  <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-accent-blue text-accent-blue-text">
+                    <User size={16} />
+                  </span>
                   <div className="flex flex-col">
-                    <span className="text-xs font-medium uppercase tracking-wide text-foreground-muted">Sales phụ trách</span>
+                    <button
+                      onClick={() => router.push(portalPath(`/customers/${lead.customer!.id}`))}
+                      className="text-left text-sm text-primary hover:underline"
+                    >
+                      {lead.customer.fullName}
+                    </button>
+                    <span className="text-xs text-foreground-muted">Khách hàng</span>
+                  </div>
+                </div>
+              )}
+              {lead.phoneNormalized && (
+                <div className="flex items-center gap-2.5">
+                  <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-accent-yellow text-accent-yellow-text">
+                    <Phone size={16} />
+                  </span>
+                  <div className="flex flex-col">
+                    <span className="text-sm tabular-nums">{lead.phoneNormalized}</span>
+                    <span className="text-xs text-foreground-muted">Điện thoại</span>
+                  </div>
+                </div>
+              )}
+              {lead.assignedSales && (
+                <div className="flex items-center gap-2.5">
+                  <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-accent-purple text-accent-purple-text">
+                    <User size={16} />
+                  </span>
+                  <div className="flex flex-col">
                     <span className="text-sm">{lead.assignedSales.fullName}</span>
                     {lead.assignedSales.email && (
                       <span className="text-xs text-foreground-muted">{lead.assignedSales.email}</span>
@@ -318,23 +302,38 @@ export default function LeadDetailPage() {
                   </div>
                 </div>
               )}
-              {lead.phoneNormalized && (
-                <div className="flex items-start gap-2">
-                  <Phone size={16} className="text-foreground-muted shrink-0 mt-0.5" />
-                  <div className="flex flex-col">
-                    <span className="text-xs font-medium uppercase tracking-wide text-foreground-muted">Điện thoại</span>
-                    <span className="text-sm tabular-nums">{lead.phoneNormalized}</span>
-                  </div>
+              <div className="flex items-center gap-2.5">
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-surface-muted text-foreground-muted">
+                  <Tag size={16} />
+                </span>
+                <div className="flex flex-col">
+                  <Badge variant={statusVariant[lead.status] ?? "default"} className="w-fit text-[10px]">
+                    {lead.status}
+                  </Badge>
+                  <span className="text-xs text-foreground-muted">Trạng thái</span>
                 </div>
-              )}
+              </div>
+              <div className="flex items-center gap-2.5">
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-surface-muted text-foreground-muted">
+                  <Globe size={16} />
+                </span>
+                <div className="flex flex-col">
+                  <Badge variant="blue" className="w-fit text-[10px]">
+                    {sourceLabel[lead.source] ?? lead.source}
+                  </Badge>
+                  <span className="text-xs text-foreground-muted">Nguồn</span>
+                </div>
+              </div>
               {lead.createdAt && (
-                <div className="flex items-start gap-2">
-                  <Clock size={16} className="text-foreground-muted shrink-0 mt-0.5" />
+                <div className="flex items-center gap-2.5">
+                  <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-surface-muted text-foreground-muted">
+                    <Clock size={16} />
+                  </span>
                   <div className="flex flex-col">
-                    <span className="text-xs font-medium uppercase tracking-wide text-foreground-muted">Ngày tạo</span>
                     <span className="text-sm tabular-nums">
                       {new Date(lead.createdAt).toLocaleDateString("vi-VN")}
                     </span>
+                    <span className="text-xs text-foreground-muted">Ngày tạo</span>
                   </div>
                 </div>
               )}
@@ -345,26 +344,6 @@ export default function LeadDetailPage() {
             entityType="LEAD"
             values={lead.dynamicValuesJson}
           />
-
-          {/* Status update */}
-          <Can I="UPDATE_OWN" a="LEAD">
-            <div className="rounded-lg border border-border bg-surface p-6">
-              <h3 className="text-sm font-semibold mb-4">Cập nhật trạng thái</h3>
-              <div className="flex flex-wrap items-center gap-2">
-                {statusOptions.map((opt) => (
-                  <Button
-                    key={opt.value}
-                    variant={lead.status === opt.value ? "default" : "outline"}
-                    size="sm"
-                    disabled={isUpdating || lead.status === opt.value}
-                    onClick={() => handleStatusChange(opt.value)}
-                  >
-                    {opt.label}
-                  </Button>
-                ))}
-              </div>
-            </div>
-          </Can>
 
           {/* Activities */}
           <div className="rounded-lg border border-border bg-surface p-6">
@@ -417,8 +396,8 @@ export default function LeadDetailPage() {
                 {activities.map((act) => {
                   const isStatusChange = act.activityType === "STATUS_CHANGE";
                   const meta = act.metadataJson;
-                  const oldLabel = isStatusChange && meta ? (statusLabel[meta.oldStatus ?? ""] ?? meta.oldStatus ?? "—") : null;
-                  const newLabel = isStatusChange && meta ? (statusLabel[meta.newStatus ?? ""] ?? meta.newStatus ?? "—") : null;
+                  const oldLabel = isStatusChange && meta ? (meta.oldStatus ?? "—") : null;
+                  const newLabel = isStatusChange && meta ? (meta.newStatus ?? "—") : null;
                   return (
                     <div
                       key={act.id}
@@ -463,57 +442,6 @@ export default function LeadDetailPage() {
         {/* Sidebar */}
         <div className="flex flex-col gap-4">
           <LeadWorkflowActions leadId={id} />
-          <div className="rounded-lg border border-border bg-surface overflow-hidden">
-            <div className="flex items-center gap-2 border-b border-border bg-surface-muted/30 px-4 py-3">
-              <Layers size={14} className="text-foreground-muted" />
-              <h3 className="text-sm font-semibold">Thông tin liên quan</h3>
-            </div>
-            <div className="flex flex-col divide-y divide-border">
-              <div className="flex items-center justify-between px-4 py-3">
-                <div className="flex items-center gap-2">
-                  <SquareKanban size={14} className="text-foreground-muted" />
-                  <span className="text-xs text-foreground-muted">Mã định danh</span>
-                </div>
-                <span className="text-xs font-medium tabular-nums">{lead.leadCode}</span>
-              </div>
-              <div className="flex items-center justify-between px-4 py-3">
-                <div className="flex items-center gap-2">
-                  <Tag size={14} className="text-foreground-muted" />
-                  <span className="text-xs text-foreground-muted">Trạng thái</span>
-                </div>
-                <Badge variant={statusVariant[lead.status] ?? "default"} className="text-[10px]">
-                  {statusLabel[lead.status] ?? lead.status}
-                </Badge>
-              </div>
-              <div className="flex items-center justify-between px-4 py-3">
-                <div className="flex items-center gap-2">
-                  <FileText size={14} className="text-foreground-muted" />
-                  <span className="text-xs text-foreground-muted">Nguồn</span>
-                </div>
-                <Badge variant="blue" className="text-[10px]">
-                  {sourceLabel[lead.source] ?? lead.source}
-                </Badge>
-              </div>
-              <div className="grid grid-cols-1 divide-y divide-border">
-                <div className="flex items-center justify-between px-4 py-3">
-                  <div className="flex items-center gap-2">
-                    <MessageSquare size={14} className="text-foreground-muted" />
-                    <span className="text-xs text-foreground-muted">Hoạt động</span>
-                  </div>
-                  <span className="text-sm font-semibold tabular-nums">{activities.length}</span>
-                </div>
-              </div>
-              <div className="flex items-center justify-between px-4 py-3">
-                <div className="flex items-center gap-2">
-                  <Clock size={14} className="text-foreground-muted" />
-                  <span className="text-xs text-foreground-muted">Ngày tạo</span>
-                </div>
-                <span className="text-xs font-medium tabular-nums">
-                  {lead.createdAt ? new Date(lead.createdAt).toLocaleDateString("vi-VN") : "—"}
-                </span>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
 

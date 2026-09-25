@@ -32,6 +32,9 @@ import {
   getGetApiWorkflowsQueryKey,
 } from "@/lib/api/endpoints/workflow";
 import type { CreateWorkflowDto } from "@/lib/api/models/createWorkflowDto";
+import type { UpdateWorkflowDtoStatus } from "@/lib/api/models/updateWorkflowDtoStatus";
+import type { GetApiWorkflowsEntityType } from "@/lib/api/models/getApiWorkflowsEntityType";
+import type { GetApiWorkflowsStatus } from "@/lib/api/models/getApiWorkflowsStatus";
 import { WorkflowCard } from "./_components/workflow-card";
 import { WorkflowDetailDialog } from "./_components/workflow-detail-dialog";
 import { CreateWorkflowDialog } from "./_components/create-workflow-dialog";
@@ -54,18 +57,15 @@ export default function WorkflowsPage() {
   const canUpdate = ability.can("UPDATE", "WORKFLOW");
   const canDelete = ability.can("DELETE", "WORKFLOW");
 
-  const { data: workflowsRaw, isLoading } = useGetApiWorkflows(
-    entityTypeFilter ? { entityType: entityTypeFilter as any } : undefined,
-  );
+  const { data: workflowsRaw, isLoading } = useGetApiWorkflows({
+    ...(entityTypeFilter ? { entityType: entityTypeFilter as GetApiWorkflowsEntityType } : {}),
+    ...(statusFilter ? { status: statusFilter as GetApiWorkflowsStatus } : {}),
+  });
 
   // BE returns array directly; handle both wrapped and unwrapped
-  const allWorkflows: WorkflowDefinition[] = Array.isArray(workflowsRaw)
+  const workflows: WorkflowDefinition[] = Array.isArray(workflowsRaw)
     ? workflowsRaw
     : ((workflowsRaw as any)?.data ?? []);
-
-  const workflows = statusFilter
-    ? allWorkflows.filter((w) => w.status === statusFilter)
-    : allWorkflows;
 
   const { mutateAsync: createWorkflow, isPending: isCreating } = usePostApiWorkflow({
     mutation: {
@@ -142,6 +142,7 @@ export default function WorkflowsPage() {
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="" label="Tất cả">Tất cả</SelectItem>
               {entityTypeOptions.map((o) => (
                 <SelectItem key={o.value} value={o.value} label={o.label}>
                   {o.label}
@@ -172,9 +173,9 @@ export default function WorkflowsPage() {
       </div>
 
       {isLoading ? (
-        <div className="flex flex-col gap-2">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-20 animate-pulse rounded-lg bg-surface-muted" />
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="h-40 animate-pulse rounded-lg bg-surface-muted" />
           ))}
         </div>
       ) : workflows.length === 0 ? (
@@ -192,7 +193,7 @@ export default function WorkflowsPage() {
           }
         />
       ) : (
-        <div className="flex flex-col gap-2">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {workflows.map((wf) => (
             <WorkflowCard
               key={wf.id}
@@ -200,6 +201,15 @@ export default function WorkflowsPage() {
               onView={() => setViewTarget(wf)}
               onEdit={canUpdate ? () => setEditTarget(wf) : () => { }}
               onDelete={canDelete ? () => setDeleteTarget(wf) : () => { }}
+              onStatusChange={
+                canUpdate
+                  ? (status) =>
+                    updateWorkflow({
+                      id: wf.id,
+                      data: { status: status as UpdateWorkflowDtoStatus },
+                    })
+                  : undefined
+              }
             />
           ))}
         </div>

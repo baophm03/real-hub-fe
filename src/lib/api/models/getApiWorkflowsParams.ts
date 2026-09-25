@@ -6,7 +6,9 @@
  * OpenAPI spec version: v1
  */
 import type { GetApiWorkflowsEntityType } from './getApiWorkflowsEntityType';
+import type { GetApiWorkflowsStatus } from './getApiWorkflowsStatus';
 
 export type GetApiWorkflowsParams = {
 entityType?: GetApiWorkflowsEntityType;
+status?: GetApiWorkflowsStatus;
 };

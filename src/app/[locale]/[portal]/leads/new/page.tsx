@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { usePortalPath } from "@/lib/hooks/use-portal";
 import { useForm } from "react-hook-form";
@@ -16,46 +16,16 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { usePostApiLead } from "@/lib/api/endpoints/leads";
 import { useGetApiCustomers } from "@/lib/api/endpoints/customers";
 import { useGetApiPropertiesAdmin } from "@/lib/api/endpoints/properties";
+import { useGetApiWorkflows, useGetApiWorkflowIdStates } from "@/lib/api/endpoints/workflow";
 import { DynamicFieldsSection } from "@/components/shared/dynamic-fields-section";
-
-interface Customer {
-  id: string;
-  fullName: string;
-  phone?: string;
-}
-interface Property {
-  id: string;
-  title: string;
-  propertyCode: string;
-}
-
-const sourceOptions = [
-  { value: "WEBSITE", label: "Website" },
-  { value: "PROPERTY_DETAIL", label: "Trang BĐS" },
-  { value: "OWNER_PAGE", label: "Trang chủ" },
-  { value: "SALES_LINK", label: "Link sales" },
-  { value: "CTV_LINK", label: "Link CTV" },
-  { value: "AGENCY_MARKETING", label: "Marketing" },
-  { value: "MANUAL_INPUT", label: "Nhập tay" },
-  { value: "LEAD_POOL", label: "Lead pool" },
-  { value: "IMPORT", label: "Nhập file" },
-];
-
-const statusOptions = [
-  { value: "NEW", label: "Mới" },
-  { value: "CONTACTED", label: "Đã liên hệ" },
-  { value: "INTERESTED", label: "Quan tâm" },
-  { value: "NEGOTIATING", label: "Đàm phán" },
-  { value: "CONVERTED", label: "Chuyển đổi" },
-  { value: "LOST", label: "Mất" },
-  { value: "RECYCLED", label: "Khách cũ" },
-];
+import type { CreateLeadDtoStatus } from "@/lib/api/models/createLeadDtoStatus";
+import { sourceOptions, type Customer, type Property, type WorkflowState } from "../_components/type";
 
 const leadSchema = z.object({
   customerId: z.string().optional(),
   propertyId: z.string().optional(),
   source: z.enum(["WEBSITE", "PROPERTY_DETAIL", "OWNER_PAGE", "SALES_LINK", "CTV_LINK", "AGENCY_MARKETING", "MANUAL_INPUT", "LEAD_POOL", "IMPORT"]),
-  status: z.enum(["NEW", "CONTACTED", "INTERESTED", "NEGOTIATING", "CONVERTED", "LOST", "RECYCLED"]),
+  status: z.string(),
   phoneNormalized: z.string().optional(),
 });
 
@@ -72,6 +42,34 @@ export default function LeadFormPage() {
   const [dynamicValues, setDynamicValues] = useState<Record<string, unknown>>({});
 
   const { mutateAsync: createLead } = usePostApiLead();
+
+  // Active LEAD workflow → status options from its states
+  const { data: workflowsRaw } = useGetApiWorkflows({
+    entityType: "LEAD" as any,
+    status: "ACTIVE" as any,
+  });
+  const workflows = Array.isArray(workflowsRaw)
+    ? workflowsRaw
+    : ((workflowsRaw as any)?.data ?? []);
+  const leadWorkflow = workflows[0];
+
+  const { data: wfStatesRaw } = useGetApiWorkflowIdStates(leadWorkflow?.id ?? "", {
+    query: { enabled: !!leadWorkflow },
+  });
+  const statusStates = useMemo(() => {
+    const states: WorkflowState[] = (Array.isArray(wfStatesRaw)
+      ? wfStatesRaw
+      : ((wfStatesRaw as any)?.data ?? [])
+    ).filter((s: WorkflowState) => s.columnName === "status");
+    return states
+      .slice()
+      .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+  }, [wfStatesRaw]);
+
+  const statusOptions = statusStates.map((s) => ({
+    value: s.stateName,
+    label: s.stateName,
+  }));
 
   const { data: customersData } = useGetApiCustomers({ limit: "100", offset: "0" });
   const customers = ((customersData as unknown as { data: Customer[] })?.data) || [];
@@ -100,13 +98,22 @@ export default function LeadFormPage() {
     defaultValues: { source: "MANUAL_INPUT", status: "NEW" },
   });
 
+  // Default status = initial workflow state
+  useEffect(() => {
+    const initial = statusStates.find((s) => s.isInitial) ?? statusStates[0];
+    if (initial) {
+      setSelectedStatus(initial.stateName);
+      setValue("status", initial.stateName);
+    }
+  }, [statusStates, setValue]);
+
   const onSubmit = async (data: LeadFormData) => {
     setLoading(true);
     try {
       await createLead({
         data: {
           source: data.source,
-          status: data.status,
+          status: data.status as CreateLeadDtoStatus,
           customerId: data.customerId || undefined,
           propertyId: data.propertyId || undefined,
           phoneNormalized: data.phoneNormalized || undefined,

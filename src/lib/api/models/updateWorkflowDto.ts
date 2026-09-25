@@ -7,6 +7,7 @@
  */
 import type { WorkflowStateDto } from './workflowStateDto';
 import type { WorkflowTransitionDto } from './workflowTransitionDto';
+import type { UpdateWorkflowDtoStatus } from './updateWorkflowDtoStatus';
 
 export interface UpdateWorkflowDto {
   entityType?: string;
@@ -14,4 +15,5 @@ export interface UpdateWorkflowDto {
   version?: number;
   states?: WorkflowStateDto[];
   transitions?: WorkflowTransitionDto[];
+  status?: UpdateWorkflowDtoStatus;
 }
