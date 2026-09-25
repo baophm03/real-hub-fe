@@ -16,8 +16,8 @@ import { FormSection, FormField } from "@/components/shared/form-section";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { useGetApiDealId, usePatchApiDeal, getGetApiDealsQueryKey, getGetApiDealIdQueryKey } from "@/lib/api/endpoints/deals-reservations";
 import { useGetApiPropertiesAdmin } from "@/lib/api/endpoints/properties";
+import { txOptions } from "../../_components/type";
 import { useUserStore } from "@/lib/stores/user-store";
-import type { UpdateDealDtoStatus } from "@/lib/api/models/updateDealDtoStatus";
 import type { GetPropertiesResponse } from "@/lib/api/types/properties";
 import { DynamicFieldsSection } from "@/components/shared/dynamic-fields-section";
 
@@ -25,6 +25,7 @@ interface Deal {
   id: string;
   dealCode: string;
   status: string;
+  transactionType: string;
   expectedValue?: string;
   finalValue?: string;
   currentWorkflowState?: string | null;
@@ -33,19 +34,8 @@ interface Deal {
   dynamicValuesJson?: Record<string, unknown> | null;
 }
 
-const statusOptions = [
-  { value: "SOFT_RESERVED", label: "Đặt cọc" },
-  { value: "NEGOTIATING", label: "Đàm phán" },
-  { value: "SUCCESS", label: "Thành công" },
-  { value: "FAILED", label: "Thất bại" },
-  { value: "CANCELLED", label: "Hủy" },
-  { value: "DISPUTED", label: "Tranh chấp" },
-];
-
-// UpdateDealDto allows: status, currentWorkflowState, salesUserId, ownerUserId,
-// expectedValue, finalValue, metadata
 const dealSchema = z.object({
-  status: z.enum(["SOFT_RESERVED", "NEGOTIATING", "SUCCESS", "FAILED", "CANCELLED", "DISPUTED"]),
+  transactionType: z.string(),
   salesUserId: z.string().optional(),
   expectedValue: z.string().optional(),
   finalValue: z.string().optional(),
@@ -60,7 +50,7 @@ export default function DealEditPage() {
   const queryClient = useQueryClient();
   const id = params.id as string;
   const [loading, setLoading] = useState(false);
-  const [selectedStatus, setSelectedStatus] = useState("SOFT_RESERVED");
+  const [selectedTx, setSelectedTx] = useState("");
   const [dynamicValues, setDynamicValues] = useState<Record<string, unknown>>({});
 
   const currentUser = useUserStore((s) => s.user);
@@ -83,19 +73,19 @@ export default function DealEditPage() {
 
   const { register, handleSubmit, setValue, reset } = useForm<DealFormData>({
     resolver: zodResolver(dealSchema),
-    defaultValues: { status: "SOFT_RESERVED" },
+    defaultValues: { transactionType: "" },
   });
 
   useEffect(() => {
     if (deal) {
       const salesUserId = deal.salesUser?.id || currentUser?.id || "";
       reset({
-        status: (deal.status as DealFormData["status"]) || "SOFT_RESERVED",
+        transactionType: deal.transactionType || "",
         salesUserId,
         expectedValue: deal.expectedValue || "",
         finalValue: deal.finalValue || "",
       });
-      setSelectedStatus(deal.status || "SOFT_RESERVED");
+      setSelectedTx(deal.transactionType || "");
       setDynamicValues(deal.dynamicValuesJson || {});
     }
   }, [deal, reset, currentUser]);
@@ -106,12 +96,12 @@ export default function DealEditPage() {
       await updateDeal({
         id,
         data: {
-          status: data.status as UpdateDealDtoStatus,
+          transactionType: data.transactionType || undefined,
           salesUserId: data.salesUserId || undefined,
           expectedValue: data.expectedValue || undefined,
           finalValue: data.finalValue || undefined,
           dynamicValuesJson: Object.keys(dynamicValues).length > 0 ? dynamicValues : undefined,
-        },
+        } as any,
       });
       toast.success("Đã cập nhật giao dịch");
       void queryClient.invalidateQueries({ queryKey: getGetApiDealIdQueryKey(id) });
@@ -154,25 +144,25 @@ export default function DealEditPage() {
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
         <FormSection
           title="Thông tin giao dịch"
-          description="Có thể cập nhật trạng thái và giá trị giao dịch."
+          description="Có thể cập nhật loại giao dịch và giá trị giao dịch."
         >
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <FormField label="Trạng thái" required>
+            <FormField label="Loại giao dịch" required>
               <Select
-                value={selectedStatus}
-                items={Object.fromEntries(statusOptions.map((o) => [o.value, o.label]))}
+                value={selectedTx}
+                items={Object.fromEntries(txOptions.map((o) => [o.value, o.label]))}
                 onValueChange={(v) => {
                   if (v) {
-                    setSelectedStatus(v);
-                    setValue("status", v as DealFormData["status"]);
+                    setSelectedTx(v);
+                    setValue("transactionType", v);
                   }
                 }}
               >
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Chọn trạng thái" />
+                  <SelectValue placeholder="Chọn loại giao dịch" />
                 </SelectTrigger>
                 <SelectContent>
-                  {statusOptions.map((o) => (
+                  {txOptions.map((o) => (
                     <SelectItem key={o.value} value={o.value} label={o.label}>
                       {o.label}
                     </SelectItem>

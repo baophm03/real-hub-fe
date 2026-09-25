@@ -1,6 +1,6 @@
 import { Link } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
-import { Building2, Mail, MapPin, Phone } from "lucide-react";
+import { Mail, MapPin, Phone } from "lucide-react";
 import { NewsletterForm } from "@/components/layout/public/newsletter-form";
 
 export function PublicFooter() {
@@ -12,7 +12,7 @@ export function PublicFooter() {
         <div className="grid grid-cols-12 gap-8">
           <div className="col-span-12 md:col-span-4">
             <div className="flex items-center gap-2">
-              <Building2 size={22} className="text-primary" />
+              <img src="/logo.png" alt="RealHub" className="size-8 rounded-lg object-cover" />
               <p className="font-serif text-xl font-semibold tracking-tight">
                 RealHub
               </p>
@@ -107,7 +107,7 @@ export function PublicFooter() {
 
         <div className="mt-12 flex flex-col items-start justify-between gap-4 border-t border-border pt-6 md:flex-row md:items-center">
           <p className="text-xs text-foreground-muted">
-            {t("footer.rights", { year: new Date().getFullYear() })}
+            {t("footer.rights", { year: new Date().getFullYear() })} | Powered By MeU Solutions
           </p>
           <div className="flex items-center gap-6">
             <Link

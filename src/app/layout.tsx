@@ -6,12 +6,12 @@ import config from "@/config";
 
 export const metadata: Metadata = {
   metadataBase: new URL(config.siteUrl),
-  title: "RealHub - Nền tảng bất động sản",
+  title: "RealHub - Nền tảng mua bán bất động sản",
   description: "Hệ thống mua bán quản lý bất động sản cho đa người dùng",
   openGraph: {
     url: config.siteUrl,
     siteName: "RealHub",
-    title: "RealHub - Nền tảng bất động sản",
+    title: "RealHub - Nền tảng mua bán bất động sản",
     description: "Hệ thống mua bán quản lý bất động sản cho đa người dùng",
     type: "website",
     locale: 'vi_VN',
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
         url: `${config.siteUrl}/thumbnail-seo.webp`,
         width: 1200,
         height: 630,
-        alt: 'RealHub - Nền tảng bất động sản',
+        alt: 'RealHub - Nền tảng mua bán bất động sản',
       }
     ],
   },

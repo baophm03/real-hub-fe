@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Building2 } from "lucide-react";
 import { navGroups } from "./nav.config";
 import { ability } from "@/config/casl/ability";
 import { cn } from "@/lib/utils";
@@ -19,9 +18,11 @@ export function Sidebar() {
       {(collapsed) => (
         <>
           <Link href="/" className="group flex h-16 items-center gap-2.5 px-4" title="RealHub">
-            <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#092909] text-white transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:scale-105">
-              <Building2 size={22} className="text-white" />
-            </span>
+            <img
+              src="/logo.png"
+              alt="RealHub"
+              className="size-9 shrink-0 rounded-lg object-cover transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:scale-105"
+            />
             {!collapsed && (
               <div className="flex flex-col leading-none">
                 <span className="font-serif text-lg font-semibold tracking-tight text-foreground">

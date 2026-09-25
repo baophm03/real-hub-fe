@@ -6,11 +6,12 @@
  * OpenAPI spec version: v1
  */
 
-export type GetApiWorkflowsEntityType = typeof GetApiWorkflowsEntityType[keyof typeof GetApiWorkflowsEntityType];
+export type GetApiWorkflowsStatus = typeof GetApiWorkflowsStatus[keyof typeof GetApiWorkflowsStatus];
 
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const GetApiWorkflowsEntityType = {
-  PROPERTY: 'PROPERTY',
-  LEAD: 'LEAD',
+export const GetApiWorkflowsStatus = {
+  ACTIVE: 'ACTIVE',
+  DRAFT: 'DRAFT',
+  ARCHIVED: 'ARCHIVED',
 } as const;

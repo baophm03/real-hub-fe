@@ -21,7 +21,6 @@ import {
   useGetApiPropertyTransitions,
   usePostApiPropertyTransition,
 } from "@/lib/api/endpoints/properties";
-import { useGetApiWorkflowEntityStatusFields } from "@/lib/api/endpoints/workflow";
 
 interface AvailableTransition {
   transitionId: string;
@@ -35,12 +34,6 @@ interface AvailableTransition {
   requireAttachment: boolean;
 }
 
-interface StatusField {
-  fieldKey: string;
-  label: string;
-  values: { code: string; label: string; color?: string }[];
-}
-
 export function WorkflowActions({ propertyId }: { propertyId: string }) {
   const queryClient = useQueryClient();
   const [selectedAction, setSelectedAction] = useState<AvailableTransition | null>(null);
@@ -51,24 +44,6 @@ export function WorkflowActions({ propertyId }: { propertyId: string }) {
   const { data: transData, isLoading } = useGetApiPropertyTransitions(propertyId);
   const rawTrans = transData as any;
   const actions: AvailableTransition[] = rawTrans?.data ?? rawTrans ?? [];
-
-  // Fetch status field labels for display
-  const { data: fieldsData } = useGetApiWorkflowEntityStatusFields(
-    { entityType: "PROPERTY" as any },
-  );
-  const rawFields = fieldsData as any;
-  const fields: StatusField[] = rawFields?.data ?? rawFields ?? [];
-  const fieldLabelMap = new Map<string, string>();
-  const valueLabelMap = new Map<string, Map<string, string>>();
-  for (const f of fields) {
-    fieldLabelMap.set(f.fieldKey, f.label);
-    const inner = new Map<string, string>();
-    for (const v of f.values) inner.set(v.code, v.label);
-    valueLabelMap.set(f.fieldKey, inner);
-  }
-  const getStateLabel = (col: string, name: string) =>
-    valueLabelMap.get(col)?.get(name) ?? name;
-  const getColumnLabel = (col: string) => fieldLabelMap.get(col) ?? col;
 
   const { mutateAsync: executeTransition } = usePostApiPropertyTransition({
     mutation: {
@@ -145,9 +120,9 @@ export function WorkflowActions({ propertyId }: { propertyId: string }) {
                 <div className="flex flex-col gap-0.5 min-w-0 flex-1">
                   <span className="text-sm font-medium truncate">{a.actionLabel}</span>
                   <span className="text-[10px] text-foreground-muted truncate">
-                    {getStateLabel(a.fromColumnName, a.fromStateName)} → {getStateLabel(a.toColumnName, a.toStateName)}
+                    {a.fromStateName} → {a.toStateName}
                     {a.fromColumnName !== a.toColumnName && (
-                      <span className="ml-1">({getColumnLabel(a.toColumnName)})</span>
+                      <span className="ml-1">({a.toColumnName})</span>
                     )}
                   </span>
                 </div>
@@ -176,15 +151,15 @@ export function WorkflowActions({ propertyId }: { propertyId: string }) {
                   <>
                     {" "}Trạng thái sẽ chuyển từ{" "}
                     <span className="font-medium text-foreground">
-                      {getStateLabel(selectedAction.fromColumnName, selectedAction.fromStateName)}
+                      {selectedAction.fromStateName}
                     </span>{" "}
                     sang{" "}
                     <span className="font-medium text-foreground">
-                      {getStateLabel(selectedAction.toColumnName, selectedAction.toStateName)}
+                      {selectedAction.toStateName}
                     </span>{" "}
                     trên cột{" "}
                     <span className="font-medium text-foreground">
-                      {getColumnLabel(selectedAction.toColumnName)}
+                      {selectedAction.toColumnName}
                     </span>.
                   </>
                 )}
@@ -192,19 +167,19 @@ export function WorkflowActions({ propertyId }: { propertyId: string }) {
                   <>
                     {" "}Cột{" "}
                     <span className="font-medium text-foreground">
-                      {getColumnLabel(selectedAction.fromColumnName)}
+                      {selectedAction.fromColumnName}
                     </span>{" "}
                     đang ở trạng thái{" "}
                     <span className="font-medium text-foreground">
-                      {getStateLabel(selectedAction.fromColumnName, selectedAction.fromStateName)}
+                      {selectedAction.fromStateName}
                     </span>{" "}
                     sẽ đổi cột{" "}
                     <span className="font-medium text-foreground">
-                      {getColumnLabel(selectedAction.toColumnName)}
+                      {selectedAction.toColumnName}
                     </span>{" "}
                     sang{" "}
                     <span className="font-medium text-foreground">
-                      {getStateLabel(selectedAction.toColumnName, selectedAction.toStateName)}
+                      {selectedAction.toStateName}
                     </span>.
                   </>
                 )}

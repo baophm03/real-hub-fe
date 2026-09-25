@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { usePortalPath } from "@/lib/hooks/use-portal";
 import { useForm } from "react-hook-form";
@@ -16,6 +16,8 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { useGetApiLeadId, usePatchApiLead } from "@/lib/api/endpoints/leads";
 import type { UpdateLeadDtoStatus } from "@/lib/api/models/updateLeadDtoStatus";
 import { DynamicFieldsSection } from "@/components/shared/dynamic-fields-section";
+import { useGetApiWorkflows, useGetApiWorkflowIdStates } from "@/lib/api/endpoints/workflow";
+import type { WorkflowState } from "../../_components/type";
 
 interface Lead {
   id: string;
@@ -25,18 +27,8 @@ interface Lead {
   dynamicValuesJson?: Record<string, unknown> | null;
 }
 
-const statusOptions = [
-  { value: "NEW", label: "Mới" },
-  { value: "CONTACTED", label: "Đã liên hệ" },
-  { value: "INTERESTED", label: "Quan tâm" },
-  { value: "NEGOTIATING", label: "Đàm phán" },
-  { value: "CONVERTED", label: "Chuyển đổi" },
-  { value: "LOST", label: "Mất" },
-  { value: "RECYCLED", label: "Khách cũ" },
-];
-
 const leadSchema = z.object({
-  status: z.enum(["NEW", "CONTACTED", "INTERESTED", "NEGOTIATING", "CONVERTED", "LOST", "RECYCLED"]),
+  status: z.string(),
   phoneNormalized: z.string().optional(),
 });
 
@@ -55,6 +47,37 @@ export default function LeadEditPage() {
   const lead = (leadData as unknown as { data: Lead })?.data;
 
   const { mutateAsync: updateLead } = usePatchApiLead();
+
+  // Active LEAD workflow → status options from its states
+  const { data: workflowsRaw } = useGetApiWorkflows({
+    entityType: "LEAD" as any,
+    status: "ACTIVE" as any,
+  });
+  const workflows = Array.isArray(workflowsRaw)
+    ? workflowsRaw
+    : ((workflowsRaw as any)?.data ?? []);
+  const leadWorkflow = workflows[0];
+
+  const { data: wfStatesRaw } = useGetApiWorkflowIdStates(leadWorkflow?.id ?? "", {
+    query: { enabled: !!leadWorkflow },
+  });
+  const statusStates = useMemo(() => {
+    const states: WorkflowState[] = (Array.isArray(wfStatesRaw)
+      ? wfStatesRaw
+      : ((wfStatesRaw as any)?.data ?? [])
+    ).filter((s: WorkflowState) => s.columnName === "status");
+    return states
+      .slice()
+      .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+  }, [wfStatesRaw]);
+
+  const statusOptions = useMemo(() => {
+    const opts = statusStates.map((s) => ({ value: s.stateName, label: s.stateName }));
+    if (lead?.status && !opts.some((o) => o.value === lead.status)) {
+      return [...opts, { value: lead.status, label: lead.status }];
+    }
+    return opts;
+  }, [statusStates, lead?.status]);
 
   const { register, handleSubmit, setValue, reset, formState: { errors } } = useForm<LeadFormData>({
     resolver: zodResolver(leadSchema),
