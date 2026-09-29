@@ -1,0 +1,23 @@
+services:
+  # ── Service: Next.js FE ────────────────────────────
+  web:
+    image: ${IMAGE_FE:-realhub-fe}:latest
+    build:
+      context: .
+      args:
+        NEXT_PUBLIC_FRONTEND_HOST: ${NEXT_PUBLIC_FRONTEND_HOST:-https://realhub.vn}
+        NEXT_PUBLIC_BACKEND_HOST: ${NEXT_PUBLIC_BACKEND_HOST:-https://realhub.vn}
+    container_name: realhub-frontend-production
+    restart: unless-stopped
+    ports:
+      - "8101:8101"
+    env_file:
+      - .env
+    networks:
+      - web-network
+
+volumes: {}
+
+networks:
+  web-network:
+    driver: bridge

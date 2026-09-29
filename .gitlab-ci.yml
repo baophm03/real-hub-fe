@@ -1,0 +1,120 @@
+stages:
+  - build
+  - deploy
+  - cleanup
+
+variables:
+  IMAGE_FE: "realhub-fe"
+  COMPOSE_PROJECT: "realhub-fe-product"
+  DEPLOY_PATH: "/opt/production/realhub.vn/fe-realhub"
+  DOCKER_BUILDKIT: "1"
+  NEXT_PUBLIC_FRONTEND_HOST: "https://realhub.vn"
+  NEXT_PUBLIC_BACKEND_HOST: "https://realhub.vn"
+
+build:
+  stage: build
+  tags:
+    - runner-local-vpd
+  retry:
+    max: 1
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
+  cache:
+    key: "pnpm-$CI_COMMIT_REF_SLUG"
+    paths:
+      - .pnpm/store/
+      - .bin/
+  before_script:
+    - |
+      if ! command -v pnpm &>/dev/null; then
+        echo "pnpm not found, installing via corepack..."
+        corepack prepare pnpm@11.10.0 --activate --install-directory "$CI_PROJECT_DIR/.bin"
+        export PATH="$CI_PROJECT_DIR/.bin:$PATH"
+      fi
+      pnpm config set store-dir "$CI_PROJECT_DIR/.pnpm/store"
+  script:
+    - |
+      echo "Install dependencies (cached)"
+      pnpm install --frozen-lockfile
+
+      echo "Build FE"
+      pnpm build
+  only:
+    - release/product
+
+deploy:
+  stage: deploy
+  tags:
+    - runner-local-vpd
+  retry:
+    max: 1
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
+  script:
+    - |
+      echo "Backup current image for auto-rollback"
+      docker tag "$IMAGE_FE:latest" "$IMAGE_FE:previous" || echo "No previous image, skip"
+
+      echo "Build FE image (bake NEXT_PUBLIC_*)"
+      docker build \
+        --build-arg NEXT_PUBLIC_FRONTEND_HOST="$NEXT_PUBLIC_FRONTEND_HOST" \
+        --build-arg NEXT_PUBLIC_BACKEND_HOST="$NEXT_PUBLIC_BACKEND_HOST" \
+        -t "$IMAGE_FE:$CI_COMMIT_SHORT_SHA" -t "$IMAGE_FE:latest" -f Dockerfile .
+
+      echo "Deploy folder already exists, only update compose (keep .env on server)"
+      cp docker-compose.yml "$DEPLOY_PATH/docker-compose.yml"
+      echo "IMAGE_FE=$IMAGE_FE" > "$DEPLOY_PATH/.deploy.env"
+      echo "IMAGE_TAG=$CI_COMMIT_SHORT_SHA" >> "$DEPLOY_PATH/.deploy.env"
+
+      echo "Restart services (scoped project: $COMPOSE_PROJECT)"
+      cd "$DEPLOY_PATH"
+      docker compose -p "$COMPOSE_PROJECT" -f docker-compose.yml --env-file .env --env-file .deploy.env up -d --no-build --remove-orphans
+
+      rollback() {
+        echo "Healthcheck FAILED -> auto-rollback to :previous"
+        docker tag "$IMAGE_FE:previous" "$IMAGE_FE:latest" || true
+        docker compose -p "$COMPOSE_PROJECT" -f docker-compose.yml --env-file .env --env-file .deploy.env up -d --no-build --remove-orphans || true
+        docker compose -p "$COMPOSE_PROJECT" ps || true
+        exit 1
+      }
+
+      echo "Healthcheck http://127.0.0.1:8101/"
+      for i in $(seq 1 15); do
+        if wget -qO- http://127.0.0.1:8101/ >/dev/null 2>&1; then
+          echo "Healthy after ${i}x10s"
+          break
+        fi
+        echo "Retry $i/15..."
+        sleep 10
+        if [ "$i" = "15" ]; then
+          rollback
+        fi
+      done
+
+      echo "Service status"
+      docker compose -p "$COMPOSE_PROJECT" -f docker-compose.yml --env-file .env --env-file .deploy.env ps
+  only:
+    - release/product
+
+# Chi don trong scope COMPOSE_PROJECT + IMAGE_FE, khong dung prune global
+cleanup:
+  stage: cleanup
+  tags:
+    - runner-local-vpd
+  when: on_success
+  script:
+    - |
+      echo "Scoped cleanup: $COMPOSE_PROJECT / $IMAGE_FE only"
+
+      echo "1) Remove exited containers of THIS project only"
+      docker ps -a --filter "label=com.docker.compose.project=$COMPOSE_PROJECT" --filter "status=exited" -q | xargs -r docker rm -v || true
+
+      echo "2) Remove old tags of THIS image only (keep latest, previous, current SHA)"
+      docker images "$IMAGE_FE" --format "{{.Repository}}:{{.Tag}}" | grep -v -e ":latest$" -e ":previous$" -e ":$CI_COMMIT_SHORT_SHA$" | tail -n +3 | xargs -r docker rmi || true
+
+      echo "3) Scoped df"
+      docker system df || true
+  only:
+    - release/product
