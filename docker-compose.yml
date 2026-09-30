@@ -10,7 +10,7 @@ services:
     container_name: realhub-frontend-production
     restart: unless-stopped
     ports:
-      - "8101:8101"
+      - "127.0.0.1:8101:8101"
     env_file:
       - .env
     networks:

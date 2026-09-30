@@ -35,6 +35,13 @@ build:
       pnpm config set store-dir "$CI_PROJECT_DIR/.pnpm/store"
   script:
     - |
+      echo "Check marker [tag]0.1-prod in commit message"
+      if ! git log -1 --pretty=%B | grep -q '\[tag\]0\.1-prod'; then
+        echo "SKIP: no marker found, finish without doing anything"
+        exit 0
+      fi
+      echo "Marker found, continue"
+
       echo "Install dependencies (cached)"
       pnpm install --frozen-lockfile
 
@@ -54,6 +61,13 @@ deploy:
       - stuck_or_timeout_failure
   script:
     - |
+      echo "Check marker [tag]0.1-prod in commit message"
+      if ! git log -1 --pretty=%B | grep -q '\[tag\]0\.1-prod'; then
+        echo "SKIP: no marker found, finish without doing anything"
+        exit 0
+      fi
+      echo "Marker found, continue"
+
       echo "Backup current image for auto-rollback"
       docker tag "$IMAGE_FE:latest" "$IMAGE_FE:previous" || echo "No previous image, skip"
 
@@ -106,6 +120,13 @@ cleanup:
   when: on_success
   script:
     - |
+      echo "Check marker [tag]0.1-prod in commit message"
+      if ! git log -1 --pretty=%B | grep -q '\[tag\]0\.1-prod'; then
+        echo "SKIP: no marker found, finish without doing anything"
+        exit 0
+      fi
+      echo "Marker found, continue"
+
       echo "Scoped cleanup: $COMPOSE_PROJECT / $IMAGE_FE only"
 
       echo "1) Remove exited containers of THIS project only"
