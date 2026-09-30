@@ -27,16 +27,11 @@ build:
       - .bin/
   before_script:
     - |
-      echo "Force pnpm 11.10.0 via corepack (runner global pnpm may be broken)"
-      corepack enable || true
-      if ! corepack prepare pnpm@11.10.0 --activate 2>/dev/null; then
-        echo "Global activate failed, installing to project .bin"
+      if ! command -v pnpm &>/dev/null; then
+        echo "pnpm not found, installing via corepack..."
         corepack prepare pnpm@11.10.0 --activate --install-directory "$CI_PROJECT_DIR/.bin"
         export PATH="$CI_PROJECT_DIR/.bin:$PATH"
       fi
-      hash -r
-      echo "pnpm path: $(command -v pnpm)"
-      pnpm --version
       pnpm config set store-dir "$CI_PROJECT_DIR/.pnpm/store"
   script:
     - |
