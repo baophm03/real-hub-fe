@@ -121,8 +121,8 @@ export function buildBlogDetailContext(news: News, slug?: string): SeoContext {
     newsTitle: news.title ?? "",
     newsSlug: news.slug ?? slug ?? "",
     categoryName: news.category?.name ?? "",
-    newsExcerpt: n?.excerpt ?? n?.summary ?? "",
-    newsImageUrl: n?.featuredImage ?? n?.thumbnail ?? "",
+    newsExcerpt: n?.excerpt ?? n?.summary ?? news.description ?? "",
+    newsImageUrl: n?.thumbnail?.url ?? n?.featuredImage ?? "",
     tenantName: "RealHub",
   };
 }
