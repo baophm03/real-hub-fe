@@ -22,8 +22,6 @@ type Props = {
   params: Promise<{ locale: string; categoryCode: string }>;
 };
 
-export const revalidate = 1800;
-
 export async function generateMetadata({
   params,
 }: Props): Promise<Metadata> {
