@@ -14,8 +14,6 @@ type Props = {
   params: Promise<{ locale: string }>;
 };
 
-export const revalidate = 1800;
-
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("public.home");
   return generateSeoMetadata("HOME", buildStaticContext(), {

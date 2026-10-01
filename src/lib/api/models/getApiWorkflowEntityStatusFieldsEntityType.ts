@@ -13,4 +13,5 @@ export type GetApiWorkflowEntityStatusFieldsEntityType = typeof GetApiWorkflowEn
 export const GetApiWorkflowEntityStatusFieldsEntityType = {
   PROPERTY: 'PROPERTY',
   LEAD: 'LEAD',
+  DEAL: 'DEAL',
 } as const;

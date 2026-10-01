@@ -1,7 +1,7 @@
 import { Link } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
-import { Mail, MapPin, Phone } from "lucide-react";
 import { NewsletterForm } from "@/components/layout/public/newsletter-form";
+import { ContactInfoList } from "@/components/shared/contact-info-list";
 
 export function PublicFooter() {
   const t = useTranslations("public");
@@ -84,24 +84,7 @@ export function PublicFooter() {
             <p className="text-sm font-semibold uppercase tracking-wide text-foreground">
               {t("footer.contactCol")}
             </p>
-            <div className="flex items-center gap-2 text-sm text-foreground-muted">
-              <Phone size={14} className="shrink-0 text-primary" />
-              <a href="tel:+84901234567" className="transition-colors hover:text-foreground tabular-nums">
-                0901 234 567
-              </a>
-            </div>
-            <div className="flex items-center gap-2 text-sm text-foreground-muted">
-              <Mail size={14} className="shrink-0 text-primary" />
-              <a href="mailto:contact@realhub.vn" className="transition-colors hover:text-foreground">
-                contact@realhub.vn
-              </a>
-            </div>
-            <div className="flex items-start gap-2 text-sm text-foreground-muted">
-              <MapPin size={14} className="shrink-0 text-primary mt-0.5" />
-              <span className="leading-relaxed">
-                123 Lê Lợi, Q.1, TP. HCM
-              </span>
-            </div>
+            <ContactInfoList variant="compact" />
           </div>
         </div>
 

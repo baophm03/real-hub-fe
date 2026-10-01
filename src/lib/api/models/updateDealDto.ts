@@ -6,10 +6,12 @@
  * OpenAPI spec version: v1
  */
 import type { UpdateDealDtoStatus } from './updateDealDtoStatus';
+import type { UpdateDealDtoTransactionType } from './updateDealDtoTransactionType';
 import type { UpdateDealDtoDynamicValuesJson } from './updateDealDtoDynamicValuesJson';
 
 export interface UpdateDealDto {
   status?: UpdateDealDtoStatus;
+  transactionType?: UpdateDealDtoTransactionType;
   currentWorkflowState?: string;
   salesUserId?: string;
   ownerUserId?: string;

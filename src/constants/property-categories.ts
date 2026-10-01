@@ -3,8 +3,8 @@ import type { LucideIcon } from "lucide-react";
 
 export interface PropertyCategory {
   icon: LucideIcon;
-  label: string;
-  desc: string;
+  labelKey: string;
+  descKey: string;
   href: string;
   types: string;
   color: string;
@@ -14,8 +14,8 @@ export interface PropertyCategory {
 export const propertyCategories: PropertyCategory[] = [
   {
     icon: House,
-    label: "Căn hộ",
-    desc: "Chung cư, studio, penthouse",
+    labelKey: "header.catApartment",
+    descKey: "header.catApartmentDesc",
     types: "APARTMENT",
     href: "/listings?types=APARTMENT",
     color: "text-blue-600",
@@ -23,8 +23,8 @@ export const propertyCategories: PropertyCategory[] = [
   },
   {
     icon: Building2,
-    label: "Biệt thự",
-    desc: "Biệt thự đơn lập, song lập",
+    labelKey: "header.catVilla",
+    descKey: "header.catVillaDesc",
     types: "VILLA",
     href: "/listings?types=VILLA",
     color: "text-violet-600",
@@ -32,8 +32,8 @@ export const propertyCategories: PropertyCategory[] = [
   },
   {
     icon: Warehouse,
-    label: "Nhà phố",
-    desc: "Nhà phố, nhà mặt tiền",
+    labelKey: "header.catTownhouse",
+    descKey: "header.catTownhouseDesc",
     types: "HOUSE,SHOPHOUSE",
     href: "/listings?types=HOUSE,SHOPHOUSE",
     color: "text-emerald-600",
@@ -41,8 +41,8 @@ export const propertyCategories: PropertyCategory[] = [
   },
   {
     icon: Map,
-    label: "Đất nền",
-    desc: "Đất thổ cư, đất dự án",
+    labelKey: "header.catLand",
+    descKey: "header.catLandDesc",
     types: "LAND",
     href: "/listings?types=LAND",
     color: "text-amber-600",
@@ -50,8 +50,8 @@ export const propertyCategories: PropertyCategory[] = [
   },
   {
     icon: Store,
-    label: "Mặt bằng",
-    desc: "Văn phòng, shop, kho xưởng",
+    labelKey: "header.catCommercial",
+    descKey: "header.catCommercialDesc",
     types: "OFFICE,WAREHOUSE,SHOP",
     href: "/listings?types=OFFICE,WAREHOUSE,SHOP",
     color: "text-rose-600",

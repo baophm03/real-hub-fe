@@ -9,5 +9,15 @@
   "searchTerm1": "Căn hộ Quận 1",
   "searchTerm2": "Biệt thự Thủ Đức",
   "searchTerm3": "Đất nền Bình Dương",
-  "searchTerm4": "Nhà phố Tân Bình"
+  "searchTerm4": "Nhà phố Tân Bình",
+  "catApartment": "Căn hộ",
+  "catApartmentDesc": "Chung cư, studio, penthouse",
+  "catVilla": "Biệt thự",
+  "catVillaDesc": "Biệt thự đơn lập, song lập",
+  "catTownhouse": "Nhà phố",
+  "catTownhouseDesc": "Nhà phố, nhà mặt tiền",
+  "catLand": "Đất nền",
+  "catLandDesc": "Đất thổ cư, đất dự án",
+  "catCommercial": "Mặt bằng",
+  "catCommercialDesc": "Văn phòng, shop, kho xưởng"
 }
