@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { getApiResolveSeoMeta } from "@/lib/api/endpoints/seo-templates";
+import config from "@/config";
 
 export type SeoPageType =
   | "HOME"
@@ -32,6 +33,16 @@ function render(tmpl: string, ctx: SeoContext): string {
   return tmpl.replace(/\{\{(\w+)\}\}/g, (_, key: string) => ctx[key] ?? "");
 }
 
+const DEFAULT_OG_IMAGE = `${config.siteUrl}/thumbnail-seo.webp`;
+
+function resolveOgImage(context: SeoContext): string {
+  const candidate = context.propertyImageUrl || context.newsImageUrl || "";
+
+  if (/^https?:\/\//i.test(candidate)) return candidate;
+  if (candidate.startsWith("/")) return candidate;
+  return DEFAULT_OG_IMAGE;
+}
+
 export async function generateSeoMetadata(
   pageType: SeoPageType,
   context: SeoContext = {},
@@ -57,6 +68,14 @@ export async function generateSeoMetadata(
         ...(fallback.openGraph as any),
         siteName: "RealHub",
         locale: "vi_VN",
+        images: [
+          {
+            url: resolveOgImage(context),
+            width: 1200,
+            height: 630,
+            alt: (fallback.title as string) || "RealHub",
+          },
+        ],
       },
     };
   }
@@ -86,6 +105,14 @@ export async function generateSeoMetadata(
       siteName: "RealHub",
       locale: "vi_VN",
       type: "website",
+      images: [
+        {
+          url: resolveOgImage(context),
+          width: 1200,
+          height: 630,
+          alt: ogTitle || title || (fallback.title as string) || "RealHub",
+        },
+      ],
     },
     robots: {
       index: !robotsParts.includes("noindex"),
