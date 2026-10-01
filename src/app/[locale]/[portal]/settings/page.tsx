@@ -13,6 +13,7 @@ import {
   Globe,
   Bell,
   RefreshCw,
+  Contact,
 } from "lucide-react";
 
 const settingModules = [
@@ -63,6 +64,12 @@ const settingModules = [
     icon: Globe,
     title: "SEO templates",
     description: "Template title, description, OG, robots cho từng loại trang",
+  },
+  {
+    href: "/settings/contact-info",
+    icon: Contact,
+    title: "Thông tin liên hệ",
+    description: "Số điện thoại, email, địa chỉ hiển thị ở trang liên hệ và footer",
   },
   {
     href: "/settings/notifications",

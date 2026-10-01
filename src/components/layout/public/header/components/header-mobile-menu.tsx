@@ -72,7 +72,7 @@ export function HeaderMobileMenu({
             <div className="flex flex-col gap-0.5 pb-2 pl-2">
               {propertyCategories.map((cat) => (
                 <Link
-                  key={cat.label}
+                  key={cat.labelKey}
                   href={cat.href}
                   onClick={onClose}
                   className="flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm text-black/70 transition-colors hover:bg-black/5 hover:text-foreground"
@@ -80,7 +80,7 @@ export function HeaderMobileMenu({
                   <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-surface-muted">
                     <cat.icon size={16} className={cat.color} />
                   </span>
-                  {cat.label}
+                  {t(cat.labelKey)}
                 </Link>
               ))}
               <Link

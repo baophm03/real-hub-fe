@@ -77,7 +77,7 @@ export function HeaderDesktopNav({ isActive, isListingsActive }: HeaderDesktopNa
             <div className="grid grid-cols-1">
               {propertyCategories.map((cat) => (
                 <Link
-                  key={cat.label}
+                  key={cat.labelKey}
                   href={cat.href}
                   onClick={() => setMegaOpen(false)}
                   className="group flex items-center gap-4 px-5 py-3.5 transition-colors hover:bg-surface-muted"
@@ -86,8 +86,8 @@ export function HeaderDesktopNav({ isActive, isListingsActive }: HeaderDesktopNa
                     <cat.icon size={20} className={cat.color} />
                   </span>
                   <div className="flex flex-col gap-0.5">
-                    <span className="text-sm font-medium text-foreground">{cat.label}</span>
-                    <span className="text-xs text-foreground-muted">{cat.desc}</span>
+                    <span className="text-sm font-medium text-foreground">{t(cat.labelKey)}</span>
+                    <span className="text-xs text-foreground-muted">{t(cat.descKey)}</span>
                   </div>
                   <ArrowUpRight
                     size={14}

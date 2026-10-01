@@ -9,5 +9,15 @@
   "searchTerm1": "Apartment District 1",
   "searchTerm2": "Villa Thu Duc",
   "searchTerm3": "Land Binh Duong",
-  "searchTerm4": "Townhouse Tan Binh"
+  "searchTerm4": "Townhouse Tan Binh",
+  "catApartment": "Apartment",
+  "catApartmentDesc": "Condos, studios, penthouses",
+  "catVilla": "Villa",
+  "catVillaDesc": "Detached & semi-detached villas",
+  "catTownhouse": "Townhouse",
+  "catTownhouseDesc": "Townhouses, street-front houses",
+  "catLand": "Land",
+  "catLandDesc": "Residential land, project land",
+  "catCommercial": "Commercial",
+  "catCommercialDesc": "Offices, shops, warehouses"
 }
