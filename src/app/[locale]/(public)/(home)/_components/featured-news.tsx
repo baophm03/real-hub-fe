@@ -4,6 +4,7 @@ import { Link } from "@/i18n/navigation";
 import { ArrowRight } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { NewsCard } from "@/components/shared/news-card";
+import { NewsListItem } from "@/components/shared/news-list-item";
 import { NewsCarousel } from "@/components/shared/news-carousel";
 
 export async function FeaturedNews() {
@@ -44,9 +45,16 @@ export async function FeaturedNews() {
         </div>
 
         {newsList.length > 0 ? (
-          <div className="flex flex-col gap-12">
+          <div className="flex flex-col gap-10 md:gap-12">
             <NewsCarousel newsList={newsList.slice(0, 6)} />
-            <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+            {/* Mobile: compact list cards (related-news style) */}
+            <div className="flex flex-col sm:hidden">
+              {newsList.slice(6, 12).map((news) => (
+                <NewsListItem key={news.id} article={news} />
+              ))}
+            </div>
+            {/* sm+: article card grid */}
+            <div className="hidden gap-8 sm:grid sm:grid-cols-2 lg:grid-cols-3">
               {newsList.slice(6, 12).map((news) => (
                 <NewsCard key={news.id} article={news} />
               ))}

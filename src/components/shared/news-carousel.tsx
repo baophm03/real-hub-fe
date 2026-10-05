@@ -6,7 +6,7 @@ import { User } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import type { News } from "@/lib/api/types/news";
-import { formatNewsDate } from "@/components/shared/news-card";
+import { formatNewsDate, NewsCard } from "@/components/shared/news-card";
 import { getNewsCategoryColor } from "@/constants/news";
 import { cn } from "@/lib/utils";
 
@@ -37,13 +37,17 @@ export function NewsCarousel({ newsList }: NewsCarouselProps) {
         className="!pb-12"
       >
         {newsList.map((news) => (
-          <SwiperSlide key={news.id} className="!h-auto">
+          <SwiperSlide key={news.id} className="h-auto!">
+            {/* Mobile / tablet: normal article card */}
+            <NewsCard article={news} className="h-full lg:hidden" />
+
+            {/* Desktop: featured slide */}
             <Link
               href={`/news/${news.category?.code ?? "uncategorized"}/${news.slug}`}
-              className="group flex flex-col overflow-hidden rounded-xl border border-border bg-surface transition-all duration-300 hover:-translate-y-[1px] hover:shadow-[0_8px_24px_-8px_rgba(0,0,0,0.08)] sm:flex-row"
+              className="group hidden flex-col overflow-hidden rounded-xl border border-border bg-surface transition-all duration-300 hover:-translate-y-[1px] hover:shadow-[0_8px_24px_-8px_rgba(0,0,0,0.08)] lg:flex lg:flex-row"
             >
               {/* Image */}
-              <div className="relative aspect-[16/10] w-full shrink-0 overflow-hidden bg-surface-muted sm:w-[720px]">
+              <div className="relative aspect-[16/10] w-full shrink-0 overflow-hidden bg-surface-muted lg:w-[55%] xl:w-[720px]">
                 <img
                   src={news.thumbnail?.url || "/image-fallback.jpg"}
                   alt={news.title || ""}
