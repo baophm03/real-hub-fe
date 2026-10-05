@@ -24,6 +24,11 @@
   "contactNoPosition": "Chưa có vị trí",
   "contactConsultNow": "Tư vấn ngay",
   "contactSendRequest": "Gửi yêu cầu",
+  "contactLoginRequired": "Đăng nhập để liên hệ",
+  "contactNow": "Liên hệ ngay",
+  "contactPrice": "Giá bán",
+  "saveListing": "Lưu thông tin",
+  "savedListing": "Đã lưu thông tin",
   "contactSending": "Đang gửi...",
   "contactNamePlaceholder": "Họ và tên",
   "contactPhonePlaceholder": "Số điện thoại",
@@ -37,5 +42,10 @@
   "contactCategory": "Thể loại",
   "contactDirection": "Hướng",
   "contactSellingMode": "Hình thức",
-  "contactPostedDate": "Ngày đăng"
+  "contactPostedDate": "Ngày đăng",
+  "ctaEyebrow": "RealHub",
+  "ctaTitle": "Cần hỗ trợ tìm bất động sản phù hợp?",
+  "ctaDesc": "Đội ngũ tư vấn của chúng tôi sẵn sàng đồng hành cùng bạn trong hành trình tìm thấy ngôi nhà mơ ước.",
+  "ctaPrimary": "Liên hệ tư vấn",
+  "ctaSecondary": "Xem thêm bất động sản"
 }

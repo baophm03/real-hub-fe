@@ -6,16 +6,17 @@
  * OpenAPI spec version: v1
  */
 import type { UpdateLeadDtoStatus } from './updateLeadDtoStatus';
-import type { UpdateLeadDtoDuplicateStatus } from './updateLeadDtoDuplicateStatus';
 import type { UpdateLeadDtoDynamicValuesJson } from './updateLeadDtoDynamicValuesJson';
+import type { UpdateLeadDtoMetadata } from './updateLeadDtoMetadata';
 
 export interface UpdateLeadDto {
   status?: UpdateLeadDtoStatus;
-  assignedSalesId?: string;
+  /** Team phụ trách */
   assignedTeamId?: string;
+  /** Sales phụ trách */
+  assignedSalesId?: string;
   phoneNormalized?: string;
   protectionUntil?: string;
-  duplicateStatus?: UpdateLeadDtoDuplicateStatus;
   dynamicValuesJson?: UpdateLeadDtoDynamicValuesJson;
-  metadata?: string;
+  metadata?: UpdateLeadDtoMetadata;
 }

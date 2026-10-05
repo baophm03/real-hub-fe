@@ -6,11 +6,15 @@
  * OpenAPI spec version: v1
  */
 import type { UpdateCustomerDtoStatus } from './updateCustomerDtoStatus';
+import type { UpdateCustomerDtoMetadata } from './updateCustomerDtoMetadata';
 
 export interface UpdateCustomerDto {
   fullName?: string;
   phone?: string;
   email?: string;
   status?: UpdateCustomerDtoStatus;
+  metadata?: UpdateCustomerDtoMetadata;
+  /** Gán sales phụ trách (null = chưa gán) */
+  assignedUserId?: string;
   types?: string[];
 }

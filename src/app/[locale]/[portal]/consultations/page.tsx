@@ -78,38 +78,33 @@ export default function ConsultationsPage() {
   const columns = useMemo<ColumnDef<PropertyContact>[]>(
     () => [
       {
-        accessorKey: "userName",
-        header: "Khách hàng",
+        accessorKey: "propertyId",
+        header: "Bất động sản",
         cell: ({ row }) => (
-          <div className="flex flex-col gap-0.5">
-            <span className="font-medium">{row.original.userName}</span>
-            <span className="text-xs tabular-nums text-foreground-muted">{row.original.userPhone}</span>
-          </div>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              router.push(portalPath(`/properties/${row.original.propertyId}`));
+            }}
+            className="group flex flex-col gap-0.5 text-left"
+          >
+            <span className="font-medium text-foreground group-hover:text-primary transition-colors line-clamp-1 max-w-[220px]">
+              {row.original.propertyId}
+            </span>
+          </button>
         ),
       },
       {
-        id: "property",
-        header: "Bất động sản",
-        cell: ({ row }) => {
-          const property = row.original.property;
-          if (!property) return <span className="text-foreground-muted">—</span>;
-          return (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                router.push(portalPath(`/properties/${property.id}`));
-              }}
-              className="group flex flex-col gap-0.5 text-left"
-            >
-              <span className="font-medium text-foreground group-hover:text-primary transition-colors line-clamp-1 max-w-[220px]">
-                {property.title}
-              </span>
-              <span className="text-xs tabular-nums text-foreground-muted">
-                #{property.propertyCode}
-              </span>
-            </button>
-          );
-        },
+        id: "people",
+        header: "Người liên hệ",
+        cell: ({ row }) => (
+          <div className="flex flex-col gap-0.5">
+            <span className="font-medium break-all">{row.original.createdBy || "—"}</span>
+            <span className="text-xs break-all text-foreground-muted">
+              Nhận xử lý: {row.original.receiverId || "—"}
+            </span>
+          </div>
+        ),
       },
       {
         accessorKey: "status",

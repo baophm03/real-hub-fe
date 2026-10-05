@@ -46,8 +46,8 @@ export function PublicHeader() {
       .toUpperCase() ?? "U";
 
   return (
-    <header className="fixed inset-x-0 top-0 z-30 [--primary-foreground:#ffffff]">
-      <div className="bg-white border-b border-black/10 shadow-[0_4px_20px_-6px_rgba(0,0,0,0.15)]">
+    <header className="fixed inset-x-0 top-0 z-30 bg-white">
+      <div className="border-b border-black/10 shadow-[0_4px_20px_-6px_rgba(0,0,0,0.15)]">
         <div className="container mx-auto flex h-16 items-center justify-between">
           {/* Logo */}
           <Link href="/" className="group flex items-center gap-2.5">

@@ -5,12 +5,12 @@ import { Camera } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { ImageLightbox, type LightboxImage } from "@/components/shared/image-lightbox";
 
-interface ListingGalleryProps {
+interface PropertyGalleryProps {
   images: string[];
   propertyCode?: string;
 }
 
-export function ListingGallery({ images, propertyCode }: ListingGalleryProps) {
+export function PropertyGallery({ images, propertyCode }: PropertyGalleryProps) {
   const t = useTranslations("public.listingDetail");
   const tc = useTranslations("public.common");
   const [activeImage] = useState(0);

@@ -3,7 +3,7 @@ import {
   Zap, Droplet, Wind, Sun, Waves, Dumbbell, Utensils, Coffee, ShoppingBag,
   GraduationCap, HeartPulse, Lock, ArrowUpDown, Sofa, Mountain, TreePalm, TreeDeciduous,
   Fish, Flame, Snowflake, Wifi, Tv, WashingMachine, Refrigerator,
-  DoorOpen, Fence, Bike, Bus, Cigarette,
+  DoorOpen, Fence, Bike, Bus, Cigarette, Scan,
 } from "lucide-react";
 
 export type IconColor = "blue" | "purple" | "green" | "yellow" | "red";
@@ -47,7 +47,7 @@ export const propertyIconMap: { patterns: string[]; icon: any; color: IconColor 
   { patterns: ["hút thuốc", "smoking", "smoke", "thuoc la", "thuoc_la"], icon: Cigarette, color: "yellow" },
   { patterns: ["di chuyển", "transport", "di chuyen", "di_chuyen", "transportation"], icon: Bus, color: "yellow" },
   { patterns: ["pháp lý", "legal", "phap ly", "phap_ly", "ownership"], icon: ShieldCheck, color: "green" },
-  { patterns: ["diện tích", "area", "dien tich", "dien_tich"], icon: Ruler, color: "blue" },
+  { patterns: ["diện tích", "area", "dien tich", "dien_tich"], icon: Scan, color: "blue" },
   { patterns: ["hướng", "direction", "huong"], icon: Compass, color: "yellow" },
   { patterns: ["mặt tiền", "facade", "mat tien", "mat_tien"], icon: Building2, color: "purple" },
   { patterns: ["vị trí", "location", "vi tri", "vi_tri"], icon: MapPin, color: "red" },

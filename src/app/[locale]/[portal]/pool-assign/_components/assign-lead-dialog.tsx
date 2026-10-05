@@ -21,10 +21,8 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { useGetApiUsers } from "@/lib/api/endpoints/users";
-import { useGetApiTeams } from "@/lib/api/endpoints/teams";
 import { usePostApiLeadAssign } from "@/lib/api/endpoints/leads";
 import type { PoolLead } from "@/lib/api/types/pool";
-import type { GetTeamsResponse } from "@/lib/api/types/teams";
 
 type UserOption = { id: string; fullName: string; email: string; roles?: Array<{ code: string }> };
 
@@ -43,21 +41,15 @@ export function AssignLeadDialog({ lead, open, onOpenChange, onAssigned }: Props
     (usersRaw as unknown as { data?: UserOption[] })?.data ?? []
   ).filter((u) => u && u.id && u.roles?.some((r) => r.code === "SALES" || r.code === "TEAM_LEADER"));
 
-  const { data: teamsRaw } = useGetApiTeams({ limit: 100 });
-  const teams = ((teamsRaw as unknown as GetTeamsResponse)?.data ?? []).filter(
-    (t) => t.status === "ACTIVE",
-  );
-
   const { mutateAsync: assignLead, isPending } = usePostApiLeadAssign();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!lead || !target) return;
-    const [kind, id] = target.split(":");
     try {
       await assignLead({
         id: lead.id,
-        data: kind === "team" ? { teamId: id } : { salesId: id },
+        data: { salesId: target },
       });
       toast.success("Đã phân bổ lead");
       setTarget("");
@@ -76,27 +68,22 @@ export function AssignLeadDialog({ lead, open, onOpenChange, onAssigned }: Props
           <DialogHeader>
             <DialogTitle>Phân bổ lead</DialogTitle>
             <DialogDescription>
-              {lead?.leadCode} — gán cho sales hoặc team
+              {lead?.leadCode} — gán cho sales phụ trách
             </DialogDescription>
           </DialogHeader>
           <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
             <div className="flex flex-col gap-2">
               <label className="text-xs font-semibold tracking-wide text-foreground-muted">
-                Người nhận / Nhóm <span className="text-accent-red-text">*</span>
+                Sales nhận lead <span className="text-accent-red-text">*</span>
               </label>
               <Select value={target} onValueChange={(v) => setTarget((v as string) ?? "")}>
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Chọn sales hoặc team" />
+                  <SelectValue placeholder="Chọn sales" />
                 </SelectTrigger>
                 <SelectContent>
                   {salesOptions.map((u) => (
-                    <SelectItem key={u.id} value={`sales:${u.id}`} label={u.fullName}>
+                    <SelectItem key={u.id} value={u.id} label={u.fullName}>
                       {u.fullName} ({u.email})
-                    </SelectItem>
-                  ))}
-                  {teams.map((t) => (
-                    <SelectItem key={t.id} value={`team:${t.id}`} label={t.name}>
-                      Team: {t.name}
                     </SelectItem>
                   ))}
                 </SelectContent>

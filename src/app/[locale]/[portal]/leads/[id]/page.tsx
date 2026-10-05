@@ -45,11 +45,6 @@ interface LeadProperty {
   propertyCode: string;
   price?: string;
 }
-interface LeadSales {
-  id: string;
-  fullName: string;
-  email?: string;
-}
 interface LeadActivity {
   id: string;
   activityType: string;
@@ -69,14 +64,12 @@ interface Lead {
   customerId: string | null;
   propertyId: string | null;
   source: string;
-  assignedSalesId: string | null;
   phoneNormalized: string | null;
   status: string;
   createdAt: string;
   dynamicValuesJson?: Record<string, unknown> | null;
   customer: LeadCustomer | null;
   property: LeadProperty | null;
-  assignedSales: LeadSales | null;
   activities?: LeadActivity[];
 }
 
@@ -286,19 +279,6 @@ export default function LeadDetailPage() {
                   <div className="flex flex-col">
                     <span className="text-sm tabular-nums">{lead.phoneNormalized}</span>
                     <span className="text-xs text-foreground-muted">Điện thoại</span>
-                  </div>
-                </div>
-              )}
-              {lead.assignedSales && (
-                <div className="flex items-center gap-2.5">
-                  <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-accent-purple text-accent-purple-text">
-                    <User size={16} />
-                  </span>
-                  <div className="flex flex-col">
-                    <span className="text-sm">{lead.assignedSales.fullName}</span>
-                    {lead.assignedSales.email && (
-                      <span className="text-xs text-foreground-muted">{lead.assignedSales.email}</span>
-                    )}
                   </div>
                 </div>
               )}

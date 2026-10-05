@@ -75,9 +75,8 @@ export interface MyDeal {
 
 export interface MyContact {
   id: string;
-  userName: string | null;
-  userPhone: string | null;
-  userContent: string | null;
+  propertyId: string;
+  refCode: string | null;
   status: string;
   createdAt: string;
   property: {

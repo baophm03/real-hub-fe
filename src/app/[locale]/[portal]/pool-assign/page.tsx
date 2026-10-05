@@ -10,7 +10,7 @@ import { PaginationBar } from "@/components/shared/pagination-bar";
 import { usePagination } from "@/lib/hooks/use-pagination";
 import { useGetApiLeadsPool } from "@/lib/api/endpoints/leads";
 import type { PoolLead, GetPoolLeadsResponse } from "@/lib/api/types/pool";
-import { PoolLeadsTable } from "../pool/_components/pool-leads-table";
+import { PoolLeadsTable } from "./_components/pool-leads-table";
 import { AssignLeadDialog } from "./_components/assign-lead-dialog";
 
 export default function PoolManagePage() {
@@ -31,7 +31,7 @@ export default function PoolManagePage() {
       <PageHeader
         eyebrow="CRM"
         title="Phân bổ lead"
-        description="Phân bổ lead trong pool cho sales hoặc team"
+        description="Phân bổ lead trong pool cho sales phụ trách"
       />
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

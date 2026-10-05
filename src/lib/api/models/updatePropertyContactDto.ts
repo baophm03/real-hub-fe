@@ -9,5 +9,4 @@ import type { UpdatePropertyContactDtoStatus } from './updatePropertyContactDtoS
 
 export interface UpdatePropertyContactDto {
   status?: UpdatePropertyContactDtoStatus;
-  userContent?: string;
 }

@@ -61,8 +61,8 @@ export default function MyContactsPage() {
                           <span className="text-sm font-medium">{c.property.title}</span>
                         )}
                       </div>
-                      {c.userContent && (
-                        <p className="text-sm text-foreground-muted line-clamp-2">{c.userContent}</p>
+                      {c.refCode && (
+                        <p className="text-sm text-foreground-muted line-clamp-2">ref: {c.refCode}</p>
                       )}
                     </div>
                     <span className="shrink-0 text-xs text-foreground-muted">

@@ -693,69 +693,7 @@ export const prefetchGetApiLeadsPoolQuery = async <TData = Awaited<ReturnType<ty
 
 
 /**
- * @summary Sales claims a lead from the pool
- */
-export const postApiLeadClaim = (
-    id: string,
- signal?: AbortSignal
-) => {
-      
-      
-      return customInstance<void>(
-      {url: `/api/leads/${id}/claim`, method: 'POST', signal
-    },
-      );
-    }
-  
-
-
-export const getPostApiLeadClaimMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiLeadClaim>>, TError,{id: string}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof postApiLeadClaim>>, TError,{id: string}, TContext> => {
-
-const mutationKey = ['postApiLeadClaim'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiLeadClaim>>, {id: string}> = (props) => {
-          const {id} = props ?? {};
-
-          return  postApiLeadClaim(id,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type PostApiLeadClaimMutationResult = NonNullable<Awaited<ReturnType<typeof postApiLeadClaim>>>
-    
-    export type PostApiLeadClaimMutationError = unknown
-
-    /**
- * @summary Sales claims a lead from the pool
- */
-export const usePostApiLeadClaim = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiLeadClaim>>, TError,{id: string}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof postApiLeadClaim>>,
-        TError,
-        {id: string},
-        TContext
-      > => {
-
-      const mutationOptions = getPostApiLeadClaimMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
-    }
-    /**
- * @summary Assign a pool lead to a sales or team
+ * @summary Assign a pool lead to a sales
  */
 export const postApiLeadAssign = (
     id: string,
@@ -764,7 +702,7 @@ export const postApiLeadAssign = (
 ) => {
       
       
-      return customInstance<void>(
+      return customInstance<unknown>(
       {url: `/api/leads/${id}/assign`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: assignLeadDto, signal
@@ -804,7 +742,7 @@ const {mutation: mutationOptions} = options ?
     export type PostApiLeadAssignMutationError = unknown
 
     /**
- * @summary Assign a pool lead to a sales or team
+ * @summary Assign a pool lead to a sales
  */
 export const usePostApiLeadAssign = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiLeadAssign>>, TError,{id: string;data: AssignLeadDto}, TContext>, }

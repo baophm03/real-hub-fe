@@ -46,27 +46,6 @@ export function PublicFooter() {
 
           <div className="col-span-6 md:col-span-2 flex flex-col gap-3">
             <p className="text-sm font-semibold uppercase tracking-wide text-foreground">
-              {t("footer.rent")}
-            </p>
-            <Link href="/listings?types=APARTMENT&transactionType=RENT" className="text-sm text-foreground-muted transition-colors hover:text-foreground">
-              {t("footer.apartment")}
-            </Link>
-            <Link href="/listings?types=VILLA&transactionType=RENT" className="text-sm text-foreground-muted transition-colors hover:text-foreground">
-              {t("footer.villa")}
-            </Link>
-            <Link href="/listings?types=HOUSE,SHOPHOUSE&transactionType=RENT" className="text-sm text-foreground-muted transition-colors hover:text-foreground">
-              {t("footer.townhouse")}
-            </Link>
-            <Link href="/listings?types=LAND&transactionType=RENT" className="text-sm text-foreground-muted transition-colors hover:text-foreground">
-              {t("footer.land")}
-            </Link>
-            <Link href="/listings?types=OFFICE,WAREHOUSE,SHOP&transactionType=RENT" className="text-sm text-foreground-muted transition-colors hover:text-foreground">
-              {t("footer.commercial")}
-            </Link>
-          </div>
-
-          <div className="col-span-6 md:col-span-2 flex flex-col gap-3">
-            <p className="text-sm font-semibold uppercase tracking-wide text-foreground">
               {t("footer.explore")}
             </p>
             <Link href="/projects" className="text-sm text-foreground-muted transition-colors hover:text-foreground">
@@ -80,7 +59,7 @@ export function PublicFooter() {
             </Link>
           </div>
 
-          <div className="col-span-6 md:col-span-2 flex flex-col gap-3">
+          <div className="col-span-6 md:col-span-4 flex flex-col gap-3">
             <p className="text-sm font-semibold uppercase tracking-wide text-foreground">
               {t("footer.contactCol")}
             </p>

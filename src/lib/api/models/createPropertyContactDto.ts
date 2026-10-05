@@ -9,9 +9,6 @@
 export interface CreatePropertyContactDto {
   /** UUID of the Property record */
   propertyId: string;
-  /** publicLinkCode từ URL ?ref= — BE resolve sang assignment → sales nhận contact. Không truyền recipientUserId trực tiếp. */
+  /** publicLinkCode từ URL ?ref= (nếu có) */
   refCode?: string;
-  userName: string;
-  userPhone: string;
-  userContent?: string;
 }
