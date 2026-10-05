@@ -58,13 +58,16 @@ export function ImageLightbox({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[90vw] max-h-[90vh] overflow-hidden rounded-lg border border-border bg-black/95 p-0 sm:max-w-[900px]">
+      <DialogContent
+        showCloseButton={false}
+        className="h-[90vh] max-h-[90vh] max-w-[95vw] sm:max-w-[95vw] overflow-hidden rounded-lg border border-border bg-black/95 p-0"
+      >
         <DialogTitle className="sr-only">{label}</DialogTitle>
-        <div className="relative flex h-full max-h-[90vh] items-center justify-center">
+        <div className="relative flex h-full items-center justify-center">
           <img
             src={current.url}
             alt={label}
-            className="max-h-[85vh] w-auto object-contain"
+            className="max-h-full max-w-full object-contain"
           />
 
           {/* Close */}

@@ -2,7 +2,6 @@
 
 import { motion } from "framer-motion";
 import {
-  ArrowRight,
   Building2,
   Eye,
   Handshake,
@@ -14,10 +13,9 @@ import {
   Zap,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { Link } from "@/i18n/navigation";
-import { Button } from "@/components/ui/button";
 import { RevealSection } from "@/components/shared/reveal-section";
 import { PageBanner } from "@/components/shared/page-banner";
+import { CtaCard } from "@/components/shared/cta/cta-card";
 import { cn } from "@/lib/utils";
 
 export default function AboutPage() {
@@ -73,7 +71,7 @@ export default function AboutPage() {
       />
 
       {/* Stats Bar */}
-      <section className="border-y border-border bg-[#F9FAFB] py-12 md:py-16">
+      <section className="border-y border-border bg-[#F9FAFB] py-8">
         <div className="container">
           <div className="grid grid-cols-2 md:grid-cols-4">
             {stats.map((item, i) => (
@@ -85,11 +83,7 @@ export default function AboutPage() {
                 transition={{ duration: 0.6, delay: i * 0.08, ease: [0.16, 1, 0.3, 1] }}
                 whileHover={{ y: -6 }}
                 className={cn(
-                  "group flex cursor-pointer flex-col items-center gap-3 rounded-2xl px-6 py-6 text-center transition-colors duration-300 hover:bg-surface md:px-10 md:py-8",
-                  i > 0 && "md:border-l md:border-border",
-                  i === 2 && "border-t border-border md:border-t-0",
-                  i === 3 && "border-t border-border md:border-t-0",
-                  i < 2 && "border-r border-border md:border-r-0",
+                  "group flex cursor-pointer flex-col items-center gap-3 rounded-2xl px-6 py-6 text-center transition-colors duration-300 hover:bg-surface md:px-10 md:py-8"
                 )}
               >
                 <motion.div
@@ -204,50 +198,15 @@ export default function AboutPage() {
 
         {/* CTA section */}
         <RevealSection>
-          <section className="bg-[#0B2A0B] py-16 md:py-24 rounded-2xl">
-            <motion.div
-              initial={{ opacity: 0, y: 24, filter: "blur(8px)" }}
-              whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-              viewport={{ once: true, margin: "-80px" }}
-              transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-              className="flex flex-col items-center justify-center gap-8 px-6 text-center md:px-8"
-            >
-              <span className="w-fit rounded-full bg-white/10 px-3 py-1 text-[10px] font-medium uppercase tracking-[0.2em] text-white/60">
-                {t("joinEyebrow")}
-              </span>
-
-              <h2 className="max-w-[20ch] font-serif text-3xl font-semibold leading-[1.1] tracking-tighter text-balance text-white md:text-5xl">
-                {t("joinTitle")}
-              </h2>
-
-              <p className="max-w-[44ch] text-base leading-relaxed text-white/60">
-                {t("joinDesc")}
-              </p>
-
-              <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
-                <Button
-                  size="lg"
-                  className="bg-[#C7EDBB] text-[#1E2220] hover:bg-[#C7EDBB]/90"
-                  render={<Link href="/register" />}
-                  rightIcon={
-                    <span className="flex items-center justify-center">
-                      <ArrowRight size={14} />
-                    </span>
-                  }
-                >
-                  {t("joinNow")}
-                </Button>
-                <Button
-                  variant="outline"
-                  size="lg"
-                  className="bg-white text-[#1E2220] hover:bg-white/90"
-                  render={<Link href="/contact" />}
-                >
-                  {t("contactAdvisory")}
-                </Button>
-              </div>
-            </motion.div>
-          </section>
+          <CtaCard
+            eyebrow={t("joinEyebrow")}
+            title={t("joinTitle")}
+            description={t("joinDesc")}
+            primaryLabel={t("joinNow")}
+            primaryHref="/register"
+            secondaryLabel={t("contactAdvisory")}
+            secondaryHref="/contact"
+          />
         </RevealSection>
       </div>
     </>

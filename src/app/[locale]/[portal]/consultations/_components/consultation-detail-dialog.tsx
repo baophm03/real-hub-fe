@@ -8,8 +8,7 @@ import {
   CircleUser,
   ExternalLink,
   House,
-  MessageCircle,
-  Phone,
+  Link2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Can } from "@casl/react";
@@ -32,25 +31,17 @@ import {
   getGetApiPropertyContactsQueryKey,
 } from "@/lib/api/endpoints/property-contacts";
 
+// BE chỉ trả về field của chính property contact (không join bảng khác).
 export interface PropertyContact {
   id: string;
-  userName: string;
-  userPhone: string;
-  userContent?: string;
+  tenantId: string;
+  propertyId: string;
   status: "UNREAD" | "READ" | "REPLIED" | "ARCHIVED";
+  receiverId: string | null;
+  createdBy: string | null;
+  updatedBy: string | null;
   createdAt: string;
   updatedAt: string;
-  property?: {
-    id: string;
-    title: string;
-    propertyCode: string;
-  };
-  recipient?: {
-    id: string;
-    fullName: string;
-    email: string;
-    phone: string;
-  } | null;
 }
 
 const statusConfig: Record<
@@ -153,58 +144,39 @@ export function ConsultationDetailDialog({
                     <House size={14} />
                     Bất động sản
                   </div>
-                  {contact.property ? (
-                    <div className="flex flex-col gap-2">
-                      <div className="flex items-start justify-between gap-2">
-                        <span className="text-sm font-medium leading-snug">
-                          {contact.property.title}
-                        </span>
-                        <Button
-                          variant="ghost"
-                          size="icon-sm"
-                          aria-label="Xem bất động sản"
-                          onClick={() => {
-                            router.push(portalPath(`/properties/${contact.property!.id}`));
-                            onOpenChange(false);
-                          }}
-                        >
-                          <ExternalLink size={14} />
-                        </Button>
-                      </div>
-                      <span className="text-xs tabular-nums text-foreground-muted">
-                        #{contact.property.propertyCode}
-                      </span>
-                    </div>
-                  ) : (
-                    <span className="text-sm text-foreground-muted">—</span>
-                  )}
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="text-sm font-medium leading-snug">
+                      {contact.propertyId}
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      aria-label="Xem bất động sản"
+                      onClick={() => {
+                        router.push(portalPath(`/properties/${contact.propertyId}`));
+                        onOpenChange(false);
+                      }}
+                    >
+                      <ExternalLink size={14} />
+                    </Button>
+                  </div>
                 </div>
 
-                {/* Customer info */}
+                {/* Người tạo / người nhận xử lý */}
                 <div className="flex flex-col gap-3 rounded-lg border border-border bg-surface-muted/40 p-4">
                   <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-foreground-muted">
                     <CircleUser size={14} />
-                    Khách liên hệ
+                    Người liên hệ
                   </div>
                   <div className="flex flex-col gap-2">
-                    <span className="text-sm font-medium">{contact.userName}</span>
-                    <div className="flex items-center gap-2 text-sm text-foreground-muted">
-                      <Phone size={14} />
-                      <span className="tabular-nums">{contact.userPhone}</span>
-                    </div>
+                    <span className="text-sm font-medium break-all">
+                      {contact.createdBy || "—"}
+                    </span>
+                    <span className="text-xs text-foreground-muted">
+                      Người nhận xử lý: {contact.receiverId || "—"}
+                    </span>
                   </div>
                 </div>
-              </div>
-
-              {/* Content (full width) */}
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-foreground-muted">
-                  <MessageCircle size={14} />
-                  Nội dung yêu cầu
-                </div>
-                <p className="text-sm leading-relaxed text-foreground whitespace-pre-wrap rounded-lg border border-border bg-surface-muted/40 p-4">
-                  {contact.userContent || "—"}
-                </p>
               </div>
 
               {/* Meta */}

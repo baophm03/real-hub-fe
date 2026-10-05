@@ -2,6 +2,7 @@
 
 import { Phone, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PropertyPrice } from "@/components/shared/property-detail/property-price";
 
 interface OwnerContactSidebarProps {
   property?: any;
@@ -14,6 +15,7 @@ export function OwnerContactSidebar({ property, title = "Thông tin liên hệ c
   return (
     <div className="w-full lg:w-1/3 lg:sticky lg:top-24">
       <div className="flex flex-col gap-6 rounded-lg border border-border bg-surface p-6 shadow-[0_1px_3px_rgba(42,37,32,0.02),0_8px_24px_-12px_rgba(45,95,63,0.06)]">
+        <PropertyPrice property={property} />
         <div>
           <h2 className="font-serif text-lg font-medium tracking-tight text-foreground border-b border-border pb-3 mb-4">
             {title}

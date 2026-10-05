@@ -220,12 +220,6 @@ export default function DealFormPage() {
                 <p className="text-xs font-semibold uppercase tracking-wide text-foreground-muted">Nguồn</p>
                 <p className="mt-1 text-sm font-medium">{selectedLead.source}</p>
               </div>
-              <div className="rounded-lg border border-border bg-surface-muted/30 p-4">
-                <p className="text-xs font-semibold uppercase tracking-wide text-foreground-muted">Sales phụ trách</p>
-                <p className="mt-1 text-sm font-medium">
-                  {selectedLead.assignedSales?.fullName ?? "—"}
-                </p>
-              </div>
             </div>
           </FormSection>
         )}

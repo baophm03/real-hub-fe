@@ -14,11 +14,8 @@ export interface CreateLeadDto {
   /** Auto-generated as LD-DDMMyy-NNN if omitted */
   leadCode?: string;
   customerId?: string;
-  customerNeedId?: string;
   propertyId?: string;
   source: CreateLeadDtoSource;
-  sourceUserId?: string;
-  assignedSalesId?: string;
   phoneNormalized?: string;
   status?: CreateLeadDtoStatus;
   dynamicValuesJson?: CreateLeadDtoDynamicValuesJson;

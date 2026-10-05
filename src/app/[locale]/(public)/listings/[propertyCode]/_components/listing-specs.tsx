@@ -29,10 +29,10 @@ export async function ListingSpecs({ property, schemas }: ListingSpecsProps) {
   const legalStatus = findFieldValue(schemas, dynamicValues, ["legal", "phap_ly", "pháp lý", "ownership"]);
 
   const staticSpecs = [
-    { icon: findPropertyIcon("diện tích").icon, color: findPropertyIcon("diện tích").color as IconColor, label: t("specArea"), value: property?.area ? `${areaNum} m²` : "—" },
-    { icon: findPropertyIcon("phòng ngủ").icon, color: findPropertyIcon("phòng ngủ").color as IconColor, label: t("specBedrooms"), value: bedrooms ?? "—" },
-    { icon: findPropertyIcon("phòng tắm").icon, color: findPropertyIcon("phòng tắm").color as IconColor, label: t("specBathrooms"), value: bathrooms ?? "—" },
-    { icon: findPropertyIcon("pháp lý").icon, color: findPropertyIcon("pháp lý").color as IconColor, label: t("specLegal"), value: legalStatus ?? "—" },
+    { icon: findPropertyIcon("phòng ngủ").icon, color: findPropertyIcon("phòng ngủ").color as IconColor, label: t("specBedrooms"), value: bedrooms },
+    { icon: findPropertyIcon("phòng tắm").icon, color: findPropertyIcon("phòng tắm").color as IconColor, label: t("specBathrooms"), value: bathrooms },
+    { icon: findPropertyIcon("diện tích").icon, color: findPropertyIcon("diện tích").color as IconColor, label: t("specArea"), value: property?.area ? `${areaNum} m²` : null },
+    { icon: findPropertyIcon("pháp lý").icon, color: findPropertyIcon("pháp lý").color as IconColor, label: t("specLegal"), value: legalStatus },
   ];
 
   // Dedup by label — dynamic field labels come from the API (Vietnamese), so compare
@@ -43,23 +43,26 @@ export async function ListingSpecs({ property, schemas }: ListingSpecsProps) {
     .filter((f) => !staticSpecLabels.has(f.label))
     .map((f) => {
       const { icon, color } = findPropertyIcon(f.label);
-      return { icon, color: color as IconColor, label: f.label, value: f.value };
+      return { icon, color: color as IconColor, label: f.label, value: f.value as string | null };
     });
-  const specs = [...staticSpecs, ...dynamicSpecs];
+  const specs = [...staticSpecs, ...dynamicSpecs].filter(
+    (s) => s.value != null && s.value !== "" && s.value !== "—",
+  );
 
   if (specs.length === 0) return null;
 
   return (
-    <section className="grid grid-cols-2 md:grid-cols-4 gap-4 p-6 bg-surface-muted rounded-xl border border-border">
+    <section className="grid grid-cols-2 md:grid-cols-4 gap-3">
       {specs.map((spec) => {
         const Icon = spec.icon;
         return (
-          <div key={spec.label} className="flex flex-col gap-1">
-            <span className="text-xs font-semibold uppercase tracking-wide text-foreground-muted">{spec.label}</span>
-            <div className="flex items-center gap-2">
-              <Icon size={20} className={iconColorClasses[spec.color]} />
-              <span className="font-serif text-xl font-medium text-primary">{spec.value}</span>
-            </div>
+          <div
+            key={spec.label}
+            className="flex flex-col items-center justify-center gap-1 rounded-xl bg-surface-muted px-3 py-5 text-center"
+          >
+            <Icon size={24} className={iconColorClasses[spec.color]} />
+            <span className="text-base font-bold text-foreground">{spec.value}</span>
+            <span className="text-xs text-foreground-muted">{spec.label}</span>
           </div>
         );
       })}

@@ -12,5 +12,7 @@ export interface CreateCustomerDto {
   phone?: string;
   email?: string;
   types?: string[];
+  /** Gán sales phụ trách (null = chưa gán) */
+  assignedUserId?: string;
   metadata?: CreateCustomerDtoMetadata;
 }

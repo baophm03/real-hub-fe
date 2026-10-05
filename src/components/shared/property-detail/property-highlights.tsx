@@ -8,13 +8,6 @@ import {
   type IconColor,
 } from "@/constants/property-icons";
 
-export interface PropertyHighlight {
-  icon?: any;
-  color: IconColor;
-  title: string;
-  desc: string;
-}
-
 const iconColorClasses: Record<IconColor, string> = {
   blue: "bg-accent-blue text-accent-blue-text",
   purple: "bg-accent-purple text-accent-purple-text",
@@ -29,8 +22,9 @@ interface PropertyHighlightsProps {
   title?: string;
 }
 
+/** Đặc điểm nổi bật — cùng thiết kế với listing công khai. */
 export function PropertyHighlights({ property, schemas = [], title = "Đặc điểm nổi bật" }: PropertyHighlightsProps) {
-  const highlights = useMemo<PropertyHighlight[]>(() => {
+  const highlights = useMemo(() => {
     const dynamicValues = property?.dynamicValuesJson as Record<string, unknown> | undefined;
     const specialFields = getFieldsByGroupCode(schemas, dynamicValues, "special");
     return specialFields.map((f) => {
@@ -39,26 +33,21 @@ export function PropertyHighlights({ property, schemas = [], title = "Đặc đi
     });
   }, [property, schemas]);
 
-  if (!highlights || highlights.length === 0) return null;
+  if (highlights.length === 0) return null;
 
   return (
-    <section className="flex flex-col gap-4">
-      <h2 className="font-serif text-xl font-medium tracking-tight text-foreground border-b border-border pb-3">
-        {title}
-      </h2>
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+    <section className="space-y-4">
+      <h2 className="font-serif text-xl font-semibold text-primary border-b border-border pb-2">{title}</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {highlights.map((item) => {
           const Icon = item.icon ?? Star;
           return (
-            <div
-              key={item.title}
-              className="flex items-center gap-4 rounded-lg border border-border bg-surface p-4 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:border-primary/20 hover:shadow-[0_4px_16px_-8px_rgba(45,95,63,0.12)]"
-            >
-              <div className={`flex size-10 shrink-0 items-center justify-center rounded-lg ${iconColorClasses[item.color]}`}>
+            <div key={item.title} className="flex items-center gap-3 p-4 bg-surface rounded-lg border border-border">
+              <div className={`flex size-10 items-center justify-center rounded-full ${iconColorClasses[item.color]}`}>
                 <Icon size={20} />
               </div>
               <div className="flex flex-col gap-0.5">
-                <h3 className="text-sm font-semibold text-foreground">{item.title}</h3>
+                <h3 className="font-serif text-base font-medium text-primary">{item.title}</h3>
                 <p className="text-xs text-foreground-muted">{item.desc}</p>
               </div>
             </div>

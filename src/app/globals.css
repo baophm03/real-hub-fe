@@ -72,12 +72,12 @@
 
 :root {
   --surface: #FFFFFF;
-  --surface-muted: #F7F6F3;
+  --surface-muted: #F9FAFB;
   --foreground-muted: #787774;
   --border: #EAEAEA;
   --border-strong: #D1D0CE;
 
-  --primary: #2D5F3F;
+  --primary: #092909;
   --primary-foreground: #FFFFFF;
   --secondary: #F7F6F3;
   --secondary-foreground: #1A1A1A;
@@ -92,7 +92,7 @@
   --popover: #FFFFFF;
   --popover-foreground: #1A1A1A;
   --input: #EAEAEA;
-  --ring: #2D5F3F;
+  --ring: #092909;
   --radius: 0.625rem;
 
   --accent-red: #FDEBEC;
@@ -112,13 +112,13 @@
   --chart-5: oklch(0.269 0 0);
   --sidebar: #FFFFFF;
   --sidebar-foreground: #1A1A1A;
-  --sidebar-primary: #2D5F3F;
+  --sidebar-primary: #092909;
   --sidebar-primary-foreground: #FFFFFF;
   --sidebar-accent: #F7F6F3;
   --sidebar-accent-foreground: #1A1A1A;
   --sidebar-border: #EAEAEA;
-  --sidebar-ring: #2D5F3F;
-  --background: #FBFBFA;
+  --sidebar-ring: #092909;
+  --background: #FFFFFF;
   --foreground: #1A1A1A;
 }
 
@@ -373,6 +373,7 @@ body::before {
     @apply mx-auto px-5 md:px-15 lg:px-25;
   }
 }
+
 /* Dual-thumb price range slider (public listings filter) */
 .price-range-thumb::-webkit-slider-thumb {
   pointer-events: auto;
