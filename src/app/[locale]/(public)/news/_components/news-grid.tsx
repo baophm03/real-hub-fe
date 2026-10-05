@@ -1,6 +1,7 @@
 import type { News } from "@/lib/api/types/news";
 import { Newspaper } from "lucide-react";
 import { NewsCard } from "@/components/shared/news-card";
+import { NewsListItem } from "@/components/shared/news-list-item";
 import { getTranslations } from "next-intl/server";
 
 export async function NewsGrid({ news }: { news: News[] }) {
@@ -20,10 +21,19 @@ export async function NewsGrid({ news }: { news: News[] }) {
   }
 
   return (
-    <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-      {sorted.map((article) => (
-        <NewsCard key={article.id} article={article} />
-      ))}
-    </div>
+    <>
+      {/* Mobile: compact list cards (related-news style) */}
+      <div className="flex flex-col sm:hidden">
+        {sorted.map((article) => (
+          <NewsListItem key={article.id} article={article} />
+        ))}
+      </div>
+      {/* sm+: article card grid */}
+      <div className="hidden gap-8 sm:grid sm:grid-cols-2 lg:grid-cols-3">
+        {sorted.map((article) => (
+          <NewsCard key={article.id} article={article} />
+        ))}
+      </div>
+    </>
   );
 }

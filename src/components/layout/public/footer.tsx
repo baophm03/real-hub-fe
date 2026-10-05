@@ -9,7 +9,7 @@ export function PublicFooter() {
   return (
     <footer className="bg-white">
       <div className="container pt-14 pb-8">
-        <div className="grid grid-cols-12 gap-8">
+        <div className="grid grid-cols-12 gap-6 md:gap-8">
           <div className="col-span-12 md:col-span-4">
             <div className="flex items-center gap-2">
               <img src="/logo.png" alt="RealHub" className="size-8 rounded-lg object-cover" />
@@ -23,7 +23,7 @@ export function PublicFooter() {
             <NewsletterForm />
           </div>
 
-          <div className="col-span-6 md:col-span-2 flex flex-col gap-3">
+          <div className="col-span-12 flex flex-col gap-3 sm:col-span-6 md:col-span-2">
             <p className="text-sm font-semibold uppercase tracking-wide text-foreground">
               {t("footer.sale")}
             </p>
@@ -44,7 +44,7 @@ export function PublicFooter() {
             </Link>
           </div>
 
-          <div className="col-span-6 md:col-span-2 flex flex-col gap-3">
+          <div className="col-span-12 flex flex-col gap-3 sm:col-span-6 md:col-span-2">
             <p className="text-sm font-semibold uppercase tracking-wide text-foreground">
               {t("footer.explore")}
             </p>
@@ -59,7 +59,7 @@ export function PublicFooter() {
             </Link>
           </div>
 
-          <div className="col-span-6 md:col-span-4 flex flex-col gap-3">
+          <div className="col-span-12 flex flex-col gap-3 md:col-span-4">
             <p className="text-sm font-semibold uppercase tracking-wide text-foreground">
               {t("footer.contactCol")}
             </p>
