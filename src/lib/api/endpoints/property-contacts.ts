@@ -236,7 +236,7 @@ export const prefetchGetApiPropertyContactsQuery = async <TData = Awaited<Return
 
 
 /**
- * @summary Submit a property contact request (public)
+ * @summary Submit a property contact request (login required)
  */
 export const postApiPropertyContacts = (
     createPropertyContactDto: CreatePropertyContactDto,
@@ -284,7 +284,7 @@ const {mutation: mutationOptions} = options ?
     export type PostApiPropertyContactsMutationError = unknown
 
     /**
- * @summary Submit a property contact request (public)
+ * @summary Submit a property contact request (login required)
  */
 export const usePostApiPropertyContacts = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiPropertyContacts>>, TError,{data: CreatePropertyContactDto}, TContext>, }
@@ -308,7 +308,7 @@ export const getApiPropertyContactsId = (
 ) => {
       
       
-      return customInstance<void>(
+      return customInstance<unknown>(
       {url: `/api/property-contacts/${id}`, method: 'GET', signal
     },
       );
@@ -493,7 +493,7 @@ export const prefetchGetApiPropertyContactsIdQuery = async <TData = Awaited<Retu
 
 
 /**
- * @summary Update a property contact request (status/content)
+ * @summary Update a property contact request
  */
 export const patchApiPropertyContactsId = (
     id: string,
@@ -541,7 +541,7 @@ const {mutation: mutationOptions} = options ?
     export type PatchApiPropertyContactsIdMutationError = unknown
 
     /**
- * @summary Update a property contact request (status/content)
+ * @summary Update a property contact request
  */
 export const usePatchApiPropertyContactsId = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof patchApiPropertyContactsId>>, TError,{id: string;data: UpdatePropertyContactDto}, TContext>, }

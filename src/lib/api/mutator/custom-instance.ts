@@ -86,14 +86,14 @@ apiClient.interceptors.response.use(
             console.error("Failed to refresh token", e);
             localStorage.removeItem("realhub-auth");
             localStorage.removeItem("realhub-user");
-            window.location.href = "/vi/login";
+            window.location.href = `/vi/login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`;
             return Promise.reject(error);
           }
         }
 
         localStorage.removeItem("realhub-auth");
         localStorage.removeItem("realhub-user");
-        window.location.href = "/vi/login";
+        window.location.href = `/vi/login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`;
       }
 
       if (statusCode === 403) {

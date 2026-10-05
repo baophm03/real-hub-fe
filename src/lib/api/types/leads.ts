@@ -43,13 +43,11 @@ export interface LeadActivity {
 export interface Lead {
   id: string;
   leadCode: string;
-  assignmentId: string | null;
   source: string;
   assignedTeamId: string | null;
   phoneNormalized: string | null;
   protectionUntil: string | null;
   status: string;
-  duplicateStatus: string | null;
   dynamicValuesJson?: Record<string, unknown> | null;
   metadata: Record<string, unknown> | null;
   createdAt: string;
@@ -58,25 +56,5 @@ export interface Lead {
   updater?: { id: string; fullName: string; avatarFile: { id: string; name: string; url: string } | null } | null;
   customer: { id: string; fullName: string; phone: string } | null;
   property: { id: string; title: string; propertyCode: string } | null;
-  assignedSales: { id: string; fullName: string } | null;
-  sourceUser?: { id: string; fullName: string } | null;
-  ownerUser?: { id: string; fullName: string } | null;
-  customerNeed?: {
-    id: string;
-    purpose: string | null;
-    zoneId: string | null;
-    budgetMin: string | null;
-    budgetMax: string | null;
-    areaMin: number | null;
-    areaMax: number | null;
-    bedrooms: number | null;
-    expectedTime: string | null;
-    note: string | null;
-    dynamicValuesJson: Record<string, unknown> | null;
-    status: string;
-    createdAt: string;
-    updatedAt: string;
-    propertyType: { id: string; name: string; code: string; group: string } | null;
-  } | null;
   activities?: LeadActivity[];
 }

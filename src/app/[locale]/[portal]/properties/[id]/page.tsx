@@ -4,7 +4,6 @@ import { useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { usePortalPath } from "@/lib/hooks/use-portal";
 import Link from "next/link";
-import { formatPrice } from "@/utils";
 import {
   ArrowLeft,
   ChevronRight,
@@ -16,9 +15,10 @@ import { useGetApiPropertyId, useGetApiPropertyMedia } from "@/lib/api/endpoints
 import { useGetApiFormSchemas } from "@/lib/api/endpoints/dynamic-fields";
 import { Property } from "@/lib/api/types/properties";
 import { ContactSidebar } from "./_components/contact-sidebar";
-import { PropertyGallery } from "./_components/property-gallery";
-import { PropertyHighlights } from "./_components/property-highlights";
-import { PropertySpecs } from "./_components/property-specs";
+import { PropertyGallery } from "@/components/shared/property-detail/property-gallery";
+import { PropertyHighlights } from "@/components/shared/property-detail/property-highlights";
+import { PropertySpecs } from "@/components/shared/property-detail/property-specs";
+import { PropertyBadges } from "@/components/shared/property-detail/property-badges";
 import { PropertyDescription } from "./_components/property-description";
 import { PropertyMap } from "./_components/property-map";
 import { WorkflowActions } from "./_components/workflow-actions";
@@ -44,9 +44,7 @@ export default function PropertyDetailPage() {
       .sort((a: any, b: any) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
   }, [mediaData]);
 
-  const priceNum = Number(property?.price || 0);
-  const areaNum = property?.area ?? 0;
-  const pricePerM2 = areaNum > 0 ? priceNum / areaNum : 0;
+  const gallery = mediaItems.map((m: any) => m.file?.url).filter(Boolean) as string[];
 
   const propertyTypeId = property?.propertyType?.id;
 
@@ -96,41 +94,31 @@ export default function PropertyDetailPage() {
         </Button>
       </div>
 
-      {/* Breadcrumbs & Header */}
-      <div className="flex flex-col gap-4">
-        <div className="flex items-center gap-2 text-sm text-foreground-muted">
-          <Link href={portalPath("/properties")} className="transition-colors hover:text-foreground">
-            Bất động sản
-          </Link>
-          <ChevronRight size={12} />
-          <span>{property?.province?.name ?? "-"}</span>
-          <ChevronRight size={12} />
-          <span>{property?.district?.name ?? "-"}</span>
-        </div>
-
-        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-          <div className="flex flex-col gap-2">
-            <h1 className="font-serif text-2xl font-medium tracking-tight text-foreground md:text-4xl">
-              {property?.title ?? "-"}
-            </h1>
-            <p className="flex items-center gap-2 text-sm text-foreground-muted md:text-base">
-              <MapPin size={16} className="text-primary" />
-              {property?.district?.name ?? "-"}, {property?.province?.name ?? "-"}
-            </p>
-          </div>
-          <div className="flex flex-col items-start gap-1 md:items-end">
-            <span className="font-serif text-3xl font-medium text-primary md:text-4xl">
-              {property ? formatPrice(priceNum) : "-"}
-            </span>
-            <span className="text-sm text-foreground-muted">
-              {property && pricePerM2 > 0 ? `~ ${formatPrice(pricePerM2)}/m2` : "~ -"}
-            </span>
-          </div>
-        </div>
+      {/* Breadcrumbs */}
+      <div className="flex items-center gap-2 text-sm text-foreground-muted">
+        <Link href={portalPath("/properties")} className="transition-colors hover:text-foreground">
+          Bất động sản
+        </Link>
+        <ChevronRight size={12} />
+        <span>{property?.province?.name ?? "-"}</span>
+        <ChevronRight size={12} />
+        <span>{property?.district?.name ?? "-"}</span>
       </div>
 
-      {/* Image Gallery Grid */}
-      <PropertyGallery mediaItems={mediaItems} title={property?.title} />
+      {/* Image Gallery */}
+      <PropertyGallery images={gallery} propertyCode={property?.propertyCode} />
+
+      {/* Header: badges + title + address */}
+      <div className="flex flex-col gap-2">
+        <PropertyBadges property={property} />
+        <h1 className="font-serif text-3xl font-semibold tracking-tight text-black md:text-4xl">
+          {property?.title ?? "-"}
+        </h1>
+        <p className="flex items-center gap-2 text-sm text-foreground-muted md:text-base">
+          <MapPin size={16} className="text-primary" />
+          {property?.district?.name ?? "-"}, {property?.province?.name ?? "-"}
+        </p>
+      </div>
 
       {/* Main Layout: Content + Sidebar */}
       <div className="flex flex-col gap-6 lg:flex-row lg:items-start">

@@ -68,7 +68,6 @@ interface Lead {
     province?: { id: string; name: string };
     district?: { id: string; name: string };
   };
-  assignedSales?: { id: string; fullName: string };
   createdAt: string;
 }
 

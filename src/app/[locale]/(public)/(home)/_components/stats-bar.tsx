@@ -39,8 +39,8 @@ export function StatsBar() {
   const stats = ((res as any)?.data as PublicStats | undefined) ?? FALLBACK_STATS;
 
   return (
-    <section className="border-y border-border bg-[#F9FAFB] py-12 md:py-16">
-      <div className="mx-auto max-w-[1400px] px-6 md:px-8 lg:px-12">
+    <section className="bg-[#F9FAFB] py-8">
+      <div className="mx-auto max-w-350 px-6 md:px-8 lg:px-12">
         <div className="grid grid-cols-2 md:grid-cols-4">
           {labels.map((item, i) => (
             <motion.div
@@ -51,11 +51,7 @@ export function StatsBar() {
               transition={{ duration: 0.6, delay: i * 0.08, ease: [0.16, 1, 0.3, 1] }}
               whileHover={{ y: -6 }}
               className={cn(
-                "group flex cursor-pointer flex-col items-center gap-3 rounded-2xl px-6 py-6 text-center transition-colors duration-300 hover:bg-surface md:px-10 md:py-8",
-                i > 0 && "md:border-l md:border-border",
-                i === 2 && "border-t border-border md:border-t-0",
-                i === 3 && "border-t border-border md:border-t-0",
-                i < 2 && "border-r border-border md:border-r-0",
+                "group flex cursor-pointer flex-col items-center gap-3 rounded-2xl px-6 py-6 text-center transition-colors duration-300 hover:bg-surface md:px-10 md:py-8"
               )}
             >
               <motion.div

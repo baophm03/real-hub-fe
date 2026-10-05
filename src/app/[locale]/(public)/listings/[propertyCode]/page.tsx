@@ -5,7 +5,6 @@ import {
   getApiProperties,
 } from "@/lib/api/endpoints/properties";
 import { getApiFormSchemas } from "@/lib/api/endpoints/dynamic-fields";
-import { findFieldValue } from "@/constants/property-icons";
 import type {
   GetPropertiesResponse,
   GetPropertyItemResponse,
@@ -13,12 +12,8 @@ import type {
   PropertyMedia,
 } from "@/lib/api/types/properties";
 import { Link } from "@/i18n/navigation";
-import {
-  formatPriceWithTransaction as formatPrice,
-  formatPricePerSqm,
-} from "@/utils";
 import { MapPin, ChevronRight } from "lucide-react";
-import { ListingGallery } from "./_components/listing-gallery";
+import { PropertyGallery } from "@/components/shared/property-detail/property-gallery";
 import { ListingSpecs } from "./_components/listing-specs";
 import { ListingDescription } from "./_components/listing-description";
 import { ListingHighlights } from "./_components/listing-highlights";
@@ -26,6 +21,7 @@ import { ListingTags } from "./_components/listing-tags";
 import { ListingMap } from "./_components/listing-map";
 import { ContactSidebar } from "./_components/contact-sidebar";
 import { FeaturedPropertiesCarousel } from "@/components/shared/featured-properties-carousel";
+import { CtaBanner } from "@/components/shared/cta/cta-banner";
 import { generateSeoMetadata } from "@/lib/seo";
 import { buildPropertyDetailContext } from "@/lib/seo-context";
 
@@ -133,8 +129,6 @@ export default async function ListingDetailPage({ params }: Props) {
   const relevantSchemas = schemas.filter(
     (s) => !s.propertyType || s.propertyType?.id === undefined || s.propertyType?.id === propertyTypeId,
   );
-  const dynamicValues = (property as any)?.dynamicValuesJson as Record<string, unknown> | undefined;
-  const direction = findFieldValue(relevantSchemas, dynamicValues, ["direction", "huong", "hướng"]);
 
   const gallery: string[] = (() => {
     const mediaList = (property as any)?.media as any[] | undefined;
@@ -147,22 +141,27 @@ export default async function ListingDetailPage({ params }: Props) {
   })();
 
   return (
-    <div className="container">
-      {/* Breadcrumbs */}
-      <div className="flex items-center gap-2 text-sm text-foreground-muted mb-4">
-        <Link href="/listings" className="hover:text-foreground transition-colors">{tprops("title")}</Link>
-        <ChevronRight size={14} className="text-foreground-muted" />
-        <span>{property.propertyType?.name ?? tprops("title")}</span>
-        <ChevronRight size={14} className="text-foreground-muted" />
-        <span className="truncate">{property.title}</span>
+    <div>
+      {/* Gallery band */}
+      <div className="pt-4">
+        <div className="container">
+          {/* Breadcrumbs */}
+          <div className="flex items-center gap-2 text-sm text-foreground-muted mb-4">
+            <Link href="/listings" className="hover:text-foreground transition-colors">{tprops("title")}</Link>
+            <ChevronRight size={14} className="text-foreground-muted" />
+            <span>{property.propertyType?.name ?? tprops("title")}</span>
+            <ChevronRight size={14} className="text-foreground-muted" />
+            <span className="truncate">{property.title}</span>
+          </div>
+
+          {/* Image Gallery */}
+          <PropertyGallery images={gallery} propertyCode={property.propertyCode} />
+        </div>
       </div>
 
-      {/* Image Gallery */}
-      <ListingGallery images={gallery} propertyCode={property.propertyCode} />
-      <div className="flex flex-col lg:flex-row gap-6 items-start mt-6">
-        {/* Left Column: Details */}
-        <div className="flex-grow w-full lg:w-2/3 space-y-8">
-          <div>
+      <div>
+        <div className="container">
+          <div className="mt-6">
             <div className="flex items-center gap-2 mb-2">
               <span className={`rounded-lg px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide ${property.transactionType === "SALE" ? "bg-[#FCEAEB] text-[#C57B7A]" : "bg-accent-blue text-accent-blue-text"}`}>
                 {tp(`enums.transaction.${property.transactionType}`) ?? property.transactionType}
@@ -178,40 +177,49 @@ export default async function ListingDetailPage({ params }: Props) {
               <MapPin size={16} className="text-black" />
               {[property.district?.name, property.province?.name].filter(Boolean).join(", ") || t("updatingLocation")}
             </p>
-            <div className="mt-4 flex flex-col gap-0.5">
-              <div className="font-serif text-xl font-semibold text-black md:text-3xl">
-                {formatPrice(property.price, property.transactionType)}
-              </div>
-              <div className="text-sm text-foreground-muted">{formatPricePerSqm(property.price, property.area)}</div>
-            </div>
           </div>
 
-          <ListingSpecs property={property} schemas={relevantSchemas} />
-          <ListingDescription property={property} />
-          <ListingHighlights property={property} schemas={relevantSchemas} />
-          <ListingTags property={property} />
-          <ListingMap property={property} />
-        </div>
+          <div className="flex flex-col lg:flex-row gap-6 items-start mt-6">
+            {/* Left Column: Property details */}
+            <div className="w-full lg:flex-1 space-y-8">
+              <ListingSpecs property={property} schemas={relevantSchemas} />
+              <ListingDescription property={property} />
+              <ListingHighlights property={property} schemas={relevantSchemas} />
+              <ListingTags property={property} />
+              <ListingMap property={property} />
+            </div>
 
-        {/* Right Column: Contact Sidebar */}
-        <ContactSidebar
-          property={property}
-          direction={direction}
-        />
+            {/* Right Column: Contact Sidebar */}
+            <ContactSidebar
+              property={property}
+            />
+          </div>
+
+          {/* Similar Properties */}
+          {similarProperties.length > 0 && (
+            <section className="pt-8 border-t border-border mt-8">
+              <div className="mb-6 flex flex-col gap-2">
+                <h2 className="font-serif text-2xl font-semibold tracking-tight text-primary">{t("similarTitle")}</h2>
+                <p className="text-sm text-foreground-muted">
+                  {t("similarDesc")}
+                </p>
+              </div>
+              <FeaturedPropertiesCarousel properties={similarProperties} imageMap={similarImageMap} />
+            </section>
+          )}
+        </div>
       </div>
 
-      {/* Similar Properties */}
-      {similarProperties.length > 0 && (
-        <section className="pt-8 border-t border-border mt-8">
-          <div className="mb-6 flex flex-col gap-2">
-            <h2 className="font-serif text-2xl font-semibold tracking-tight text-primary">{t("similarTitle")}</h2>
-            <p className="text-sm text-foreground-muted">
-              {t("similarDesc")}
-            </p>
-          </div>
-          <FeaturedPropertiesCarousel properties={similarProperties} imageMap={similarImageMap} />
-        </section>
-      )}
+      {/* CTA */}
+      <CtaBanner
+        eyebrow={t("ctaEyebrow")}
+        title={t("ctaTitle")}
+        description={t("ctaDesc")}
+        primaryLabel={t("ctaPrimary")}
+        primaryHref="/contact"
+        secondaryLabel={t("ctaSecondary")}
+        secondaryHref="/listings"
+      />
     </div>
   );
 }

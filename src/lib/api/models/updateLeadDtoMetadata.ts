@@ -6,7 +6,4 @@
  * OpenAPI spec version: v1
  */
 
-export interface AssignLeadDto {
-  /** Sales nhận lead từ pool */
-  salesId: string;
-}
+export type UpdateLeadDtoMetadata = { [key: string]: unknown };

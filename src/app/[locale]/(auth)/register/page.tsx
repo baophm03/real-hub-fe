@@ -19,7 +19,7 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { usePostApiRegister } from "@/lib/api/endpoints/auth";
-import { LocationSelectWithLabel } from "@/app/[locale]/_components/location-select-with-label";
+import { LocationSelectWithLabel } from "@/components/shared/location-select-with-label";
 import { AuthCard } from "../_components/auth-card";
 
 const createRegisterSchema = (t: (key: string) => string) => z.object({

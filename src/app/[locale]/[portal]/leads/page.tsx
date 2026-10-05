@@ -39,21 +39,14 @@ interface LeadProperty {
   title: string;
   propertyCode: string;
 }
-interface LeadSales {
-  id: string;
-  fullName: string;
-}
-
 interface Lead extends LeadDeleteTarget {
   customerId: string | null;
   propertyId: string | null;
   source: string;
-  assignedSalesId: string | null;
   phoneNormalized: string | null;
   status: string;
   createdAt: string;
   property: LeadProperty | null;
-  assignedSales: LeadSales | null;
 }
 
 interface LeadsResponse {

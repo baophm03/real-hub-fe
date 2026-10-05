@@ -11,7 +11,6 @@ import type { GetApiLeadsSource } from './getApiLeadsSource';
 export type GetApiLeadsParams = {
 status?: GetApiLeadsStatus;
 source?: GetApiLeadsSource;
-assignedSalesId?: string;
 customerId?: string;
 propertyId?: string;
 search?: string;

@@ -16,6 +16,6 @@ export interface GetPoolLeadsResponse {
 }
 
 export interface AssignLeadPayload {
-  salesId?: string;
-  teamId?: string;
+  /** Sales nhận lead từ pool */
+  salesId: string;
 }

@@ -10,7 +10,8 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!isAuthenticated && hasHydrated) {
-      window.location.href = "/login";
+      const current = encodeURIComponent(`${window.location.pathname}${window.location.search}`);
+      window.location.href = `/login?redirect=${current}`;
     }
   }, [isAuthenticated, hasHydrated]);
 

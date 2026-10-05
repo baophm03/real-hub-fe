@@ -4,7 +4,6 @@ import { useEffect, useState, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import Link from "next/link";
-import { formatPrice } from "@/utils";
 import {
   ArrowLeft,
   ChevronRight,
@@ -17,13 +16,13 @@ import {
   XCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { useGetApiPropertyId, useGetApiPropertyMedia } from "@/lib/api/endpoints/properties";
 import { useGetApiFormSchemas } from "@/lib/api/endpoints/dynamic-fields";
 import { Property } from "@/lib/api/types/properties";
-import { PropertyGallery } from "./_components/property-gallery";
-import { PropertyHighlights } from "./_components/property-highlights";
-import { PropertySpecs } from "./_components/property-specs";
+import { PropertyGallery } from "@/components/shared/property-detail/property-gallery";
+import { PropertyHighlights } from "@/components/shared/property-detail/property-highlights";
+import { PropertySpecs } from "@/components/shared/property-detail/property-specs";
+import { PropertyBadges } from "@/components/shared/property-detail/property-badges";
 import { PropertyDescription } from "./_components/property-description";
 import { PropertyMap } from "./_components/property-map";
 import { OwnerContactSidebar } from "./_components/owner-contact-sidebar";
@@ -46,6 +45,13 @@ const statusConfig: Record<string, { label: string; variant: "green" | "yellow" 
   ACTIVE: { label: "Đang phụ trách", variant: "green" },
   EXPIRED: { label: "Hết hạn", variant: "yellow" },
   REVOKED: { label: "Đã huỷ", variant: "red" },
+};
+
+const statusChipClass: Record<string, string> = {
+  green: "bg-accent-green text-accent-green-text",
+  yellow: "bg-accent-yellow text-accent-yellow-text",
+  red: "bg-accent-red text-accent-red-text",
+  default: "bg-surface-muted text-foreground-muted",
 };
 
 function daysLeft(expiresAt: string): number {
@@ -102,9 +108,7 @@ export default function MyPropertyDetailPage() {
       .sort((a: any, b: any) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
   }, [mediaData]);
 
-  const priceNum = Number(property?.price || 0);
-  const areaNum = property?.area ?? 0;
-  const pricePerM2 = areaNum > 0 ? priceNum / areaNum : 0;
+  const gallery = mediaItems.map((m: any) => m.file?.url).filter(Boolean) as string[];
 
   const propertyTypeId = property?.propertyType?.id;
   const { data: schemaData } = useGetApiFormSchemas({ entityType: "PROPERTY" });
@@ -189,72 +193,68 @@ export default function MyPropertyDetailPage() {
         </div>
       </div>
 
-      {/* Breadcrumbs + Header */}
-      <div className="flex flex-col gap-4">
-        <div className="flex items-center gap-2 text-sm text-foreground-muted">
-          <Link href="/vi/sales-portal/my-properties" className="transition-colors hover:text-foreground">
-            Sản phẩm phụ trách
-          </Link>
-          <ChevronRight size={12} />
-          <span>{property.propertyCode}</span>
-        </div>
-
-        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center gap-2">
-              <h1 className="font-serif text-2xl font-medium tracking-tight text-foreground md:text-4xl">
-                {property.title}
-              </h1>
-              <Badge variant={status.variant} className="shrink-0">
-                {status.label}
-              </Badge>
-            </div>
-            <p className="flex items-center gap-2 text-sm text-foreground-muted md:text-base">
-              <MapPin size={16} className="text-primary" />
-              {property?.district?.name ?? "-"}, {property?.province?.name ?? "-"}
-            </p>
-          </div>
-          <div className="flex flex-col items-start gap-1 md:items-end">
-            <span className="font-serif text-3xl font-medium text-primary md:text-4xl">
-              {formatPrice(priceNum)}
-            </span>
-            <span className="text-sm text-foreground-muted">
-              {pricePerM2 > 0 ? `~ ${formatPrice(pricePerM2)}/m2` : "~ -"}
-            </span>
-          </div>
-        </div>
+      {/* Breadcrumbs */}
+      <div className="flex items-center gap-2 text-sm text-foreground-muted">
+        <Link href="/vi/sales-portal/my-properties" className="transition-colors hover:text-foreground">
+          Sản phẩm phụ trách
+        </Link>
+        <ChevronRight size={12} />
+        <span>{property.propertyCode}</span>
       </div>
 
       {/* Assignment info bar */}
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <div className="flex flex-col gap-1 rounded-lg border border-border bg-surface p-4">
-          <Clock size={16} className="text-foreground-muted" />
-          <span className="text-[10px] uppercase tracking-wide text-foreground-muted">Bắt đầu</span>
-          <span className="text-sm font-medium text-foreground">{formatDate(assignment.startsAt)}</span>
+        <div className="flex items-center gap-3 rounded-lg border border-border bg-surface p-4">
+          <Clock size={16} className="shrink-0 text-foreground-muted" />
+          <div className="flex flex-col gap-0.5">
+            <span className="text-[10px] uppercase tracking-wide text-foreground-muted">Bắt đầu</span>
+            <span className="text-sm font-medium text-foreground">{formatDate(assignment.startsAt)}</span>
+          </div>
         </div>
-        <div className="flex flex-col gap-1 rounded-lg border border-border bg-surface p-4">
-          <Clock size={16} className="text-foreground-muted" />
-          <span className="text-[10px] uppercase tracking-wide text-foreground-muted">Hết hạn</span>
-          <span className="text-sm font-medium text-foreground">{formatDate(assignment.expiresAt)}</span>
+        <div className="flex items-center gap-3 rounded-lg border border-border bg-surface p-4">
+          <Clock size={16} className="shrink-0 text-foreground-muted" />
+          <div className="flex flex-col gap-0.5">
+            <span className="text-[10px] uppercase tracking-wide text-foreground-muted">Hết hạn</span>
+            <span className="text-sm font-medium text-foreground">{formatDate(assignment.expiresAt)}</span>
+          </div>
         </div>
-        <div className="flex flex-col gap-1 rounded-lg border border-border bg-surface p-4">
-          <Handshake size={16} className="text-foreground-muted" />
-          <span className="text-[10px] uppercase tracking-wide text-foreground-muted">Còn lại</span>
-          <span className={`text-sm font-medium ${left <= 1 ? "text-destructive" : left <= 3 ? "text-accent-yellow-text" : "text-foreground"}`}>
-            {assignment.status === "ACTIVE" ? (left > 0 ? `${left} ngày` : "Hết hôm nay") : "—"}
-          </span>
+        <div className="flex items-center gap-3 rounded-lg border border-border bg-surface p-4">
+          <Handshake size={16} className="shrink-0 text-foreground-muted" />
+          <div className="flex flex-col gap-0.5">
+            <span className="text-[10px] uppercase tracking-wide text-foreground-muted">Còn lại</span>
+            <span className={`text-sm font-medium ${left <= 1 ? "text-destructive" : left <= 3 ? "text-accent-yellow-text" : "text-foreground"}`}>
+              {assignment.status === "ACTIVE" ? (left > 0 ? `${left} ngày` : "Hết hôm nay") : "—"}
+            </span>
+          </div>
         </div>
-        <div className="flex flex-col gap-1 rounded-lg border border-border bg-surface p-4">
-          <Link2 size={16} className="text-foreground-muted" />
-          <span className="text-[10px] uppercase tracking-wide text-foreground-muted">Link chia sẻ</span>
-          <span className="truncate text-xs font-medium text-primary">
-            /vi/listings/{property.propertyCode}
-          </span>
+        <div className="flex items-center gap-3 rounded-lg border border-border bg-surface p-4">
+          <Link2 size={16} className="shrink-0 text-foreground-muted" />
+          <div className="flex min-w-0 flex-col gap-0.5">
+            <span className="text-[10px] uppercase tracking-wide text-foreground-muted">Link chia sẻ</span>
+            <span className="truncate text-xs font-medium text-primary">
+              /vi/listings/{property.propertyCode}
+            </span>
+          </div>
         </div>
       </div>
 
       {/* Image Gallery */}
-      <PropertyGallery mediaItems={mediaItems} title={property?.title} />
+      <PropertyGallery images={gallery} propertyCode={property.propertyCode} />
+
+      {/* Header: badges + title + address */}
+      <div className="flex flex-col gap-2">
+        <PropertyBadges
+          property={property}
+          extra={{ label: status.label, className: statusChipClass[status.variant] }}
+        />
+        <h1 className="font-serif text-3xl font-semibold tracking-tight text-black md:text-4xl">
+          {property.title}
+        </h1>
+        <p className="flex items-center gap-2 text-sm text-foreground-muted md:text-base">
+          <MapPin size={16} className="text-primary" />
+          {property?.district?.name ?? "-"}, {property?.province?.name ?? "-"}
+        </p>
+      </div>
 
       {/* Main Layout: Content + Sidebar */}
       <div className="flex flex-col gap-6 lg:flex-row lg:items-start">

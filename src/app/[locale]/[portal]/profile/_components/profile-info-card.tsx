@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FormField } from "@/components/shared/form-section";
-import { LocationSelectWithLabel } from "@/app/[locale]/_components/location-select-with-label";
+import { LocationSelectWithLabel } from "@/components/shared/location-select-with-label";
 import { useUserStore } from "@/lib/stores/user-store";
 import {
   Select,

@@ -24,6 +24,11 @@
   "contactNoPosition": "No position",
   "contactConsultNow": "Consult Now",
   "contactSendRequest": "Send Request",
+  "contactLoginRequired": "Login to contact",
+  "contactNow": "Contact Now",
+  "contactPrice": "Price",
+  "saveListing": "Save info",
+  "savedListing": "Info saved",
   "contactSending": "Sending...",
   "contactNamePlaceholder": "Full Name",
   "contactPhonePlaceholder": "Phone Number",
@@ -37,5 +42,10 @@
   "contactCategory": "Category",
   "contactDirection": "Direction",
   "contactSellingMode": "Selling Mode",
-  "contactPostedDate": "Posted Date"
+  "contactPostedDate": "Posted Date",
+  "ctaEyebrow": "RealHub",
+  "ctaTitle": "Need help finding the right property?",
+  "ctaDesc": "Our consultants are ready to support you on the journey to your dream home.",
+  "ctaPrimary": "Talk to a consultant",
+  "ctaSecondary": "Browse more listings"
 }

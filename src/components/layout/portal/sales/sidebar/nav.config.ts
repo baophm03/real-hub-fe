@@ -3,7 +3,6 @@ import {
   Calendar,
   CircleUser,
   Folder,
-  Inbox,
   Handshake,
   Headset,
   House,
@@ -107,12 +106,6 @@ export const navGroups: NavGroup[] = [
         href: `/${entryPortal?.slug}/leads`,
         icon: CircleUser,
         permission: { action: "VIEW", subject: "LEAD" },
-      },
-      {
-        label: "Lead Pool",
-        href: `/${entryPortal?.slug}/pool`,
-        icon: Inbox,
-        permission: { action: "VIEW", subject: "POOL" },
       },
       {
         label: "Phân bổ lead",
