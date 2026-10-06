@@ -24,7 +24,7 @@ function createQueryClient() {
         retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
         refetchOnWindowFocus: true,
         refetchOnReconnect: true,
-        refetchOnMount: true,
+        refetchOnMount: 'always',
         networkMode: 'online',
       },
       mutations: {
