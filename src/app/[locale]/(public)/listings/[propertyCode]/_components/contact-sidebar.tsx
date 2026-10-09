@@ -32,9 +32,7 @@ export function ContactSidebar(props: ContactSidebarProps) {
   );
 }
 
-function ContactSidebarInner({
-  property,
-}: ContactSidebarProps) {
+function ContactSidebarInner({ property }: ContactSidebarProps) {
   const t = useTranslations("public.listingDetail");
   const locale = useLocale();
   const queryClient = useQueryClient();
@@ -54,9 +52,6 @@ function ContactSidebarInner({
     ? `${window.location.pathname}${window.location.search}`
     : "/";
   const loginHref = `/${locale}/login?redirect=${encodeURIComponent(currentUrl)}`;
-
-  const sellingMode: string | undefined = property?.sellingMode;
-  const ownerPhone = sellingMode === "SELF_SELL" ? property?.owner?.phone ?? null : null;
 
   const handleContact = async () => {
     try {
@@ -97,7 +92,6 @@ function ContactSidebarInner({
         {/* Giá */}
         {property?.price != null && <PropertyPrice property={property} title={t("contactPrice")} />}
 
-        {/* Contact actions: cả liên hệ lẫn lưu tin đều yêu cầu đăng nhập */}
         <div className="space-y-2 border-b border-border pb-8">
           {isAuthenticated ? (
             <Button
@@ -121,12 +115,7 @@ function ContactSidebarInner({
               {t("contactNow")}
             </Button>
           )}
-          {ownerPhone && (
-            <Button type="button" variant="outline" className="w-full h-12" leftIcon={<Phone size={16} />} render={<a href={`tel:${ownerPhone}`} />}>
-              {ownerPhone}
-            </Button>
-          )}
-          {/* Lưu thông tin — giống nút favorite trên card listing */}
+
           {isAuthenticated ? (
             <Button
               type="button"
