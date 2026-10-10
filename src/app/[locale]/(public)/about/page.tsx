@@ -2,7 +2,6 @@
 
 import { motion } from "framer-motion";
 import {
-  Building2,
   Eye,
   Handshake,
   LineChart,
@@ -16,6 +15,7 @@ import { useTranslations } from "next-intl";
 import { RevealSection } from "@/components/shared/reveal-section";
 import { PageBanner } from "@/components/shared/page-banner";
 import { CtaCard } from "@/components/shared/cta/cta-card";
+import { AboutIntro } from "./_components/about-intro";
 import { cn } from "@/lib/utils";
 
 export default function AboutPage() {
@@ -54,13 +54,6 @@ export default function AboutPage() {
     { icon: LineChart, title: t("v6Title"), desc: t("v6Desc"), color: "bg-teal-100 text-teal-600" },
   ];
 
-  const stats = [
-    { value: "45+", label: t("statsAgency"), icon: Building2, color: "bg-blue-100 text-blue-600" },
-    { value: "10K+", label: t("statsDeals"), icon: Handshake, color: "bg-emerald-100 text-emerald-600" },
-    { value: "50K+", label: t("statsCustomers"), icon: Users, color: "bg-amber-100 text-amber-600" },
-    { value: "99.9%", label: t("statsUptime"), icon: LineChart, color: "bg-violet-100 text-violet-600" },
-  ];
-
   return (
     <>
       <PageBanner
@@ -70,43 +63,8 @@ export default function AboutPage() {
         breadcrumbs={[{ label: tc("home"), href: "/" }, { label: tc("aboutUs") }]}
       />
 
-      {/* Stats Bar */}
-      <section className="border-y border-border bg-[#F9FAFB] py-8">
-        <div className="container">
-          <div className="grid grid-cols-2 md:grid-cols-4">
-            {stats.map((item, i) => (
-              <motion.div
-                key={item.label}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-80px" }}
-                transition={{ duration: 0.6, delay: i * 0.08, ease: [0.16, 1, 0.3, 1] }}
-                whileHover={{ y: -6 }}
-                className={cn(
-                  "group flex cursor-pointer flex-col items-center gap-3 rounded-2xl px-6 py-6 text-center transition-colors duration-300 hover:bg-surface md:px-10 md:py-8"
-                )}
-              >
-                <motion.div
-                  whileHover={{ scale: 1.15, rotate: 5 }}
-                  transition={{ type: "spring", stiffness: 300, damping: 15 }}
-                  className={cn(
-                    "flex h-14 w-14 items-center justify-center rounded-full transition-colors duration-300 group-hover:shadow-sm md:h-16 md:w-16",
-                    item.color,
-                  )}
-                >
-                  <item.icon size={32} className="transition-transform duration-300 group-hover:scale-110" strokeWidth={1.8} />
-                </motion.div>
-                <span className="font-serif text-3xl font-semibold tabular-nums tracking-tighter md:text-4xl">
-                  {item.value}
-                </span>
-                <span className="text-[11px] font-medium uppercase tracking-[0.15em] text-foreground-muted">
-                  {item.label}
-                </span>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* Section giới thiệu đầu tiên — nội dung + collage ảnh + stats */}
+      <AboutIntro />
 
       {/* Sứ mệnh & Tầm nhìn */}
       <div className="container py-16 md:py-24">
