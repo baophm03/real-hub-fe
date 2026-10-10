@@ -123,7 +123,7 @@ export function Hero() {
             {t("heroSubtitle")}
           </p>
         </div>
-        <div className="flex w-full max-w-3xl flex-col gap-2 rounded-xl border border-border bg-surface/95 p-3 shadow-lg backdrop-blur-sm md:flex-row md:items-center">
+        <div className="flex w-full max-w-sm md:max-w-3xl flex-col gap-2 rounded-xl border border-border bg-surface/95 p-3 shadow-lg backdrop-blur-sm md:flex-row md:items-center">
           {/* Location picker */}
           <Popover>
             <PopoverTrigger

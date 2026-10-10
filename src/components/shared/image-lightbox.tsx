@@ -63,7 +63,7 @@ export function ImageLightbox({
         className="h-[90vh] max-h-[90vh] max-w-[95vw] sm:max-w-[95vw] overflow-hidden rounded-lg border border-border bg-black/95 p-0"
       >
         <DialogTitle className="sr-only">{label}</DialogTitle>
-        <div className="relative flex h-full items-center justify-center">
+        <div className="absolute inset-0 flex items-center justify-center overflow-hidden p-4">
           <img
             src={current.url}
             alt={label}
