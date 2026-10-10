@@ -44,7 +44,7 @@ export async function ListingHighlights({ property, schemas, title }: ListingHig
         {highlights.map((item) => {
           const Icon = item.icon ?? Star;
           return (
-            <div key={item.title} className="flex items-center gap-3 p-4 bg-surface rounded-lg border border-border">
+            <div key={item.title} className="flex items-center gap-3 p-4 bg-surface-muted rounded-lg">
               <div className={`flex size-10 items-center justify-center rounded-full ${iconColorClasses[item.color]}`}>
                 <Icon size={20} />
               </div>

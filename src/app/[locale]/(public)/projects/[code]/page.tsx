@@ -13,23 +13,33 @@ import {
   Phone,
   Calendar,
   ArrowRight,
-  Camera,
+  BedDouble,
+  Bath,
+  Square,
   Building2,
   Hash,
+  Briefcase,
   Ruler,
   Tag,
   Home,
-  BedDouble,
-  Bath,
-  Square
 } from "lucide-react";
 import { formatPriceWithTransaction } from "@/utils";
-import { getProjectScale, getProjectPriceRange, getProjectImage, getProjectImages, getPropertyImageUrl } from "@/utils/project-helpers";
+import { getProjectScale, getProjectPriceRange, getProjectImages, getPropertyImageUrl } from "@/utils/project-helpers";
 import { pickDynamicValue } from "@/components/shared/property-utils";
 import { formatLocationShort } from "@/utils";
 import { ProjectCard } from "@/components/shared/project-card";
+import { PropertyGallery } from "@/components/shared/property-detail/property-gallery";
+import type { IconColor } from "@/constants/property-icons";
 import { generateSeoMetadata } from "@/lib/seo";
 import { buildProjectDetailContext } from "@/lib/seo-context";
+
+const iconColorClasses: Record<IconColor, string> = {
+  blue: "text-accent-blue-text",
+  purple: "text-accent-purple-text",
+  green: "text-accent-green-text",
+  yellow: "text-accent-yellow-text",
+  red: "text-accent-red-text",
+};
 
 type Props = {
   params: Promise<{ locale: string; code: string }>;
@@ -116,7 +126,7 @@ export default async function ProjectDetailPage({ params }: Props) {
 
   if (!project) {
     return (
-      <div className="container py-8 md:py-12">
+      <div className="container py-8 md:py-12 pt-4">
         <Link
           href="/projects"
           className="mb-6 inline-flex items-center gap-2 text-sm text-foreground-muted transition-colors hover:text-foreground"
@@ -134,10 +144,10 @@ export default async function ProjectDetailPage({ params }: Props) {
   const location = formatLocationShort(project, t("updatingLocation"));
   const scale = getProjectScale(project);
   const projectImages = getProjectImages(project);
-  const heroImage = projectImages[0]?.url || null;
+  const gallery = projectImages.map((img) => img.url);
 
   return (
-    <div className="container pb-8 md:pb-12">
+    <div className="container pb-8 md:pb-12 pt-4">
       <Link
         href="/projects"
         className="mb-6 inline-flex items-center gap-2 text-sm text-foreground-muted transition-colors hover:text-foreground"
@@ -145,53 +155,22 @@ export default async function ProjectDetailPage({ params }: Props) {
         <ArrowLeft size={16} /> {t("backToList")}
       </Link>
 
-      {/* Hero */}
-      <div className="relative mb-8 aspect-[16/9] overflow-hidden rounded-lg">
-        {heroImage ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={heroImage}
-            alt={project.name}
-            className="absolute inset-0 h-full w-full object-cover"
-          />
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center bg-surface-muted">
-            <div className="flex flex-col items-center gap-2 text-foreground-muted">
-              <Camera size={32} />
-              <span className="text-sm">{t("noImages")}</span>
-            </div>
-          </div>
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-        <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8">
-          <span className="mb-3 inline-block rounded-full bg-primary px-3 py-1 text-[10px] font-medium uppercase tracking-wide text-primary-foreground">
-            {enumLabel("enums.projectStatus", project.status)}
-          </span>
-          <h1 className="font-serif text-3xl font-semibold tracking-tight text-white md:text-4xl">
-            {project.name}
-          </h1>
-          <p className="mt-2 flex items-center gap-1.5 text-sm text-white/70">
-            <MapPin size={14} />
-            <span>{location}</span>
-          </p>
-        </div>
-      </div>
+      {/* Gallery dùng chung — bấm ảnh để phóng to như listing detail */}
+      <PropertyGallery images={gallery} propertyCode={project.code} />
 
-      {/* Gallery */}
-      {projectImages.length > 1 && (
-        <div className="mb-8 grid grid-cols-2 gap-2 md:grid-cols-4">
-          {projectImages.slice(1, 5).map((img, i) => (
-            <div key={img.id || i} className="relative aspect-[4/3] overflow-hidden rounded-lg">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={img.url}
-                alt={img.caption || project.name}
-                className="h-full w-full object-cover"
-              />
-            </div>
-          ))}
-        </div>
-      )}
+      {/* Tiêu đề dự án */}
+      <div className="mb-8 mt-6 flex flex-col items-start gap-2">
+        <span className="inline-block rounded-full bg-primary px-3 py-1 text-[10px] font-medium uppercase tracking-wide text-primary-foreground">
+          {enumLabel("enums.projectStatus", project.status)}
+        </span>
+        <h1 className="font-serif text-3xl font-semibold tracking-tight md:text-4xl">
+          {project.name}
+        </h1>
+        <p className="mt-1 flex items-center gap-1.5 text-base text-foreground-muted">
+          <MapPin size={16} />
+          <span>{location}</span>
+        </p>
+      </div>
 
       <div className="grid gap-10 lg:grid-cols-12">
         <div className="flex flex-col gap-8 lg:col-span-8">
@@ -207,28 +186,29 @@ export default async function ProjectDetailPage({ params }: Props) {
 
           <div>
             <h2 className="mb-4 font-serif text-xl font-semibold">{t("detailsTitle")}</h2>
-            <div className="rounded-xl border border-border bg-white p-6 shadow-[0_4px_24px_-8px_rgba(0,0,0,0.08)]">
-              <div className="grid grid-cols-2 divide-y divide-border md:grid-cols-2 md:divide-y-0">
+            <div className="rounded-xl border border-border bg-white px-6 py-2 shadow-[0_4px_24px_-8px_rgba(0,0,0,0.08)]">
+              <div className="flex flex-col divide-y divide-border md:grid md:grid-cols-2 md:divide-y-0">
                 {[
-                  { label: t("detailName"), value: project.name, icon: Building2 },
-                  { label: t("detailCode"), value: project.code, icon: Hash },
-                  { label: t("detailLocation"), value: location, icon: MapPin },
-                  { label: t("detailDeveloper"), value: project.developer ?? tc("updating"), icon: Building2 },
-                  { label: t("detailScale"), value: scale, icon: Ruler },
+                  { label: t("detailName"), value: project.name, icon: Building2, color: "blue" as IconColor },
+                  { label: t("detailCode"), value: project.code, icon: Hash, color: "purple" as IconColor },
+                  { label: t("detailLocation"), value: location, icon: MapPin, color: "red" as IconColor },
+                  { label: t("detailDeveloper"), value: project.developer ?? tc("updating"), icon: Briefcase, color: "green" as IconColor },
+                  { label: t("detailScale"), value: scale, icon: Ruler, color: "yellow" as IconColor },
                   {
                     label: t("detailStatus"),
                     value: enumLabel("enums.projectStatus", project.status),
                     icon: Tag,
+                    color: "blue" as IconColor,
                   },
-                  { label: t("detailType"), value: tc("updating"), icon: Home },
-                  { label: t("detailHandover"), value: project.handoverDate ?? tc("updating"), icon: Calendar },
-                ].map(({ label, value, icon: Icon }, i) => (
+                  { label: t("detailType"), value: tc("updating"), icon: Home, color: "purple" as IconColor },
+                  { label: t("detailHandover"), value: project.handoverDate ?? tc("updating"), icon: Calendar, color: "red" as IconColor },
+                ].map(({ label, value, icon: Icon, color }, i) => (
                   <div
                     key={label}
-                    className={`flex items-center gap-3 py-4 ${i % 2 === 0 ? "md:pr-6 md:border-r md:border-border" : "md:pl-6"} ${i >= 2 ? "md:border-t md:border-border" : ""} ${i < 2 ? "pt-0" : ""} ${i >= 6 ? "pb-0" : ""}`}
+                    className={`flex items-center gap-3 py-4 ${i % 2 === 0 ? "md:pr-6 md:border-r md:border-border" : "md:pl-6"} ${i >= 2 ? "md:border-t md:border-border" : ""} ${i < 2 ? "pt-0 md:pt-4" : ""} ${i >= 6 ? "pb-0 md:pb-4" : ""}`}
                   >
-                    <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                      <Icon size={16} className="text-primary" />
+                    <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-surface-muted">
+                      <Icon size={16} className={iconColorClasses[color]} />
                     </div>
                     <div className="flex flex-col gap-0.5 min-w-0">
                       <span className="text-[11px] font-medium uppercase tracking-wide text-foreground-muted">
