@@ -54,7 +54,19 @@ export interface Lead {
   updatedAt: string;
   creator?: { id: string; fullName: string; avatarFile: { id: string; name: string; url: string } | null } | null;
   updater?: { id: string; fullName: string; avatarFile: { id: string; name: string; url: string } | null } | null;
-  customer: { id: string; fullName: string; phone: string } | null;
+  customer: {
+    id: string;
+    userId?: string | null;
+    fullName?: string | null;
+    phone?: string | null;
+    email?: string | null;
+    user?: {
+      id: string;
+      fullName?: string | null;
+      email?: string | null;
+      phone?: string | null;
+    } | null;
+  } | null;
   property: { id: string; title: string; propertyCode: string } | null;
   activities?: LeadActivity[];
 }

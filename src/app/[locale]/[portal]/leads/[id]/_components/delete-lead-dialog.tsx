@@ -14,7 +14,13 @@ import {
 interface DeleteLeadDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  lead?: { leadCode: string; customer?: { fullName?: string } | null } | null;
+  lead?: {
+    leadCode: string;
+    customer?: {
+      fullName?: string | null;
+      user?: { id: string; fullName?: string | null } | null;
+    } | null;
+  } | null;
   isDeleting?: boolean;
   onConfirm: () => void;
 }
@@ -40,8 +46,10 @@ export function DeleteLeadDialog({
           {lead && (
             <div className="rounded-lg border border-border bg-surface-muted/40 p-4 text-sm">
               <p className="font-medium">{lead.leadCode}</p>
-              {lead.customer?.fullName && (
-                <p className="text-foreground-muted">{lead.customer.fullName}</p>
+              {(lead.customer?.user?.fullName || lead.customer?.fullName) && (
+                <p className="text-foreground-muted">
+                  {lead.customer?.user?.fullName || lead.customer?.fullName}
+                </p>
               )}
             </div>
           )}

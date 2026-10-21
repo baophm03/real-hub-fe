@@ -36,7 +36,16 @@ interface CustomerType {
   type: string;
 }
 
+interface CustomerUser {
+  id: string;
+  fullName?: string | null;
+  email?: string | null;
+  phone?: string | null;
+}
+
 interface CustomerRow extends CustomerDeleteTarget {
+  userId?: string | null;
+  user?: CustomerUser | null;
   email?: string;
   status: string;
   types: CustomerType[];
@@ -112,22 +121,28 @@ export default function CustomersPage() {
       {
         accessorKey: "fullName",
         header: "Khách hàng",
-        cell: ({ row }) => (
-          <div className="flex flex-col gap-0.5">
-            <span className="font-medium">{row.original.fullName}</span>
-            {row.original.email && (
-              <span className="text-xs text-foreground-muted truncate max-w-[180px]">
-                {row.original.email}
-              </span>
-            )}
-          </div>
-        ),
+        cell: ({ row }) => {
+          const name = row.original.user?.fullName || row.original.fullName || "—";
+          const email = row.original.user?.email || row.original.email;
+          return (
+            <div className="flex flex-col gap-0.5">
+              <span className="font-medium">{name}</span>
+              {email && (
+                <span className="text-xs text-foreground-muted truncate max-w-[180px]">
+                  {email}
+                </span>
+              )}
+            </div>
+          );
+        },
       },
       {
         accessorKey: "phone",
         header: "Điện thoại",
         cell: ({ row }) => (
-          <span className="tabular-nums text-foreground-muted">{row.original.phone || "—"}</span>
+          <span className="tabular-nums text-foreground-muted">
+            {row.original.user?.phone || row.original.phone || "—"}
+          </span>
         ),
       },
       {
@@ -189,7 +204,13 @@ export default function CustomersPage() {
                 variant="ghost"
                 size="icon-sm"
                 aria-label="Đánh dấu không hoạt động"
-                onClick={() => setDeleteTarget(row.original)}
+                onClick={() =>
+                  setDeleteTarget({
+                    ...row.original,
+                    fullName:
+                      row.original.user?.fullName || row.original.fullName || "—",
+                  })
+                }
               >
                 <UserX size={14} />
               </Button>

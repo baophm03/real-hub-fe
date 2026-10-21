@@ -78,7 +78,7 @@ export default function ConsultationsPage() {
   const columns = useMemo<ColumnDef<PropertyContact>[]>(
     () => [
       {
-        accessorKey: "propertyId",
+        id: "property",
         header: "Bất động sản",
         cell: ({ row }) => (
           <button
@@ -88,9 +88,14 @@ export default function ConsultationsPage() {
             }}
             className="group flex flex-col gap-0.5 text-left"
           >
-            <span className="font-medium text-foreground group-hover:text-primary transition-colors line-clamp-1 max-w-[220px]">
-              {row.original.propertyId}
+            <span className="font-medium text-foreground group-hover:text-primary transition-colors line-clamp-1 max-w-[260px]">
+              {row.original.property?.title || row.original.property?.propertyCode || "—"}
             </span>
+            {row.original.property?.propertyCode && (
+              <span className="text-xs text-foreground-muted">
+                {row.original.property.propertyCode}
+              </span>
+            )}
           </button>
         ),
       },
@@ -99,9 +104,11 @@ export default function ConsultationsPage() {
         header: "Người liên hệ",
         cell: ({ row }) => (
           <div className="flex flex-col gap-0.5">
-            <span className="font-medium break-all">{row.original.createdBy || "—"}</span>
+            <span className="font-medium break-all">
+              {row.original.creator?.fullName || "—"}
+            </span>
             <span className="text-xs break-all text-foreground-muted">
-              Nhận xử lý: {row.original.receiverId || "—"}
+              Nhận xử lý: {row.original.receiver?.fullName || "Chưa phân công"}
             </span>
           </div>
         ),

@@ -779,7 +779,7 @@ export const prefetchGetApiFileIdQuery = async <TData = Awaited<ReturnType<typeo
 
 
 /**
- * @summary Soft delete a file
+ * @summary Hard delete a file (detaches it from properties, projects, news and assignments)
  */
 export const deleteApiFile = (
     id: string,
@@ -824,7 +824,7 @@ const {mutation: mutationOptions} = options ?
     export type DeleteApiFileMutationError = unknown
 
     /**
- * @summary Soft delete a file
+ * @summary Hard delete a file (detaches it from properties, projects, news and assignments)
  */
 export const useDeleteApiFile = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteApiFile>>, TError,{id: string}, TContext>, }

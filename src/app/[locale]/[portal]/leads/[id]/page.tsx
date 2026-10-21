@@ -36,8 +36,15 @@ import { DynamicValuesDisplay } from "@/components/shared/dynamic-values-display
 
 interface LeadCustomer {
   id: string;
-  fullName: string;
-  phone: string;
+  userId?: string | null;
+  fullName?: string | null;
+  phone?: string | null;
+  user?: {
+    id: string;
+    fullName?: string | null;
+    phone?: string | null;
+    email?: string | null;
+  } | null;
 }
 interface LeadProperty {
   id: string;
@@ -192,6 +199,10 @@ export default function LeadDetailPage() {
     );
   }
 
+  const customerName = lead.customer?.user?.fullName || lead.customer?.fullName;
+  const customerPhone =
+    lead.phoneNormalized || lead.customer?.user?.phone || lead.customer?.phone;
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
@@ -203,7 +214,7 @@ export default function LeadDetailPage() {
           >
             <ArrowLeft size={20} />
           </button>
-          <PageHeader eyebrow="CRM" title={lead.customer?.fullName || lead.phoneNormalized || lead.leadCode} />
+          <PageHeader eyebrow="CRM" title={customerName || lead.phoneNormalized || lead.leadCode} />
         </div>
         <div className="flex items-center gap-2">
           <Can I="UPDATE_OWN" a="LEAD">
@@ -265,19 +276,19 @@ export default function LeadDetailPage() {
                       onClick={() => router.push(portalPath(`/customers/${lead.customer!.id}`))}
                       className="text-left text-sm text-primary hover:underline"
                     >
-                      {lead.customer.fullName}
+                      {customerName || "—"}
                     </button>
                     <span className="text-xs text-foreground-muted">Khách hàng</span>
                   </div>
                 </div>
               )}
-              {lead.phoneNormalized && (
+              {customerPhone && (
                 <div className="flex items-center gap-2.5">
                   <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-accent-yellow text-accent-yellow-text">
                     <Phone size={16} />
                   </span>
                   <div className="flex flex-col">
-                    <span className="text-sm tabular-nums">{lead.phoneNormalized}</span>
+                    <span className="text-sm tabular-nums">{customerPhone}</span>
                     <span className="text-xs text-foreground-muted">Điện thoại</span>
                   </div>
                 </div>
