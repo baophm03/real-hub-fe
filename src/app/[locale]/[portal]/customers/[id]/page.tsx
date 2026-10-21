@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { usePortalPath } from "@/lib/hooks/use-portal";
 import {
   ArrowLeft,
@@ -12,10 +13,10 @@ import {
   MapPin,
   Pencil,
   Phone,
+  RefreshCw,
   Ruler,
   SquareKanban,
   Tag,
-  Trash2,
   User,
   Users,
 } from "lucide-react";
@@ -24,6 +25,7 @@ import { toast } from "sonner";
 import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -32,8 +34,14 @@ import {
   DialogDescription,
   DialogPortal,
   DialogOverlay,
+  DialogFooter,
 } from "@/components/ui/dialog";
-import { useGetApiCustomerId, useDeleteApiCustomer } from "@/lib/api/endpoints/customers";
+import {
+  useGetApiCustomerId,
+  usePatchApiCustomer,
+  getGetApiCustomerIdQueryKey,
+} from "@/lib/api/endpoints/customers";
+import type { UpdateCustomerDtoStatus } from "@/lib/api/models/updateCustomerDtoStatus";
 
 interface CustomerType {
   id: string;
@@ -76,6 +84,13 @@ interface Customer {
   fullName: string;
   phone?: string;
   email?: string;
+  userId?: string | null;
+  user?: {
+    id: string;
+    fullName?: string | null;
+    phone?: string | null;
+    email?: string | null;
+  } | null;
   status: string;
   types?: CustomerType[];
   needs?: CustomerNeed[];
@@ -97,6 +112,12 @@ const statusLabel: Record<string, { label: string; variant: "green" | "default" 
   INACTIVE: { label: "Không hoạt động", variant: "default" },
   BLACKLISTED: { label: "Blacklist", variant: "red" },
 };
+
+const customerStatusOptions: { value: UpdateCustomerDtoStatus; label: string }[] = [
+  { value: "ACTIVE", label: "Hoạt động" },
+  { value: "INACTIVE", label: "Không hoạt động" },
+  { value: "BLACKLISTED", label: "Blacklist" },
+];
 
 const purposeLabel: Record<string, string> = {
   BUY: "Mua",
@@ -127,23 +148,38 @@ const leadStatusLabel: Record<string, { label: string; variant: "blue" | "yellow
 export default function CustomerDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const portalPath = usePortalPath();
   const id = params.id as string;
-  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [statusOpen, setStatusOpen] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState<UpdateCustomerDtoStatus>("ACTIVE");
 
   const { data: customerData, isLoading } = useGetApiCustomerId(id);
   const customer = (customerData as unknown as { data: Customer })?.data;
 
-  const { mutateAsync: deleteCustomer, isPending: isDeleting } = useDeleteApiCustomer();
+  const { mutateAsync: patchCustomer, isPending: isUpdatingStatus } = usePatchApiCustomer();
 
-  const handleDelete = async () => {
+  const openStatusDialog = () => {
+    setSelectedStatus(((customer?.status as UpdateCustomerDtoStatus) || "ACTIVE"));
+    setStatusOpen(true);
+  };
+
+  const handleStatusChange = async () => {
+    if (!customer) return;
+    if (selectedStatus === (customer.status as UpdateCustomerDtoStatus)) {
+      setStatusOpen(false);
+      return;
+    }
     try {
-      await deleteCustomer({ id });
-      toast.success(`Đã xóa khách hàng "${customer?.fullName}"`);
+      await patchCustomer({ id, data: { status: selectedStatus } });
+      await queryClient.invalidateQueries({ queryKey: getGetApiCustomerIdQueryKey(id) });
+      toast.success(
+        `Đã đổi trạng thái khách hàng "${customer.user?.fullName || customer.fullName || ""}" thành "${statusLabel[selectedStatus]?.label ?? selectedStatus}"`,
+      );
+      setStatusOpen(false);
       router.refresh();
-      router.push(portalPath("/customers"));
     } catch (err) {
-      toast.error((err as any)?.response?.data?.error?.message?.[0] || "Xóa khách hàng thất bại");
+      toast.error((err as any)?.response?.data?.error?.message?.[0] || "Đổi trạng thái thất bại");
       console.error(err);
     }
   };
@@ -174,6 +210,9 @@ export default function CustomerDetailPage() {
   }
 
   const statusCfg = statusLabel[customer.status] ?? { label: customer.status, variant: "default" as const };
+  const displayName = customer.user?.fullName || customer.fullName || "—";
+  const displayPhone = customer.user?.phone || customer.phone || "—";
+  const displayEmail = customer.user?.email || customer.email || "—";
 
   return (
     <div className="flex flex-col gap-6">
@@ -184,7 +223,7 @@ export default function CustomerDetailPage() {
           </button>
           <PageHeader
             eyebrow="CRM"
-            title={customer.fullName}
+            title={displayName}
           />
         </div>
         <div className="flex items-center gap-2">
@@ -192,9 +231,9 @@ export default function CustomerDetailPage() {
             <Pencil size={16} />
             Chỉnh sửa
           </Button>
-          <Button variant="destructive" onClick={() => setDeleteOpen(true)}>
-            <Trash2 size={16} />
-            Xóa
+          <Button variant="secondary" onClick={openStatusDialog}>
+            <RefreshCw size={16} />
+            Đổi trạng thái
           </Button>
         </div>
       </div>
@@ -211,7 +250,7 @@ export default function CustomerDetailPage() {
               <User size={16} />
             </span>
             <div className="flex flex-col">
-              <span className="text-sm font-medium">{customer.fullName}</span>
+              <span className="text-sm font-medium">{displayName}</span>
               <span className="text-xs text-foreground-muted">Họ và tên</span>
             </div>
           </div>
@@ -220,7 +259,7 @@ export default function CustomerDetailPage() {
               <Phone size={16} />
             </span>
             <div className="flex flex-col">
-              <span className="text-sm tabular-nums">{customer.phone || "—"}</span>
+              <span className="text-sm tabular-nums">{displayPhone}</span>
               <span className="text-xs text-foreground-muted">Điện thoại</span>
             </div>
           </div>
@@ -229,7 +268,7 @@ export default function CustomerDetailPage() {
               <Mail size={16} />
             </span>
             <div className="flex flex-col">
-              <span className="text-sm">{customer.email || "—"}</span>
+              <span className="text-sm">{displayEmail}</span>
               <span className="text-xs text-foreground-muted">Email</span>
             </div>
           </div>
@@ -397,27 +436,57 @@ export default function CustomerDetailPage() {
         )}
       </div>
 
-      {/* Delete dialog */}
-      <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+      {/* Status dialog */}
+      <Dialog open={statusOpen} onOpenChange={setStatusOpen}>
         <DialogPortal>
           <DialogOverlay />
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>Xóa khách hàng</DialogTitle>
+              <DialogTitle>Đổi trạng thái khách hàng</DialogTitle>
               <DialogDescription>
-                Hành động này sẽ ẩn khách hàng (soft delete). Bạn có chắc chắn?
+                Chọn trạng thái mới cho khách hàng này.
               </DialogDescription>
             </DialogHeader>
-            <div className="rounded-lg border border-border bg-surface-muted/40 p-4 text-sm">
-              <p className="font-medium">{customer.fullName}</p>
-              {customer.phone && <p className="text-foreground-muted tabular-nums">{customer.phone}</p>}
+            <div className="flex flex-col gap-4">
+              <div className="rounded-lg border border-border bg-surface-muted/40 p-4 text-sm">
+                <p className="font-medium">{displayName}</p>
+                {displayPhone !== "—" && (
+                  <p className="text-foreground-muted tabular-nums">{displayPhone}</p>
+                )}
+                <div className="mt-2 flex items-center gap-2">
+                  <span className="text-xs text-foreground-muted">Hiện tại</span>
+                  <Badge variant={statusCfg.variant} className="text-[10px]">
+                    {statusCfg.label}
+                  </Badge>
+                </div>
+              </div>
+              <Select
+                value={selectedStatus}
+                items={customerStatusOptions}
+                onValueChange={(v) => {
+                  if (v) setSelectedStatus(v as UpdateCustomerDtoStatus);
+                }}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {customerStatusOptions.map((o) => (
+                    <SelectItem key={o.value} value={o.value} label={o.label}>
+                      {o.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-            <div className="flex items-center justify-end gap-2">
-              <Button variant="outline" onClick={() => setDeleteOpen(false)}>Hủy</Button>
-              <Button variant="destructive" disabled={isDeleting} onClick={handleDelete}>
-                {isDeleting ? "Đang xóa..." : "Xóa"}
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setStatusOpen(false)} disabled={isUpdatingStatus}>
+                Hủy
               </Button>
-            </div>
+              <Button loading={isUpdatingStatus} onClick={handleStatusChange}>
+                Lưu trạng thái
+              </Button>
+            </DialogFooter>
           </DialogContent>
         </DialogPortal>
       </Dialog>

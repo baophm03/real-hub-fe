@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import type { FormEvent } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { usePortalPath } from "@/lib/hooks/use-portal";
 import { useForm } from "react-hook-form";
@@ -26,6 +27,13 @@ interface Customer {
   fullName: string;
   phone?: string;
   email?: string;
+  userId?: string | null;
+  user?: {
+    id: string;
+    fullName?: string | null;
+    phone?: string | null;
+    email?: string | null;
+  } | null;
   status: string;
   types?: CustomerType[];
 }
@@ -66,9 +74,12 @@ export default function CustomerEditPage() {
   const { data: customerData, isLoading } = useGetApiCustomerId(id);
   const customer = (customerData as unknown as { data: Customer })?.data;
 
+  // Khách hàng đã liên kết tài khoản người dùng -> họ tên/SĐT/email thuộc về tài khoản đó
+  const hasLinkedUser = Boolean(customer?.userId ?? customer?.user?.id);
+
   const { mutateAsync: updateCustomer } = usePatchApiCustomer();
 
-  const { register, handleSubmit, setValue, reset, formState: { errors } } = useForm<CustomerFormData>({
+  const { register, handleSubmit, setValue, getValues, reset, formState: { errors } } = useForm<CustomerFormData>({
     resolver: zodResolver(customerSchema),
     defaultValues: { status: "ACTIVE", types: ["BUYER"] },
   });
@@ -78,9 +89,9 @@ export default function CustomerEditPage() {
       const firstType = customer.types?.[0]?.type ?? "BUYER";
       const status = (customer.status || "ACTIVE") as UpdateCustomerDtoStatus;
       reset({
-        fullName: customer.fullName || "",
-        phone: customer.phone || "",
-        email: customer.email || "",
+        fullName: customer.user?.fullName || customer.fullName || "",
+        phone: customer.user?.phone || customer.phone || "",
+        email: customer.user?.email || customer.email || "",
         status,
         types: customer.types?.map((t) => t.type) || [firstType],
       });
@@ -95,9 +106,13 @@ export default function CustomerEditPage() {
       await updateCustomer({
         id,
         data: {
-          fullName: data.fullName,
-          phone: data.phone || undefined,
-          email: data.email || undefined,
+          ...(hasLinkedUser
+            ? {}
+            : {
+                fullName: data.fullName,
+                phone: data.phone || undefined,
+                email: data.email || undefined,
+              }),
           status: data.status,
           types: data.types,
         },
@@ -111,6 +126,22 @@ export default function CustomerEditPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const submitForm = (event: FormEvent<HTMLFormElement>) => {
+    if (!hasLinkedUser) {
+      void handleSubmit(onSubmit)(event);
+      return;
+    }
+    // Họ tên/SĐT/email bị khoá nên bỏ qua validate cho các trường này
+    event.preventDefault();
+    void onSubmit({
+      fullName: getValues("fullName") ?? "",
+      phone: getValues("phone") ?? "",
+      email: getValues("email") ?? "",
+      status: selectedStatus as UpdateCustomerDtoStatus,
+      types: [selectedType],
+    });
   };
 
   if (isLoading) {
@@ -134,19 +165,27 @@ export default function CustomerEditPage() {
         <PageHeader eyebrow="CRM" title="Chỉnh sửa khách hàng" />
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
-        <FormSection title="Thông tin khách hàng">
+      <form onSubmit={submitForm} className="flex flex-col gap-4">
+        <FormSection
+          title="Thông tin khách hàng"
+          {...(hasLinkedUser
+            ? {
+                description:
+                  "Khách hàng này đã liên kết tài khoản người dùng. Họ tên, số điện thoại và email được đồng bộ từ tài khoản đó nên không thể chỉnh sửa ở đây.",
+              }
+            : {})}
+        >
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <FormField label="Họ và tên" htmlFor="fullName" required error={errors.fullName?.message}>
-              <Input id="fullName" placeholder="Nguyễn Văn An" {...register("fullName")} />
+            <FormField label="Họ và tên" htmlFor="fullName" required={!hasLinkedUser} error={errors.fullName?.message}>
+              <Input id="fullName" placeholder="Nguyễn Văn An" disabled={hasLinkedUser} {...register("fullName")} />
             </FormField>
             <FormField label="Số điện thoại" htmlFor="phone" error={errors.phone?.message}>
-              <Input id="phone" placeholder="0901234567" {...register("phone")} />
+              <Input id="phone" placeholder="0901234567" disabled={hasLinkedUser} {...register("phone")} />
             </FormField>
           </div>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <FormField label="Email" htmlFor="email" error={errors.email?.message}>
-              <Input id="email" type="email" placeholder="an.nguyen@realhub.vn" {...register("email")} />
+              <Input id="email" type="email" placeholder="an.nguyen@realhub.vn" disabled={hasLinkedUser} {...register("email")} />
             </FormField>
             <FormField label="Loại khách hàng">
               <Select

@@ -244,14 +244,17 @@ export default function LeadsPage() {
     <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between gap-2">
         <span className="text-sm font-medium truncate">
-          {lead.customer?.fullName ?? lead.leadCode}
+          {lead.customer?.user?.fullName ?? lead.customer?.fullName ?? lead.leadCode}
         </span>
         <Badge variant="default" className="shrink-0 text-[10px]">
           {sourceLabel[lead.source] ?? lead.source}
         </Badge>
       </div>
       <span className="text-xs text-foreground-muted tabular-nums">
-        {lead.phoneNormalized ?? lead.customer?.phone ?? "—"}
+        {lead.phoneNormalized ??
+          lead.customer?.user?.phone ??
+          lead.customer?.phone ??
+          "—"}
       </span>
       {lead.property && (
         <span className="text-xs text-foreground-muted truncate">{lead.property.title}</span>
@@ -389,9 +392,14 @@ export default function LeadsPage() {
                           className="cursor-pointer border-b border-border hover:bg-surface-muted/30"
                         >
                           <td className="px-4 py-3 font-medium tabular-nums">{lead.leadCode}</td>
-                          <td className="px-4 py-3 font-medium">{lead.customer?.fullName ?? "—"}</td>
+                          <td className="px-4 py-3 font-medium">
+                            {lead.customer?.user?.fullName ?? lead.customer?.fullName ?? "—"}
+                          </td>
                           <td className="px-4 py-3 tabular-nums text-foreground-muted">
-                            {lead.phoneNormalized ?? lead.customer?.phone ?? "—"}
+                            {lead.phoneNormalized ??
+                              lead.customer?.user?.phone ??
+                              lead.customer?.phone ??
+                              "—"}
                           </td>
                           <td className="px-4 py-3 text-foreground-muted truncate max-w-[180px]">
                             {lead.property?.title ?? "—"}

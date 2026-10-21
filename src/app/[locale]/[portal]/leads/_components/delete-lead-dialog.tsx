@@ -21,7 +21,18 @@ import {
 export interface LeadDeleteTarget {
   id: string;
   leadCode: string;
-  customer?: { id: string; fullName: string; phone?: string } | null;
+  customer?: {
+    id: string;
+    userId?: string | null;
+    fullName?: string | null;
+    phone?: string | null;
+    user?: {
+      id: string;
+      fullName?: string | null;
+      phone?: string | null;
+      email?: string | null;
+    } | null;
+  } | null;
 }
 
 interface DeleteLeadDialogProps {
@@ -40,6 +51,7 @@ export function DeleteLeadDialog({
   const queryClient = useQueryClient();
   const { mutateAsync: deleteLead, isPending } = useDeleteApiLead();
   const [deleting, setDeleting] = useState(false);
+  const customerName = lead?.customer?.user?.fullName || lead?.customer?.fullName;
 
   const handleConfirm = async () => {
     if (!lead) return;
@@ -73,10 +85,10 @@ export function DeleteLeadDialog({
                   <strong className="text-foreground">
                     {lead.leadCode}
                   </strong>
-                  {lead.customer?.fullName ? (
+                  {customerName ? (
                     <>
                       {" "}
-                      (<strong className="text-foreground">{lead.customer.fullName}</strong>)
+                      (<strong className="text-foreground">{customerName}</strong>)
                     </>
                   ) : null}
                   ?

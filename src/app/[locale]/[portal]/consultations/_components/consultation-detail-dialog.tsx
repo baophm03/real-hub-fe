@@ -31,7 +31,31 @@ import {
   getGetApiPropertyContactsQueryKey,
 } from "@/lib/api/endpoints/property-contacts";
 
-// BE chỉ trả về field của chính property contact (không join bảng khác).
+export interface PropertyContactUser {
+  id: string;
+  fullName: string;
+  avatarFile?: {
+    id: string;
+    original: string;
+    url: string;
+  } | null;
+}
+
+export interface PropertyContactProperty {
+  id: string;
+  title: string;
+  propertyCode: string;
+  transactionType?: string | null;
+  price?: string | null;
+  priceUnit?: string | null;
+  area?: number | null;
+  areaUnit?: string | null;
+  addressPublic?: string | null;
+  province?: { id: string; name: string } | null;
+  district?: { id: string; name: string } | null;
+  ward?: { id: string; name: string } | null;
+}
+
 export interface PropertyContact {
   id: string;
   tenantId: string;
@@ -42,6 +66,10 @@ export interface PropertyContact {
   updatedBy: string | null;
   createdAt: string;
   updatedAt: string;
+  property?: PropertyContactProperty | null;
+  creator?: PropertyContactUser | null;
+  receiver?: PropertyContactUser | null;
+  updater?: PropertyContactUser | null;
 }
 
 const statusConfig: Record<
@@ -72,6 +100,16 @@ export function ConsultationDetailDialog({
   const queryClient = useQueryClient();
   const { mutateAsync: updateContact, isPending: isUpdating } = usePatchApiPropertyContactsId();
   const { mutateAsync: deleteContact, isPending: isDeleting } = useDeleteApiPropertyContactsId();
+  const propertyLocation = contact
+    ? contact.property?.addressPublic ||
+      [
+        contact.property?.ward?.name,
+        contact.property?.district?.name,
+        contact.property?.province?.name,
+      ]
+        .filter(Boolean)
+        .join(", ")
+    : "";
 
   const handleStatusChange = async (
     id: string,
@@ -145,9 +183,21 @@ export function ConsultationDetailDialog({
                     Bất động sản
                   </div>
                   <div className="flex items-start justify-between gap-2">
-                    <span className="text-sm font-medium leading-snug">
-                      {contact.propertyId}
-                    </span>
+                    <div className="flex min-w-0 flex-col gap-1">
+                      <span className="text-sm font-medium leading-snug">
+                        {contact.property?.title || contact.property?.propertyCode || "—"}
+                      </span>
+                      {contact.property?.propertyCode && (
+                        <span className="text-xs text-foreground-muted">
+                          Mã BĐS: {contact.property.propertyCode}
+                        </span>
+                      )}
+                      {propertyLocation && (
+                        <span className="text-xs text-foreground-muted">
+                          {propertyLocation}
+                        </span>
+                      )}
+                    </div>
                     <Button
                       variant="ghost"
                       size="icon-sm"
@@ -170,10 +220,10 @@ export function ConsultationDetailDialog({
                   </div>
                   <div className="flex flex-col gap-2">
                     <span className="text-sm font-medium break-all">
-                      {contact.createdBy || "—"}
+                      {contact.creator?.fullName || "—"}
                     </span>
                     <span className="text-xs text-foreground-muted">
-                      Người nhận xử lý: {contact.receiverId || "—"}
+                      Người nhận xử lý: {contact.receiver?.fullName || "Chưa phân công"}
                     </span>
                   </div>
                 </div>
