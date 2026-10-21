@@ -65,9 +65,14 @@ export function PoolLeadsTable({ leads, actions }: Props) {
           {leads.map((lead) => (
             <tr key={lead.id} className="border-b border-border last:border-b-0 hover:bg-surface-muted/30">
               <td className="px-4 py-3 font-medium tabular-nums">{lead.leadCode}</td>
-              <td className="px-4 py-3 font-medium">{lead.customer?.fullName ?? "—"}</td>
+              <td className="px-4 py-3 font-medium">
+                {lead.customer?.user?.fullName ?? lead.customer?.fullName ?? "—"}
+              </td>
               <td className="px-4 py-3 tabular-nums text-foreground-muted">
-                {lead.phoneNormalized ?? lead.customer?.phone ?? "—"}
+                {lead.phoneNormalized ??
+                  lead.customer?.user?.phone ??
+                  lead.customer?.phone ??
+                  "—"}
               </td>
               <td className="px-4 py-3 text-foreground-muted truncate max-w-[180px]">
                 {lead.property?.title ?? "—"}
