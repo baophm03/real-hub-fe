@@ -31,6 +31,7 @@ import {
 import { useGetApiNewsCategories } from "@/lib/api/endpoints/news-categories";
 import type { GetNewsItemResponse, GetNewsCategoriesResponse } from "@/lib/api/types/news";
 import { ThumbnailUploader } from "../../_components/thumbnail-uploader";
+import { AuditLogSection } from "@/app/[locale]/[portal]/audit-logs/_components/audit-log-section";
 
 const newsSchema = z.object({
   title: z.string().min(5, "Tiêu đề phải có ít nhất 5 ký tự"),
@@ -284,6 +285,9 @@ export default function NewsFormPage() {
           </Button>
         </div>
       </form>
+      {!isCreate && article?.id && (
+        <AuditLogSection entityType="news" entityId={id} />
+      )}
     </div>
   );
 }

@@ -22,6 +22,7 @@ import { PropertyBadges } from "@/components/shared/property-detail/property-bad
 import { PropertyDescription } from "./_components/property-description";
 import { PropertyMap } from "./_components/property-map";
 import { WorkflowActions } from "./_components/workflow-actions";
+import { AuditLogSection } from "@/app/[locale]/[portal]/audit-logs/_components/audit-log-section";
 
 export default function PropertyDetailPage() {
   const params = useParams();
@@ -139,6 +140,7 @@ export default function PropertyDetailPage() {
           <ContactSidebar property={property} />
         </div>
       </div>
+      <AuditLogSection entityType="property" entityId={id} />
     </div>
   );
 }
