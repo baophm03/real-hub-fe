@@ -160,9 +160,9 @@ export default async function ProjectDetailPage({ params }: Props) {
 
       {/* Tiêu đề dự án */}
       <div className="mb-8 mt-6 flex flex-col items-start gap-2">
-        <span className="inline-block rounded-full bg-primary px-3 py-1 text-[10px] font-medium uppercase tracking-wide text-primary-foreground">
+        {/* <span className="inline-block rounded-full bg-primary px-3 py-1 text-[10px] font-medium uppercase tracking-wide text-primary-foreground">
           {enumLabel("enums.projectStatus", project.status)}
-        </span>
+        </span> */}
         <h1 className="font-serif text-3xl font-semibold tracking-tight md:text-4xl">
           {project.name}
         </h1>
