@@ -48,9 +48,9 @@ export default function AuditLogsPage() {
   });
 
   const res = raw as unknown as AuditLogsResponse | undefined;
-  const logs: AuditLog[] = res?.items ?? [];
-  const total = res?.total ?? 0;
-  const totalPages = res?.totalPages ?? 1;
+  const logs: AuditLog[] = res?.data ?? [];
+  const total = res?.meta?.total ?? 0;
+  const totalPages = res?.meta?.totalPages ?? 1;
 
   const filtered = search.trim()
     ? logs.filter(
