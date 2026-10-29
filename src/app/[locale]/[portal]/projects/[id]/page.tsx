@@ -32,6 +32,7 @@ import { getProjectScale, getProjectImages, getPropertyImageUrl } from "@/utils/
 import { pickDynamicValue } from "@/components/shared/property-utils";
 import { formatLocationShort } from "@/utils";
 import { DeleteProjectDialog } from "../_components/delete-project-dialog";
+import { AuditLogSection } from "@/app/[locale]/[portal]/audit-logs/_components/audit-log-section";
 
 const projectStatusLabels: Record<string, string> = {
   ACTIVE: "Đang hoạt động",
@@ -387,6 +388,7 @@ export default function ProjectDetailPage() {
         open={deleteOpen}
         onOpenChange={setDeleteOpen}
       />
+      <AuditLogSection entityType="project" entityId={id} />
     </div>
   );
 }

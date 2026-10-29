@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, MessageSquareText } from "lucide-react";
 
 interface CtaCardProps {
   /** Nhãn nhỏ uppercase phía trên tiêu đề */
@@ -14,9 +14,11 @@ interface CtaCardProps {
   primaryHref: string;
   secondaryLabel?: string;
   secondaryHref?: string;
+  /** Ảnh nền phía sau lớp overlay xanh đậm */
+  backgroundImage?: string;
 }
 
-/** CTA dạng card bo góc, nhúng trong container (thường bọc ngoài bằng RevealSection). */
+/** CTA dạng banner ảnh nền + overlay xanh đậm, nhúng trong container (thường bọc ngoài bằng RevealSection). */
 export function CtaCard({
   eyebrow,
   title,
@@ -25,18 +27,25 @@ export function CtaCard({
   primaryHref,
   secondaryLabel,
   secondaryHref,
+  backgroundImage = "/background/home-banner.webp",
 }: CtaCardProps) {
   return (
-    <section className="bg-[#0B2A0B] py-16 md:py-24 rounded-2xl">
+    <section className="relative overflow-hidden bg-[#0B2A0B]">
+      <div
+        className="absolute inset-0 bg-cover bg-center"
+        style={{ backgroundImage: `url(${backgroundImage})` }}
+      />
+      <div className="absolute inset-0 bg-linear-to-b from-[#0B2A0B]/70 via-[#0B2A0B]/60 to-[#0B2A0B]/80" />
+
       <motion.div
         initial={{ opacity: 0, y: 24, filter: "blur(8px)" }}
         whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
         viewport={{ once: true, margin: "-80px" }}
         transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-        className="flex flex-col items-center justify-center gap-8 px-6 text-center md:px-8"
+        className="relative z-10 flex flex-col items-center justify-center gap-6 px-6 py-20 text-center md:gap-7 md:py-28"
       >
         {eyebrow && (
-          <span className="w-fit rounded-full bg-white/10 px-3 py-1 text-[10px] font-medium uppercase tracking-[0.2em] text-white/60">
+          <span className="w-fit rounded-full bg-white/10 px-4 py-1.5 text-[10px] font-medium uppercase tracking-[0.2em] text-white/80 backdrop-blur-sm">
             {eyebrow}
           </span>
         )}
@@ -46,15 +55,15 @@ export function CtaCard({
         </h2>
 
         {description && (
-          <p className="max-w-[44ch] text-base leading-relaxed text-white/60">
+          <p className="max-w-[52ch] text-sm leading-relaxed text-white/70 md:text-base">
             {description}
           </p>
         )}
 
-        <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
+        <div className="flex flex-wrap items-center justify-center gap-3 pt-2 md:gap-4">
           <Button
             size="lg"
-            className="bg-[#C7EDBB] text-[#1E2220] hover:bg-[#C7EDBB]/90"
+            className="bg-[#1D4D36] text-white shadow-lg shadow-black/20 hover:bg-[#1D4D36]/85"
             render={<Link href={primaryHref} />}
             rightIcon={
               <span className="flex items-center justify-center">
@@ -68,8 +77,13 @@ export function CtaCard({
             <Button
               variant="outline"
               size="lg"
-              className="bg-white text-[#1E2220] hover:bg-white/90"
+              className="border-white/30 bg-white/10 text-white backdrop-blur-sm hover:bg-white/20"
               render={<Link href={secondaryHref} />}
+              leftIcon={
+                <span className="flex items-center justify-center">
+                  <MessageSquareText size={14} />
+                </span>
+              }
             >
               {secondaryLabel}
             </Button>

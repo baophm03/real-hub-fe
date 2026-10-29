@@ -9,8 +9,8 @@ export interface AuditLog {
   action: string;
   entityType: string;
   entityId: string;
-  beforeJson: any;
-  afterJson: any;
+  beforeJson: Record<string, unknown> | null;
+  afterJson: Record<string, unknown> | null;
   ipAddress: string | null;
   userAgent: string | null;
   createdAt: string;
@@ -18,11 +18,14 @@ export interface AuditLog {
 }
 
 export interface AuditLogsResponse {
-  items: AuditLog[];
-  total: number;
-  page: number;
-  pageSize: number;
-  totalPages: number;
+  data: AuditLog[];
+  meta: {
+    total: number;
+    limit: number;
+    offset: number;
+    page: number;
+    totalPages: number;
+  };
 }
 
 export interface AuditLogSummaryItem {
@@ -31,6 +34,7 @@ export interface AuditLogSummaryItem {
 }
 
 export const actionLabel: Record<string, string> = {
+  // Legacy / HTTP-verb style (keep for backward compat)
   CREATE: "Tạo",
   UPDATE: "Cập nhật",
   DELETE: "Xóa",
@@ -39,9 +43,22 @@ export const actionLabel: Record<string, string> = {
   PUT: "Cập nhật",
   LOGIN: "Đăng nhập",
   LOGOUT: "Đăng xuất",
+  // News
+  NEWS_CREATED: "Tạo tin tức",
+  NEWS_UPDATED: "Cập nhật tin tức",
+  NEWS_DELETED: "Xóa tin tức",
+  // Projects
+  PROJECT_CREATED: "Tạo dự án",
+  PROJECT_UPDATED: "Cập nhật dự án",
+  PROJECT_DELETED: "Xóa dự án",
+  // Properties
+  PROPERTY_CREATED: "Tạo bất động sản",
+  PROPERTY_UPDATED: "Cập nhật bất động sản",
+  PROPERTY_DELETED: "Xóa bất động sản",
 };
 
 export const entityTypeLabel: Record<string, string> = {
+  // Legacy uppercase (keep for backward compat)
   PROPERTY: "Bất động sản",
   LEAD: "Lead",
   CUSTOMER: "Khách hàng",
@@ -59,23 +76,38 @@ export const entityTypeLabel: Record<string, string> = {
   APPOINTMENT: "Lịch hẹn",
   NEWS: "Tin tức",
   FILE: "Tệp",
+  // Actual stored values (lowercase)
+  news: "Tin tức",
+  project: "Dự án",
+  property: "Bất động sản",
 };
 
-export const actionOptions = Object.keys(actionLabel).map((k) => ({
-  value: k,
-  label: actionLabel[k] ?? k,
-}));
+export const actionOptions = [
+  { value: "", label: "Tất cả hành động" },
+  { value: "NEWS_CREATED", label: "Tạo tin tức" },
+  { value: "NEWS_UPDATED", label: "Cập nhật tin tức" },
+  { value: "NEWS_DELETED", label: "Xóa tin tức" },
+  { value: "PROJECT_CREATED", label: "Tạo dự án" },
+  { value: "PROJECT_UPDATED", label: "Cập nhật dự án" },
+  { value: "PROJECT_DELETED", label: "Xóa dự án" },
+  { value: "PROPERTY_CREATED", label: "Tạo bất động sản" },
+  { value: "PROPERTY_UPDATED", label: "Cập nhật bất động sản" },
+  { value: "PROPERTY_DELETED", label: "Xóa bất động sản" },
+];
 
-export const entityTypeOptions = Object.keys(entityTypeLabel).map((k) => ({
-  value: k,
-  label: entityTypeLabel[k] ?? k,
-}));
+export const entityTypeOptions = [
+  { value: "", label: "Tất cả đối tượng" },
+  { value: "news", label: "Tin tức" },
+  { value: "project", label: "Dự án" },
+  { value: "property", label: "Bất động sản" },
+];
 
-
-export function getActionBadgeVariant(action: string): "green" | "blue" | "default" | "purple" {
+export function getActionBadgeVariant(
+  action: string,
+): "green" | "blue" | "default" | "purple" {
   const a = action?.toUpperCase() ?? "";
-  if (a === "CREATE" || a === "POST") return "green";
-  if (a === "UPDATE" || a === "PATCH" || a === "PUT") return "blue";
-  if (a === "DELETE") return "default";
+  if (a.endsWith("_CREATED") || a === "CREATE" || a === "POST") return "green";
+  if (a.endsWith("_UPDATED") || a === "UPDATE" || a === "PATCH" || a === "PUT") return "blue";
+  if (a.endsWith("_DELETED") || a === "DELETE") return "default";
   return "purple";
 }
