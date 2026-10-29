@@ -23,6 +23,7 @@ import "swiper/css/effect-fade";
 const HERO_BACKGROUNDS = [
   "/background/home/home1.jpg",
   "/background/home/home2.jpg",
+  "/background/home-banner.webp",
 ];
 
 type PropertyType = {
