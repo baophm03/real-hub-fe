@@ -30,28 +30,33 @@ export default async function ContactPage() {
         breadcrumbs={[{ label: tc("home"), href: "/" }, { label: tp("nav.contact") }]}
       />
 
-      <div className="container py-16 md:py-24">
+      <section className="bg-[#F8F9FF]">
+        <div className="container py-16 md:py-24">
 
         <RevealSection>
           <div className="grid gap-10 lg:grid-cols-[1fr_400px]">
-            <div className="flex flex-col gap-6 rounded-2xl border border-border bg-surface p-8 shadow-[0_24px_70px_-24px_rgba(45,95,63,0.14)]">
-              <div className="flex items-start gap-4">
-                <Send size={24} className="mt-1 shrink-0 text-blue-600" />
+            <div className="flex flex-col gap-8 rounded-2xl border border-border bg-surface p-8 shadow-[0_24px_70px_-24px_rgba(45,95,63,0.14)]">
+              <div className="flex items-center justify-between gap-4">
                 <div className="flex flex-col gap-1">
                   <h2 className="font-serif text-2xl font-semibold tracking-tight">{t("sendMessage")}</h2>
                   <p className="text-sm text-foreground-muted">{t("sendMessageDesc")}</p>
                 </div>
+                <Send size={24} className="mt-1 shrink-0 text-blue-600" />
               </div>
               <ContactForm />
             </div>
 
-            <div className="flex flex-col gap-6">
-              <h3 className="text-xs font-semibold uppercase tracking-[0.15em] text-foreground-muted">{t("contactInfo")}</h3>
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-1.5">
+                <span className="text-xs font-bold uppercase tracking-[0.15em] text-primary">{t("connectTitle")}</span>
+                <h3 className="text-2xl font-semibold text-foreground">{t("contactInfo")}</h3>
+              </div>
               <ContactInfoList />
             </div>
           </div>
         </RevealSection>
-      </div>
-    </>
+        </div>
+      </section>
+      </>
   );
 }
