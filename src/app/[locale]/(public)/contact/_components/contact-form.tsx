@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Send, Loader2 } from "lucide-react";
+import { Send, Loader2, User, Mail, Phone } from "lucide-react";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
@@ -58,35 +58,44 @@ export function ContactForm() {
     <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
       <div className="grid gap-4 md:grid-cols-2">
         <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-medium uppercase tracking-wide text-foreground-muted">{t("formName")}</label>
-          <input
-            className="h-11 rounded-lg border border-border bg-background px-4 text-sm outline-none focus:border-primary transition-colors"
-            placeholder={t("formNamePlaceholder")}
-            value={form.fullName}
-            onChange={(e) => setForm((f) => ({ ...f, fullName: e.target.value }))}
-          />
+          <label className="text-sm font-semibold tracking-wide text-foreground">{t("formName")}<span className="ml-1 text-red-500">*</span></label>
+          <div className="relative">
+            <User size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-foreground-muted" />
+            <input
+              className="h-11 w-full rounded-lg border border-border bg-background pl-10 pr-4 text-sm outline-none focus:border-primary transition-colors"
+              placeholder={t("formNamePlaceholder")}
+              value={form.fullName}
+              onChange={(e) => setForm((f) => ({ ...f, fullName: e.target.value }))}
+            />
+          </div>
         </div>
         <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-medium uppercase tracking-wide text-foreground-muted">{t("email")}</label>
+          <label className="text-sm font-semibold tracking-wide text-foreground">{t("formEmail")}<span className="ml-1 text-red-500">*</span></label>
+          <div className="relative">
+            <Mail size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-foreground-muted" />
+            <input
+              className="h-11 w-full rounded-lg border border-border bg-background pl-10 pr-4 text-sm outline-none focus:border-primary transition-colors"
+              placeholder={t("formEmailPlaceholder")}
+              value={form.email}
+              onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+            />
+          </div>
+        </div>
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <label className="text-sm font-semibold tracking-wide text-foreground">{t("formPhone")}<span className="ml-1 text-red-500">*</span></label>
+        <div className="relative">
+          <Phone size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-foreground-muted" />
           <input
-            className="h-11 rounded-lg border border-border bg-background px-4 text-sm outline-none focus:border-primary transition-colors"
-            placeholder={t("formEmailPlaceholder")}
-            value={form.email}
-            onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+            className="h-11 w-full rounded-lg border border-border bg-background pl-10 pr-4 text-sm outline-none focus:border-primary transition-colors"
+            placeholder={t("formPhonePlaceholder")}
+            value={form.phone}
+            onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
           />
         </div>
       </div>
       <div className="flex flex-col gap-1.5">
-        <label className="text-xs font-medium uppercase tracking-wide text-foreground-muted">{t("formPhone")}</label>
-        <input
-          className="h-11 rounded-lg border border-border bg-background px-4 text-sm outline-none focus:border-primary transition-colors"
-          placeholder={t("formPhonePlaceholder")}
-          value={form.phone}
-          onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
-        />
-      </div>
-      <div className="flex flex-col gap-1.5">
-        <label className="text-xs font-medium uppercase tracking-wide text-foreground-muted">{t("formSubject")}</label>
+        <label className="text-sm font-semibold tracking-wide text-foreground">{t("formSubject")}<span className="ml-1 text-red-500">*</span></label>
         <input
           className="h-11 rounded-lg border border-border bg-background px-4 text-sm outline-none focus:border-primary transition-colors"
           placeholder={t("formSubjectPlaceholder")}
@@ -95,7 +104,7 @@ export function ContactForm() {
         />
       </div>
       <div className="flex flex-col gap-1.5">
-        <label className="text-xs font-medium uppercase tracking-wide text-foreground-muted">{t("formMessage")}</label>
+        <label className="text-sm font-semibold tracking-wide text-foreground">{t("formMessage")}<span className="ml-1 text-red-500">*</span></label>
         <textarea
           rows={5}
           className="rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary transition-colors"

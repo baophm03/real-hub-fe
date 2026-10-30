@@ -94,7 +94,7 @@ export function ContactInfoList({ variant = "full" }: { variant?: "full" | "comp
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-2">
       {items.map((item) => {
         const config = KEY_ICONS[item.key];
         const Icon = config?.icon ?? MapPin;
@@ -109,12 +109,12 @@ export function ContactInfoList({ variant = "full" }: { variant?: "full" | "comp
         const inner = (
           <>
             <div
-              className={`flex size-12 shrink-0 items-center justify-center rounded-full ${iconBg} transition-transform duration-300 group-hover:scale-105`}
+              className={`flex size-12 shrink-0 items-center justify-center rounded-[14px] ${iconBg} transition-transform duration-300 group-hover:scale-105`}
             >
-              <Icon size={22} />
+              <Icon size={18} />
             </div>
             <div className="flex min-w-0 flex-col gap-1">
-              <span className="text-xs font-semibold uppercase tracking-[0.12em] text-foreground-muted">
+              <span className="text-xs font-semibold uppercase text-foreground-muted">
                 {labelKey ? t(labelKey) : item.key}
               </span>
               <span className="text-sm font-medium leading-relaxed break-words">
@@ -127,14 +127,14 @@ export function ContactInfoList({ variant = "full" }: { variant?: "full" | "comp
           <a
             key={item.id}
             href={href}
-            className="group flex items-center gap-4 rounded-2xl border border-border bg-surface p-5 transition-all duration-300 hover:-translate-y-[1px] hover:shadow-[0_8px_24px_-8px_rgba(45,95,63,0.12)]"
+            className="group flex items-center gap-4 rounded-2xl border border-border bg-white p-4 transition-all duration-300 hover:-translate-y-[1px] hover:shadow-[0_8px_24px_-8px_rgba(45,95,63,0.12)]"
           >
             {inner}
           </a>
         ) : (
           <div
             key={item.id}
-            className="group flex items-center gap-4 rounded-2xl border border-border bg-surface p-5"
+            className="group flex items-center gap-4 rounded-2xl border border-border bg-white p-4"
           >
             {inner}
           </div>

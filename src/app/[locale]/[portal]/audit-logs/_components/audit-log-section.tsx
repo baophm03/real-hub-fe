@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { ScrollText, ChevronLeft, ChevronRight } from "lucide-react";
+import { ScrollText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { PaginationBar } from "@/components/shared/pagination-bar";
 import { useGetApiAuditLogs } from "@/lib/api/endpoints/audit-logs";
 import {
   actionLabel,
@@ -22,7 +22,7 @@ interface Props {
 
 export function AuditLogSection({ entityType, entityId }: Props) {
   const [page, setPage] = useState(1);
-  const pageSize = 10;
+  const [pageSize, setPageSize] = useState(10);
   const [detailLog, setDetailLog] = useState<AuditLog | null>(null);
 
   const { data: raw, isLoading } = useGetApiAuditLogs({
@@ -89,29 +89,13 @@ export function AuditLogSection({ entityType, entityId }: Props) {
           </div>
 
           {totalPages > 1 && (
-            <div className="flex items-center justify-between">
-              <p className="text-xs text-foreground-muted">
-                Trang {page} / {totalPages}
-              </p>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={page <= 1}
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                >
-                  <ChevronLeft size={14} />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={page >= totalPages}
-                  onClick={() => setPage((p) => p + 1)}
-                >
-                  <ChevronRight size={14} />
-                </Button>
-              </div>
-            </div>
+            <PaginationBar
+              pageSize={pageSize}
+              setPageSize={setPageSize}
+              currentPage={page}
+              setCurrentPage={setPage}
+              totalPages={totalPages}
+            />
           )}
         </>
       )}
