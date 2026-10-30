@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { ScrollText, ChevronLeft, ChevronRight } from "lucide-react";
+import { ScrollText } from "lucide-react";
 import { PageHeader } from "@/components/shared/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
-import { Button } from "@/components/ui/button";
+import { PaginationBar } from "@/components/shared/pagination-bar";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import {
@@ -34,7 +34,7 @@ export default function AuditLogsPage() {
   const canRead = ability.can("READ", "AUDIT");
 
   const [page, setPage] = useState(1);
-  const [pageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(20);
   const [actionFilter, setActionFilter] = useState<string>("");
   const [entityTypeFilter, setEntityTypeFilter] = useState<string>("");
   const [search, setSearch] = useState("");
@@ -217,32 +217,17 @@ export default function AuditLogsPage() {
           />
 
           {/* Pagination */}
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-foreground-muted">
-              Trang <span className="font-medium text-foreground">{page}</span> / {totalPages}
-              {" — "}
+          <div className="flex items-center justify-between gap-4">
+            <p className="hidden text-sm text-foreground-muted lg:block">
               <span className="font-medium text-foreground">{total}</span> log tổng cộng
             </p>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={page <= 1}
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-              >
-                <ChevronLeft size={14} />
-                Trước
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={page >= totalPages}
-                onClick={() => setPage((p) => p + 1)}
-              >
-                Sau
-                <ChevronRight size={14} />
-              </Button>
-            </div>
+            <PaginationBar
+              pageSize={pageSize}
+              setPageSize={setPageSize}
+              currentPage={page}
+              setCurrentPage={setPage}
+              totalPages={totalPages}
+            />
           </div>
         </>
       )}
