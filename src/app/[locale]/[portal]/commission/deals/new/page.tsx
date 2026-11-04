@@ -11,11 +11,9 @@ import { Button } from "@/components/ui/button";
 import { FormSection, FormField } from "@/components/shared/form-section";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { useGetApiDeals } from "@/lib/api/endpoints/deals-reservations";
-import {
-  useGetApiDealCommissions,
-  usePostApiDealCommission,
-  getGetApiDealCommissionsQueryKey,
-} from "@/lib/api/endpoints/commission";
+import { usePostApiDealCommission } from "@/lib/api/endpoints/commission";
+import { useApiCommissionDeals, useApiCommissionOptions } from "@/lib/api/endpoints/commission-meta";
+import { getApiErrorCode, getApiErrorMessage } from "@/lib/api/get-api-error-message";
 
 interface DealRow {
   id: string;
@@ -23,8 +21,19 @@ interface DealRow {
   status: string;
   expectedValue?: string;
   finalValue?: string;
-  property?: { id: string; title: string; price?: string };
+  property?: {
+    id: string;
+    title: string;
+    price?: string;
+    sellingMode?: string | null;
+    zone?: { id: string; name: string; code: string } | null;
+  };
   customer?: { id: string; fullName: string };
+}
+
+interface ExistingCommissionSummary {
+  id: string;
+  status: string;
 }
 
 export default function EstimateCommissionPage() {
@@ -34,14 +43,21 @@ export default function EstimateCommissionPage() {
   const searchParams = useSearchParams();
   const [loading, setLoading] = useState(false);
   const [selectedDealId, setSelectedDealId] = useState(searchParams.get("dealId") ?? "");
+  const [commissionType, setCommissionType] = useState("");
 
   const { data: dealsData, isLoading: dealsLoading } = useGetApiDeals({
     limit: "50",
     offset: "0",
   });
-  const deals = ((dealsData as unknown as { data: DealRow[] })?.data) || [];
+  const deals = ((dealsData as unknown as { data?: DealRow[] })?.data) ?? [];
 
   const { mutateAsync: createDc } = usePostApiDealCommission();
+  const { data: optionsEnvelope } = useApiCommissionOptions();
+  const options = optionsEnvelope?.data;
+
+  useEffect(() => {
+    if (!commissionType && options?.commissionTypes[0]) setCommissionType(options.commissionTypes[0].value);
+  }, [commissionType, options]);
 
   // Pre-select deal from query param
   useEffect(() => {
@@ -51,13 +67,25 @@ export default function EstimateCommissionPage() {
 
   const selectedDeal = deals.find((d) => d.id === selectedDealId);
   const propertyId = selectedDeal?.property?.id ?? "";
+  const sellingModeLabel = selectedDeal?.property?.sellingMode
+    ? options?.sellingModes.find((mode) => mode.value === selectedDeal.property?.sellingMode)?.label ?? selectedDeal.property.sellingMode
+    : "Chưa xác định";
+  const dealOptionLabel = (deal: DealRow) => {
+    const mode = deal.property?.sellingMode
+      ? options?.sellingModes.find((item) => item.value === deal.property?.sellingMode)?.label ?? deal.property.sellingMode
+      : "Chưa xác định hình thức khai thác";
+    const zone = deal.property?.zone?.name ?? "Chưa gán khu vực";
+    return `${deal.dealCode} — ${deal.property?.title ?? "—"} · ${mode} · ${zone}`;
+  };
 
   // Check existing commissions for this deal
-  const { data: existingDcs } = useGetApiDealCommissions(
-    { dealId: selectedDealId || undefined, status: undefined },
-    { query: { enabled: !!selectedDealId } },
-  ) as any;
-  const existingList = ((existingDcs as unknown as { data: any[] })?.data) || [];
+  const { data: existingDcs, isLoading: existingCommissionsLoading } = useApiCommissionDeals<ExistingCommissionSummary>(
+    { dealId: selectedDealId || undefined, commissionType: commissionType || undefined, limit: 100, offset: 0 },
+    Boolean(selectedDealId && commissionType),
+  );
+  const existingList = existingDcs?.data ?? [];
+  const finalizedCommission = existingList.find((commission) => !["DRAFT", "ESTIMATED"].includes(commission.status));
+  const openCommission = existingList.find((commission) => ["DRAFT", "ESTIMATED"].includes(commission.status));
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,24 +97,48 @@ export default function EstimateCommissionPage() {
       toast.error("Giao dịch không có bất động sản");
       return;
     }
+    if (!commissionType) {
+      toast.error("Chưa tải được loại khoản hoa hồng từ hệ thống");
+      return;
+    }
+    if (finalizedCommission) {
+      toast.error("Khoản hoa hồng này đã được chốt. Hãy mở hồ sơ hiện có để xem.");
+      return;
+    }
     setLoading(true);
     try {
       const result = await createDc({
         data: {
           dealId: selectedDealId,
           propertyId,
-        } as any,
+          commissionType,
+        },
       });
-      const dcId = (result as any)?.data?.id ?? (result as any)?.id;
-      toast.success("Đã tạo ước tính hoa hồng");
-      queryClient.invalidateQueries({ queryKey: getGetApiDealCommissionsQueryKey() });
+      const created = (result as any)?.data ?? result;
+      const dcId = created?.id;
+      if (created?.calculationOutcome === "UNCHANGED") {
+        toast.info("Ước tính đã tồn tại và không có thay đổi mới");
+      } else if (created?.calculationOutcome === "RECALCULATED") {
+        toast.success("Đã cập nhật ước tính theo chính sách hiện hành");
+      } else {
+        toast.success("Đã tạo ước tính theo chính sách đang áp dụng");
+      }
+      queryClient.invalidateQueries({ queryKey: ["/api/commission/deals"] });
       if (dcId) {
         router.push(portalPath(`/commission/deals/${dcId}`));
       } else {
         router.push(portalPath("/commission/deals"));
       }
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message?.[0] || "Có lỗi xảy ra khi tạo ước tính");
+    } catch (err) {
+      const code = getApiErrorCode(err);
+      const commissionErrorMessages: Record<string, string> = {
+        COMMISSION_ALREADY_FINALIZED: "Khoản hoa hồng đã được chốt và không thể tính lại bằng thao tác này.",
+        COMMISSION_NO_EFFECTIVE_PLAN: "Không có kế hoạch hoa hồng hiệu lực cho ngày nghiệp vụ của giao dịch.",
+        COMMISSION_PROPERTY_SELLING_MODE_REQUIRED: "Bất động sản chưa có hình thức khai thác. Hãy cập nhật bất động sản rồi thử lại.",
+        COMMISSION_SELLING_MODE_NO_MATCH: "Chưa có rule phù hợp với hình thức khai thác của bất động sản.",
+        COMMISSION_NO_MATCHING_RULE: "Chưa có rule hoa hồng phù hợp với giao dịch và bất động sản đã chọn.",
+      };
+      toast.error((code && commissionErrorMessages[code]) || getApiErrorMessage(err) || "Có lỗi xảy ra khi tạo ước tính");
     } finally {
       setLoading(false);
     }
@@ -119,7 +171,7 @@ export default function EstimateCommissionPage() {
             ) : (
               <Select
                 value={selectedDealId}
-                items={Object.fromEntries(deals.map((d) => [d.id, `${d.dealCode} — ${d.property?.title ?? "—"}`]))}
+                items={Object.fromEntries(deals.map((d) => [d.id, dealOptionLabel(d)]))}
                 onValueChange={(v) => v && setSelectedDealId(v)}
               >
                 <SelectTrigger className="w-full">
@@ -130,15 +182,31 @@ export default function EstimateCommissionPage() {
                     <SelectItem
                       key={d.id}
                       value={d.id}
-                      label={`${d.dealCode} — ${d.property?.title ?? "—"}`}
+                      label={dealOptionLabel(d)}
                     >
-                      {d.dealCode} — {d.property?.title ?? "—"}
+                      {dealOptionLabel(d)}
                       {d.customer?.fullName ? ` (${d.customer.fullName})` : ""}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             )}
+          </FormField>
+
+          <FormField label="Loại khoản hoa hồng" required>
+            <Select value={commissionType} onValueChange={(value) => value && setCommissionType(value)}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Chọn loại khoản">
+                  {(value: string) =>
+                    options?.commissionTypes.find((type) => type.value === value)?.label ??
+                    "Loại khoản không khả dụng"
+                  }
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {(options?.commissionTypes ?? []).map((type) => <SelectItem key={type.value} value={type.value} label={type.label}>{type.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
           </FormField>
 
           {selectedDeal && (
@@ -151,6 +219,14 @@ export default function EstimateCommissionPage() {
                 <div>
                   <span className="text-xs text-foreground-muted">Bất động sản</span>
                   <p className="font-medium">{selectedDeal.property?.title ?? "—"}</p>
+                </div>
+                <div>
+                  <span className="text-xs text-foreground-muted">Hình thức khai thác</span>
+                  <p className="font-medium">{sellingModeLabel}</p>
+                </div>
+                <div>
+                  <span className="text-xs text-foreground-muted">Khu vực áp dụng chính sách</span>
+                  <p className="font-medium">{selectedDeal.property?.zone?.name ?? "Chưa gán khu vực"}</p>
                 </div>
                 <div>
                   <span className="text-xs text-foreground-muted">Khách hàng</span>
@@ -180,17 +256,22 @@ export default function EstimateCommissionPage() {
             </div>
           )}
 
-          {existingList.length > 0 && (
-            <div className="rounded-lg border border-yellow-200 bg-yellow-50 px-4 py-3 text-sm text-yellow-700">
-              Giao dịch này đã có {existingList.length} ước tính hoa hồng. Tạo mới sẽ thêm một bản ghi khác.
+          {finalizedCommission ? (
+            <div className="flex flex-col gap-2 rounded-lg border border-amber-300/60 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:bg-amber-950/30 dark:text-amber-100">
+              <p>Giao dịch đã có khoản hoa hồng ở trạng thái {options?.commissionStatuses.find((item) => item.value === finalizedCommission.status)?.label ?? finalizedCommission.status}. Không thể tính lại hoặc mở lại khoản đã chốt bằng thao tác tạo ước tính.</p>
+              {finalizedCommission.id && <Button type="button" variant="outline" className="w-fit" onClick={() => router.push(portalPath(`/commission/deals/${finalizedCommission.id}`))}>Xem khoản hoa hồng hiện có</Button>}
             </div>
-          )}
+          ) : openCommission ? (
+            <div className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900 dark:bg-blue-950/30 dark:text-blue-100">
+              Đã có bản nháp ước tính cho giao dịch này. Hệ thống chỉ tăng revision và ghi ledger khi căn cứ tính thay đổi; gửi lại cùng dữ liệu sẽ giữ nguyên kết quả.
+            </div>
+          ) : null}
         </FormSection>
 
         <div className="flex items-center justify-end gap-2">
           <Button type="button" variant="secondary" onClick={() => router.push(portalPath("/commission/deals"))}>Hủy</Button>
-          <Button type="submit" disabled={loading || !selectedDealId}>
-            {loading ? "Đang tạo..." : "Tạo ước tính"}
+          <Button type="submit" disabled={loading || !selectedDealId || existingCommissionsLoading || Boolean(finalizedCommission)}>
+            {loading ? "Đang tính..." : openCommission ? "Cập nhật ước tính" : "Tạo ước tính"}
           </Button>
         </div>
       </form>

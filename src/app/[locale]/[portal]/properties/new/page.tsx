@@ -21,11 +21,13 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { usePostApiProperty, useGetApiPropertyTypes, getGetApiPropertiesAdminQueryKey } from "@/lib/api/endpoints/properties";
+import { useApiPropertySellingModes } from "@/lib/api/endpoints/property-meta";
 import { useGetApiProjects } from "@/lib/api/endpoints/projects";
 import { toast } from "sonner";
 import { useGetApiLocations } from "@/lib/api/endpoints/locations";
 import type { Location } from "@/lib/api/types/locations";
 import { GetProjectsResponse } from "@/lib/api/types/projects";
+import { useApiZoneOptions } from "@/lib/api/endpoints/zones";
 import { DynamicFieldsSection } from "@/components/shared/dynamic-fields-section";
 import { slugify } from "@/utils";
 
@@ -42,7 +44,7 @@ const propertySchema = z.object({
   slug: z.string().min(1, "Vui lòng nhập slug"),
   propertyTypeId: z.string().min(1, "Vui lòng chọn loại BĐS"),
   transactionType: z.enum(["SALE", "RENT", "TRANSFER", "INVESTMENT"]),
-  sellingMode: z.enum(["SELF_SELL", "SALES_DISTRIBUTION", "HYBRID", "INTERNAL_ONLY", "MARKETPLACE_PUBLIC"]),
+  sellingMode: z.string().min(1, "Vui lòng chọn hình thức khai thác"),
   provinceId: z.string().optional(),
   districtId: z.string().optional(),
   price: z.number().min(0, "Giá phải lớn hơn 0"),
@@ -50,6 +52,7 @@ const propertySchema = z.object({
   area: z.number().min(0, "Diện tích phải lớn hơn 0"),
   areaUnit: z.string(),
   projectId: z.string().optional(),
+  zoneId: z.string().optional(),
   latitude: z.number().optional(),
   longitude: z.number().optional(),
   publicationStatus: z.enum(["PRIVATE", "PUBLIC", "ARCHIVED"]),
@@ -63,11 +66,6 @@ const transactionTypeLabels: Record<string, string> = {
   RENT: "Cho thuê",
   TRANSFER: "Chuyển nhượng",
   INVESTMENT: "Đầu tư",
-};
-
-const sellingModeLabels: Record<string, string> = {
-  SELF_SELL: "Tự bán",
-  SALES_DISTRIBUTION: "Sale bán hộ",
 };
 
 const businessStatusLabels: Record<string, string> = {
@@ -118,10 +116,19 @@ function PropertyFormContent() {
   const propertyTypes = ((propertyTypesData as unknown as { data?: PropertyType[] })?.data) || [];
   const propertyTypeItems = Object.fromEntries(propertyTypes.map((t) => [t.id, t.name]));
 
+  const { data: sellingModesEnvelope, isLoading: sellingModesLoading, isError: sellingModesError } = useApiPropertySellingModes();
+  const sellingModes = sellingModesEnvelope?.data ?? [];
+  const sellingModeItems = Object.fromEntries(sellingModes.map((option) => [option.value, option.label]));
+
   // projects
   const { data: projectsData } = useGetApiProjects();
   const projects = ((projectsData as unknown as GetProjectsResponse)?.data) || [];
   const projectItems = Object.fromEntries(projects.map((p) => [p.id, p.name]));
+
+  // Commission zone is resolved from the tenant API, never hardcoded in the form.
+  const { data: zonesEnvelope, isLoading: zonesLoading } = useApiZoneOptions();
+  const zones = zonesEnvelope?.data ?? [];
+  const zoneItems = Object.fromEntries(zones.map((zone) => [zone.id, `${zone.name} (${zone.code})`]));
 
   // locations
   const { data: provincesData, isLoading: provincesLoading } = useGetApiLocations({ type: "PROVINCE", limit: 100 });
@@ -144,7 +151,7 @@ function PropertyFormContent() {
     resolver: zodResolver(propertySchema),
     defaultValues: {
       transactionType: "SALE",
-      sellingMode: "SELF_SELL",
+      sellingMode: "",
       publicationStatus: "PRIVATE",
       businessStatus: "AVAILABLE",
       priceUnit: "VND",
@@ -172,10 +179,23 @@ function PropertyFormContent() {
   }, [projectIdFromUrl, setValue]);
 
   const onSubmit = async (data: PropertyFormData) => {
+    if (!sellingModes.some((option) => option.value === data.sellingMode)) {
+      toast.error("Vui lòng tải và chọn hình thức khai thác hợp lệ từ hệ thống.");
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
-      const result = await createProperty({ data: { ...data, dynamicValuesJson: Object.keys(dynamicValues).length > 0 ? dynamicValues : undefined } as any });
+      const result = await createProperty({
+        data: {
+          ...data,
+          provinceId: data.provinceId || undefined,
+          districtId: data.districtId || undefined,
+          projectId: data.projectId || undefined,
+          zoneId: data.zoneId || undefined,
+          dynamicValuesJson: Object.keys(dynamicValues).length > 0 ? dynamicValues : undefined,
+        } as any,
+      });
       const newId = (result as any)?.id || (result as any)?.data?.id;
       void queryClient.invalidateQueries({ queryKey: getGetApiPropertiesAdminQueryKey() });
       toast.success("Tạo bất động sản thành công");
@@ -282,18 +302,19 @@ function PropertyFormContent() {
                 </SelectContent>
               </Select>
             </FormField>
-            <FormField label="Hình thức bán" required>
+            <FormField label="Hình thức khai thác" required error={errors.sellingMode?.message || (sellingModesError ? "Không tải được danh sách hình thức khai thác." : undefined)}>
               <Select
-                value={watch("sellingMode")}
-                items={sellingModeLabels}
+                value={watch("sellingMode") || ""}
+                items={sellingModeItems}
                 onValueChange={(v) => setValue("sellingMode", v as PropertyFormData["sellingMode"])}
               >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Chọn hình thức bán" />
+                <SelectTrigger className="w-full" disabled={sellingModesLoading || sellingModes.length === 0}>
+                  <SelectValue placeholder={sellingModesLoading ? "Đang tải lựa chọn..." : "Chọn hình thức khai thác"} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="SELF_SELL" label="Tự bán">Tự bán</SelectItem>
-                  <SelectItem value="SALES_DISTRIBUTION" label="Sales bán hộ">Sales bán hộ</SelectItem>
+                  {sellingModes.map((option) => (
+                    <SelectItem key={option.value} value={option.value} label={option.label}>{option.label}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </FormField>
@@ -355,6 +376,25 @@ function PropertyFormContent() {
                 </SelectContent>
               </Select>
             </FormField>
+            <FormField label="Khu vực kinh doanh" helper="Dùng để áp dụng chính sách hoa hồng theo khu vực.">
+              <Select
+                value={watch("zoneId") || "__NONE__"}
+                items={{ __NONE__: "Chưa gán khu vực", ...zoneItems }}
+                onValueChange={(value) => setValue("zoneId", value === "__NONE__" ? "" : String(value))}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder={zonesLoading ? "Đang tải khu vực…" : "Chọn khu vực (không bắt buộc)"} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__NONE__" label="Chưa gán khu vực">Chưa gán khu vực</SelectItem>
+                  {zones.map((zone) => (
+                    <SelectItem key={zone.id} value={zone.id} label={`${zone.name} (${zone.code})`}>
+                      {zone.name} <span className="text-xs text-foreground-muted">({zone.code})</span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </FormField>
           </div>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <FormField label="Tỉnh/Thành phố">
@@ -365,7 +405,7 @@ function PropertyFormContent() {
                   const val = v as string;
                   setValue("provinceId", val);
                   setSelectedProvinceId(val);
-                  setValue("districtId", "");
+                  setValue("districtId", undefined);
                 }}
               >
                 <SelectTrigger>

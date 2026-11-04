@@ -16,7 +16,7 @@ import { PageBanner } from "@/components/shared/page-banner";
 import { generateSeoMetadata } from "@/lib/seo";
 import { buildBlogListContext } from "@/lib/seo-context";
 
-export const ALL_SLUG = "all";
+const ALL_SLUG = "all";
 
 type Props = {
   params: Promise<{ locale: string; categoryCode: string }>;

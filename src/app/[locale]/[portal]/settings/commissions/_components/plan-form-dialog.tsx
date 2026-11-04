@@ -17,6 +17,7 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import type { CreateCommissionPlanDto } from "@/lib/api/models/createCommissionPlanDto";
+import { useApiCommissionOptions, type CommissionOptions } from "@/lib/api/endpoints/commission-meta";
 import {
   emptyRule,
   emptySplit,
@@ -26,23 +27,32 @@ import {
 } from "./types";
 import { RuleSection } from "./rule-section";
 
+export type PlanFormSubmission = Omit<CreateCommissionPlanDto, "effectiveTo"> & {
+  effectiveTo?: string | null;
+};
+
 interface PlanFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (dto: CreateCommissionPlanDto) => Promise<void>;
+  onSubmit: (dto: PlanFormSubmission) => Promise<void>;
   isSubmitting: boolean;
   initialPlan?: Plan | null;
+  mode?: "create" | "edit" | "clone";
 }
 
-function planToRules(plan: Plan): Rule[] {
-  if (!plan.rules || plan.rules.length === 0) return [emptyRule()];
+function planToRules(plan: Plan, options?: CommissionOptions): Rule[] {
+  if (!plan.rules || plan.rules.length === 0) return [emptyRule(options)];
   return plan.rules.map((r) => ({
     id: r.id,
     name: r.name,
     priority: r.priority ?? 0,
+    commissionType: (r as any).commissionType ?? options?.commissionTypes[0]?.value,
     dealType: (r as any).dealType ?? "",
     propertyTypeId: (r as any).propertyTypeId ?? "",
     sellingMode: (r as any).sellingMode ?? "",
+    zoneId: (r as any).zoneId ?? "",
+    projectId: (r as any).projectId ?? "",
+    leadSource: (r as any).leadSource ?? "",
     calculationType: r.calculationType,
     calculationValue: Number(r.calculationValue) || 0,
     calculationBase: r.calculationBase,
@@ -53,6 +63,7 @@ function planToRules(plan: Plan): Rule[] {
       receiverType: s.receiverType,
       receiverRole: s.receiverRole,
       receiverUserId: s.receiverUserId,
+      receiverName: (s as any).receiverName,
       splitType: s.splitType,
       splitValue: Number(s.splitValue) || 0,
       minAmount: s.minAmount ? Number(s.minAmount) : undefined,
@@ -62,13 +73,23 @@ function planToRules(plan: Plan): Rule[] {
   }));
 }
 
-function isoToDateInput(iso?: string | null): string {
-  if (!iso) return "";
-  try {
-    return new Date(iso).toISOString().slice(0, 10);
-  } catch {
-    return "";
-  }
+function isoToDateInput(value?: string | null): string {
+  if (!value) return "";
+  // Effective dates are calendar dates. Keep the stored/API date component instead
+  // of converting a legacy timestamp through the browser's timezone.
+  const match = /^(\d{4}-\d{2}-\d{2})(?:$|T)/.exec(value);
+  return match?.[1] ?? "";
+}
+
+function todayDateInput(timeZone: string): string {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date());
+  const values = Object.fromEntries(parts.map(({ type, value }) => [type, value]));
+  return `${values.year}-${values.month}-${values.day}`;
 }
 
 export function PlanFormDialog({
@@ -77,27 +98,36 @@ export function PlanFormDialog({
   onSubmit,
   isSubmitting,
   initialPlan,
+  mode = initialPlan ? "edit" : "create",
 }: PlanFormDialogProps) {
+  const { data: optionsEnvelope } = useApiCommissionOptions();
+  const options = optionsEnvelope?.data;
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState(0);
   const [effectiveFrom, setEffectiveFrom] = useState("");
   const [effectiveTo, setEffectiveTo] = useState("");
-  const [rules, setRules] = useState<Rule[]>([emptyRule()]);
+  const [rules, setRules] = useState<Rule[]>([]);
   const [collapsedRules, setCollapsedRules] = useState<Set<number>>(new Set());
 
-  // Hydrate from initialPlan when opening in edit mode
+  // Hydrate a copy from the source policy for edit/clone. Clone always starts as a new draft.
   useEffect(() => {
     if (open && initialPlan) {
-      setName(initialPlan.name);
+      setName(mode === "clone" ? `${initialPlan.name} – bản sao` : initialPlan.name);
       setDescription(initialPlan.description ?? "");
       setPriority(initialPlan.priority ?? 0);
-      setEffectiveFrom(isoToDateInput(initialPlan.effectiveFrom));
-      setEffectiveTo(isoToDateInput(initialPlan.effectiveTo));
-      setRules(planToRules(initialPlan));
+      setEffectiveFrom(mode === "clone"
+        ? options?.businessTimezone ? todayDateInput(options.businessTimezone) : ""
+        : isoToDateInput(initialPlan.effectiveFrom));
+      setEffectiveTo(mode === "clone" ? "" : isoToDateInput(initialPlan.effectiveTo));
+      setRules(planToRules(initialPlan, options));
       setCollapsedRules(new Set());
+    } else if (open && !initialPlan && options) {
+      setRules((current) => current.length === 0 || !current[0]?.calculationType
+        ? [emptyRule(options)]
+        : current);
     }
-  }, [open, initialPlan]);
+  }, [open, initialPlan, options, mode]);
 
   const toggleRule = (idx: number) =>
     setCollapsedRules((prev) => {
@@ -113,7 +143,7 @@ export function PlanFormDialog({
     setPriority(0);
     setEffectiveFrom("");
     setEffectiveTo("");
-    setRules([emptyRule()]);
+    setRules(options ? [emptyRule(options)] : []);
     setCollapsedRules(new Set());
   };
 
@@ -122,15 +152,19 @@ export function PlanFormDialog({
     if (!open) reset();
   };
 
-  const addRule = () => setRules((r) => [...r, emptyRule()]);
+  const addRule = () => setRules((r) => [...r, emptyRule(options)]);
   const removeRule = (idx: number) =>
     setRules((r) => (r.length === 1 ? r : r.filter((_, i) => i !== idx)));
   const updateRule = (idx: number, patch: Partial<Rule>) =>
-    setRules((r) => r.map((rule, i) => (i === idx ? { ...rule, ...patch } : rule)));
+    setRules((current) => current.map((rule, i) => {
+      if (i !== idx) return rule;
+      const next = { ...rule, ...patch };
+      return next;
+    }));
 
   const addSplit = (ruleIdx: number) =>
     updateRule(ruleIdx, {
-      splits: [...(rules[ruleIdx].splits ?? []), emptySplit()],
+      splits: [...(rules[ruleIdx].splits ?? []), emptySplit(options)],
     });
   const removeSplit = (ruleIdx: number, splitIdx: number) =>
     updateRule(ruleIdx, {
@@ -145,6 +179,10 @@ export function PlanFormDialog({
     });
 
   const handleSubmit = async () => {
+    if (!options) {
+      toast.error("Đang tải cấu hình hoa hồng từ hệ thống");
+      return;
+    }
     if (!name.trim()) {
       toast.error("Vui lòng nhập tên kế hoạch");
       return;
@@ -164,18 +202,22 @@ export function PlanFormDialog({
       }
     }
 
-    const dto: CreateCommissionPlanDto = {
+    const dto = {
       name: name.trim(),
       description: description.trim() || undefined,
       priority,
-      effectiveFrom: new Date(effectiveFrom).toISOString(),
-      effectiveTo: effectiveTo ? new Date(effectiveTo).toISOString() : undefined,
+      effectiveFrom,
+      effectiveTo: effectiveTo || (mode === "edit" && initialPlan?.effectiveTo ? null : undefined),
       rules: rules.map((r) => ({
         name: r.name.trim(),
         priority: r.priority ?? 0,
+        commissionType: r.commissionType,
         dealType: (r as any).dealType || undefined,
         propertyTypeId: (r as any).propertyTypeId || undefined,
         sellingMode: (r as any).sellingMode || undefined,
+        zoneId: r.zoneId || undefined,
+        projectId: r.projectId || undefined,
+        leadSource: r.leadSource || undefined,
         calculationType: r.calculationType,
         calculationValue: Number(r.calculationValue) || 0,
         calculationBase: r.calculationBase,
@@ -185,6 +227,7 @@ export function PlanFormDialog({
           receiverType: s.receiverType,
           receiverRole: s.receiverType === "ROLE" ? s.receiverRole : undefined,
           receiverUserId: s.receiverType === "USER" ? s.receiverUserId : undefined,
+          receiverName: s.receiverType === "EXTERNAL" ? s.receiverName?.trim() : undefined,
           splitType: s.splitType,
           splitValue: Number(s.splitValue) || 0,
           minAmount: s.minAmount ? Number(s.minAmount) : undefined,
@@ -194,7 +237,7 @@ export function PlanFormDialog({
       })),
     };
 
-    await onSubmit(dto);
+    await onSubmit(dto as PlanFormSubmission);
     reset();
   };
 
@@ -202,9 +245,11 @@ export function PlanFormDialog({
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-7xl h-[96vh] overflow-hidden flex flex-col">
         <DialogHeader>
-          <DialogTitle>{initialPlan ? "Sửa kế hoạch hoa hồng" : "Tạo kế hoạch hoa hồng"}</DialogTitle>
+          <DialogTitle>{mode === "clone" ? "Nhân bản chính sách hoa hồng" : mode === "edit" ? "Sửa kế hoạch hoa hồng" : "Tạo kế hoạch hoa hồng"}</DialogTitle>
           <DialogDescription>
-            Kế hoạch chứa nhiều rule — mỗi rule áp dụng theo điều kiện và chia hoa hồng cho các role
+            {mode === "clone"
+              ? "Tạo một bản nháp mới từ rule và split hiện có. Bản gốc và lịch sử hoa hồng không bị thay đổi. Kiểm tra lại ngày hiệu lực trước khi gửi duyệt."
+              : `Kế hoạch chứa nhiều rule — ngày hiệu lực theo múi giờ ${options?.businessTimezone ?? "được cấu hình cho tenant"}; mỗi rule áp dụng theo điều kiện và chia hoa hồng cho các role`}
           </DialogDescription>
         </DialogHeader>
 
@@ -279,7 +324,7 @@ export function PlanFormDialog({
         <DialogFooter>
           <DialogClose render={<Button variant="outline" />}>Hủy</DialogClose>
           <Button onClick={handleSubmit} disabled={isSubmitting}>
-            {isSubmitting ? "Đang lưu..." : initialPlan ? "Lưu thay đổi" : "Tạo kế hoạch"}
+            {isSubmitting ? "Đang lưu..." : mode === "edit" ? "Lưu thay đổi" : mode === "clone" ? "Tạo bản nháp" : "Tạo kế hoạch"}
           </Button>
         </DialogFooter>
       </DialogContent>

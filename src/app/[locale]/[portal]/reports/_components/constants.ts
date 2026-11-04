@@ -52,23 +52,7 @@ export const publicationLabels: Record<string, string> = {
   ARCHIVED: "Lưu trữ",
 };
 
-export const businessLabels: Record<string, string> = {
-  AVAILABLE: "Sẵn bán",
-  RESERVED: "Đã đặt cọc",
-  SOLD: "Đã bán",
-  RENTED: "Đã cho thuê",
-  OFF_MARKET: "Off market",
-};
-
-export const commissionStatusLabels: Record<string, string> = {
-  DRAFT: "Nháp",
-  ESTIMATED: "Đã ước tính",
-  PENDING_CONFIRMATION: "Chờ xác nhận",
-  CONFIRMED: "Đã xác nhận",
-  ADJUSTED: "Đã điều chỉnh",
-  CANCELLED: "Đã hủy",
-};
-
+// Roles shown in the general team performance report.
 export const roleLabels: Record<string, string> = {
   SALES: "Sales",
   COLLABORATOR: "CTV",
@@ -76,6 +60,14 @@ export const roleLabels: Record<string, string> = {
   AGENCY: "Agency",
   OWNER: "Owner",
   UNKNOWN: "Khác",
+};
+
+export const businessLabels: Record<string, string> = {
+  AVAILABLE: "Sẵn bán",
+  RESERVED: "Đã đặt cọc",
+  SOLD: "Đã bán",
+  RENTED: "Đã cho thuê",
+  OFF_MARKET: "Off market",
 };
 
 export const CHART_COLORS = [

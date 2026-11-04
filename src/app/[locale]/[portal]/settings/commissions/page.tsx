@@ -3,9 +3,9 @@
 import { useState, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Plus, TrendingUp, Trash2, Pencil, MoreVertical, CheckCircle2, Layers } from "lucide-react";
+import { Plus, TrendingUp, Trash2, Pencil, MoreVertical, CheckCircle2, Layers, ArrowLeft, ArrowRight, MapPin } from "lucide-react";
+import { useRouter } from "next/navigation";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Can } from "@casl/react";
 import { ability } from "@/config/casl/ability";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Button } from "@/components/ui/button";
@@ -28,38 +28,56 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import {
-  useGetApiCommissionPlans,
   usePostApiCommissionPlan,
   usePatchApiCommissionPlanId,
   usePatchApiCommissionPlanStatus,
   useDeleteApiCommissionPlanId,
-  getGetApiCommissionPlansQueryKey,
 } from "@/lib/api/endpoints/commission";
+import { useApiCommissionOptions, useApiCommissionPlans } from "@/lib/api/endpoints/commission-meta";
+import { getLeadSourceLabel } from "@/utils/lead-source-labels";
 import type { CreateCommissionPlanDto } from "@/lib/api/models/createCommissionPlanDto";
 import type { UpdateCommissionPlanDto } from "@/lib/api/models/updateCommissionPlanDto";
-import { PlanFormDialog } from "./_components/plan-form-dialog";
+import { PlanFormDialog, type PlanFormSubmission } from "./_components/plan-form-dialog";
 import { StatusConfirmDialog, type StatusConfirmData } from "./_components/status-confirm-dialog";
 import { DeletePlanDialog } from "./_components/delete-plan-dialog";
-import { statusConfig, statusFilters, statusOrder, type Plan } from "./_components/types";
+import { statusConfig, type Plan } from "./_components/types";
 import { formatDate } from "@/utils";
+import { usePortalPath } from "@/lib/hooks/use-portal";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export default function CommissionsSettingsPage() {
-  const canCreate = ability.can("CREATE", "COMMISSION");
-  const canApprove = ability.can("APPROVE", "COMMISSION");
+  const router = useRouter();
+  const portalPath = usePortalPath();
+  const hasCreatePermission = ability.can("CREATE", "COMMISSION");
+  const hasApprovePermission = ability.can("APPROVE", "COMMISSION");
+  const hasReadPermission = ability.can("READ", "COMMISSION");
 
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("");
+  const [statusFilter, setStatusFilter] = useState<string>("ALL");
+  const [offset, setOffset] = useState(0);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editPlan, setEditPlan] = useState<Plan | null>(null);
+  const [clonePlan, setClonePlan] = useState<Plan | null>(null);
+  const [viewPlan, setViewPlan] = useState<Plan | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Plan | null>(null);
   const [confirmDialog, setConfirmDialog] = useState<StatusConfirmData | null>(null);
 
   const queryClient = useQueryClient();
+  const { data: optionsEnvelope } = useApiCommissionOptions();
+  const options = optionsEnvelope?.data;
+  const canCreate = hasCreatePermission && Boolean(options?.capabilities.canManagePlans);
+  const canApprove = hasApprovePermission && Boolean(options?.capabilities.canApprovePlans);
+  const canReadAll = Boolean(options?.capabilities.canReadAllPlans);
 
-  const { data: plansRaw, isLoading } = useGetApiCommissionPlans(
-    statusFilter ? { status: statusFilter as any } : undefined,
-  );
-  const allPlans = ((plansRaw as { data?: Plan[] } | undefined)?.data) ?? [];
+  const { data: plansRaw, isLoading } = useApiCommissionPlans<Plan>({
+    status: statusFilter === "ALL" ? undefined : statusFilter,
+    limit: 50,
+    offset,
+  });
+  const allPlans = plansRaw?.data ?? [];
+  const totalPlans = plansRaw?.meta?.total ?? allPlans.length;
+  const planStatusOptions = options?.planStatuses ?? [];
+  const invalidatePlans = () => queryClient.invalidateQueries({ queryKey: ["/api/commission/plans"] });
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -75,8 +93,9 @@ export default function CommissionsSettingsPage() {
     mutation: {
       onSuccess: () => {
         toast.success("Tạo kế hoạch hoa hồng thành công");
-        queryClient.invalidateQueries({ queryKey: getGetApiCommissionPlansQueryKey() });
+        invalidatePlans();
         setDialogOpen(false);
+        setClonePlan(null);
       },
       onError: (err: any) => {
         const msg = err?.response?.data?.error?.message?.[0] || "Có lỗi khi tạo kế hoạch";
@@ -89,7 +108,7 @@ export default function CommissionsSettingsPage() {
     mutation: {
       onSuccess: () => {
         toast.success("Cập nhật kế hoạch thành công");
-        queryClient.invalidateQueries({ queryKey: getGetApiCommissionPlansQueryKey() });
+        invalidatePlans();
         setEditPlan(null);
       },
       onError: (err: any) => {
@@ -103,7 +122,7 @@ export default function CommissionsSettingsPage() {
     mutation: {
       onSuccess: () => {
         toast.success("Cập nhật trạng thái thành công");
-        queryClient.invalidateQueries({ queryKey: getGetApiCommissionPlansQueryKey() });
+        invalidatePlans();
         setConfirmDialog(null);
       },
       onError: (err: any) => {
@@ -117,7 +136,7 @@ export default function CommissionsSettingsPage() {
     mutation: {
       onSuccess: () => {
         toast.success("Đã xóa kế hoạch");
-        queryClient.invalidateQueries({ queryKey: getGetApiCommissionPlansQueryKey() });
+        invalidatePlans();
         setDeleteTarget(null);
       },
       onError: (err: any) => {
@@ -127,52 +146,36 @@ export default function CommissionsSettingsPage() {
     },
   });
 
-  const handleAdvanceStatus = (plan: Plan) => {
-    const idx = statusOrder.indexOf(plan.status);
-    const next = statusOrder[idx + 1];
-    if (!next) return;
+  const handleStatusTransition = (plan: Plan, next: { status: string; action: string; label: string }) => {
     setConfirmDialog({
-      title: `Đổi trạng thái kế hoạch`,
-      description: `Đổi kế hoạch "${plan.name}" thành "${statusConfig[next].label}"?`,
-      confirmLabel: plan.status === "DRAFT" ? "Gửi duyệt" : "Kích hoạt",
+      title: next.label,
+      description: `Thực hiện “${next.label}” với kế hoạch "${plan.name}"?`,
+      confirmLabel: next.label,
       action: async () => {
-        await updateStatus({ id: plan.id, data: { status: next } });
+        await updateStatus({ id: plan.id, data: { status: next.status } });
       },
     });
   };
 
-  const handleArchive = (plan: Plan) => {
-    setConfirmDialog({
-      title: "Lưu trữ kế hoạch",
-      description: `Lưu trữ kế hoạch "${plan.name}"? Kế hoạch sẽ không còn hiệu lực.`,
-      confirmLabel: "Lưu trữ",
-      action: async () => {
-        await updateStatus({ id: plan.id, data: { status: "ARCHIVED" } });
-      },
-    });
-  };
+  const getPlanStatusLabel = (status: string) =>
+    planStatusOptions.find((option) => option.value === status)?.label ?? status;
 
-  const handleReactivate = (plan: Plan) => {
-    setConfirmDialog({
-      title: "Kích hoạt lại kế hoạch",
-      description: `Kích hoạt lại kế hoạch "${plan.name}"? Kế hoạch sẽ áp dụng cho các giao dịch mới.`,
-      confirmLabel: "Kích hoạt",
-      action: async () => {
-        await updateStatus({ id: plan.id, data: { status: "ACTIVE" } });
-      },
-    });
-  };
-
-  const handleEditSubmit = async (dto: CreateCommissionPlanDto) => {
+  const handleEditSubmit = async (dto: PlanFormSubmission) => {
     if (!editPlan) return;
     const updateData: UpdateCommissionPlanDto = {
       name: dto.name,
       description: dto.description,
       priority: dto.priority,
       effectiveFrom: dto.effectiveFrom,
-      effectiveTo: dto.effectiveTo,
+      effectiveTo: dto.effectiveTo ?? undefined,
       rules: dto.rules,
     };
+    // The API explicitly accepts null to clear the optional end date. The generated
+    // client model still types this field as string-only until OpenAPI is regenerated.
+    if (dto.effectiveTo === null) {
+      await updatePlan({ id: editPlan.id, data: { ...updateData, effectiveTo: null } as unknown as UpdateCommissionPlanDto });
+      return;
+    }
     await updatePlan({ id: editPlan.id, data: updateData });
   };
 
@@ -239,12 +242,12 @@ export default function CommissionsSettingsPage() {
       accessorKey: "status",
       header: "Trạng thái",
       cell: ({ row }) => {
-        const cfg = statusConfig[row.original.status] ?? statusConfig.DRAFT;
+        const cfg = statusConfig[row.original.status] ?? { variant: "default" as const, icon: Layers };
         const Icon = cfg.icon;
         return (
           <Badge variant={cfg.variant} className="text-[10px]">
             <Icon size={10} />
-            {cfg.label}
+            {getPlanStatusLabel(row.original.status)}
           </Badge>
         );
       },
@@ -254,12 +257,12 @@ export default function CommissionsSettingsPage() {
       header: "",
       cell: ({ row }) => {
         const plan = row.original;
-        const canAdvance = plan.status !== "ACTIVE" && plan.status !== "ARCHIVED";
-        const canArchive = plan.status === "ACTIVE";
-        const canReactivate = plan.status === "ARCHIVED";
-        const canEditPlan = canCreate && plan.status !== "ACTIVE";
-        const canDeletePlan = canApprove && plan.status !== "ACTIVE";
-        if (!canApprove && !canCreate) return null;
+        const transition = options?.planTransitions.find((entry) => entry.from === plan.status);
+        const actions = transition?.to ?? [];
+        const planStatus = planStatusOptions.find((option) => option.value === plan.status);
+        const canEditPlan = canCreate && Boolean(planStatus?.canEdit) && (plan._count?.dealCommissions ?? 0) === 0;
+        const canDeletePlan = canApprove && Boolean(planStatus?.canDelete) && (plan._count?.dealCommissions ?? 0) === 0;
+        if (!hasReadPermission && !canApprove && !canCreate) return null;
 
         return (
           <DropdownMenu>
@@ -275,42 +278,24 @@ export default function CommissionsSettingsPage() {
               <MoreVertical size={14} />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              {canApprove && canAdvance && (
+              {hasReadPermission && <DropdownMenuItem onClick={(e: any) => { e.stopPropagation(); setViewPlan(plan); }}>Chi tiết</DropdownMenuItem>}
+              {canCreate && <DropdownMenuItem onClick={(e: any) => { e.stopPropagation(); setClonePlan(plan); }}>Sao chép thành bản nháp</DropdownMenuItem>}
+              {(hasReadPermission || canCreate) && <DropdownMenuSeparator />}
+              {canApprove && actions.map((action) => (
                 <DropdownMenuItem
+                  key={action.action}
                   onClick={(e: any) => {
                     e.stopPropagation();
-                    handleAdvanceStatus(plan);
+                    handleStatusTransition(plan, action);
                   }}
                 >
-                  <CheckCircle2 size={14} />
-                  {plan.status === "DRAFT" ? "Gửi duyệt" : "Kích hoạt"}
+                  {action.action === "ARCHIVE" ? <Layers size={14} /> : <CheckCircle2 size={14} />}
+                  {action.label}
                 </DropdownMenuItem>
-              )}
-              {canApprove && canArchive && (
-                <DropdownMenuItem
-                  onClick={(e: any) => {
-                    e.stopPropagation();
-                    handleArchive(plan);
-                  }}
-                >
-                  <Layers size={14} />
-                  Lưu trữ
-                </DropdownMenuItem>
-              )}
-              {canApprove && canReactivate && (
-                <DropdownMenuItem
-                  onClick={(e: any) => {
-                    e.stopPropagation();
-                    handleReactivate(plan);
-                  }}
-                >
-                  <CheckCircle2 size={14} />
-                  Kích hoạt lại
-                </DropdownMenuItem>
-              )}
+              ))}
               {canEditPlan && (
                 <>
-                  {(canApprove && (canAdvance || canArchive || canReactivate)) ? (
+                  {(canApprove && actions.length > 0) ? (
                     <DropdownMenuSeparator />
                   ) : null}
                   <DropdownMenuItem
@@ -350,19 +335,17 @@ export default function CommissionsSettingsPage() {
         title="Chính sách hoa hồng"
         description="Cấu hình công thức tính hoa hồng (kế hoạch, rule, split). Áp dụng cho giao dịch ở mục Hoa hồng"
         actions={
-          <Can I="CREATE" a="COMMISSION">
-            <Button onClick={() => setDialogOpen(true)}>
-              <Plus size={16} />
-              Thêm kế hoạch
-            </Button>
-          </Can>
+          <div className="flex flex-wrap gap-2">
+            {canReadAll && <Button variant="secondary" onClick={() => router.push(portalPath("/settings/commissions/zones"))}><MapPin size={16} /> Khu vực</Button>}
+            {canCreate && <Button onClick={() => setDialogOpen(true)}><Plus size={16} />Thêm kế hoạch</Button>}
+          </div>
         }
       />
 
       {/* Count + filter bar */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-foreground-muted">
-          <span className="font-medium text-foreground">{filtered.length}</span> kế hoạch
+          <span className="font-medium text-foreground">{filtered.length}</span> kế hoạch trên trang · {totalPlans} tổng cộng
         </p>
         <div className="flex items-center gap-2">
           <Input
@@ -374,19 +357,19 @@ export default function CommissionsSettingsPage() {
           />
           <Select
             value={statusFilter}
-            onValueChange={(v) => setStatusFilter((v as string) ?? "")}
+            onValueChange={(v) => {
+              setStatusFilter((v as string) ?? "ALL");
+              setOffset(0);
+            }}
           >
             <SelectTrigger className="w-[180px] shrink-0">
-              <SelectValue placeholder="Tất cả trạng thái">
-                {(value: string) =>
-                  statusFilters.find((s) => s.value === value)?.label || "Tất cả trạng thái"
-                }
-              </SelectValue>
+              <SelectValue placeholder="Tất cả trạng thái" />
             </SelectTrigger>
             <SelectContent>
-              {statusFilters.map((s) => (
-                <SelectItem key={s.value} value={s.value} label={s.label}>
-                  {s.label}
+              <SelectItem value="ALL" label="Tất cả trạng thái">Tất cả trạng thái</SelectItem>
+              {planStatusOptions.map((status) => (
+                <SelectItem key={status.value} value={status.value} label={status.label}>
+                  {status.label}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -401,7 +384,9 @@ export default function CommissionsSettingsPage() {
         <DataTable
           columns={columns}
           data={filtered}
-          onRowClick={(plan) => setEditPlan(plan)}
+          onRowClick={(plan) => {
+            if (hasReadPermission) setViewPlan(plan);
+          }}
           emptyMessage="Không tìm thấy kế hoạch nào"
         />
       ) : (
@@ -420,12 +405,22 @@ export default function CommissionsSettingsPage() {
         />
       )}
 
+      {totalPlans > 50 && (
+        <div className="flex items-center justify-between text-sm text-foreground-muted">
+          <span>{offset + 1}–{Math.min(offset + allPlans.length, totalPlans)} / {totalPlans}</span>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" disabled={offset === 0} onClick={() => setOffset(Math.max(0, offset - 50))}><ArrowLeft size={14} />Trước</Button>
+            <Button variant="outline" size="sm" disabled={offset + 50 >= totalPlans} onClick={() => setOffset(offset + 50)}>Tiếp<ArrowRight size={14} /></Button>
+          </div>
+        </div>
+      )}
+
       {/* Create dialog */}
       <PlanFormDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
-        onSubmit={async (dto: CreateCommissionPlanDto) => {
-          await createPlan({ data: dto });
+        onSubmit={async (dto: PlanFormSubmission) => {
+          await createPlan({ data: { ...dto, effectiveTo: dto.effectiveTo ?? undefined } as CreateCommissionPlanDto });
         }}
         isSubmitting={isCreating}
       />
@@ -440,6 +435,69 @@ export default function CommissionsSettingsPage() {
           isSubmitting={isUpdatingPlan}
         />
       )}
+
+      {clonePlan && (
+        <PlanFormDialog
+          open={Boolean(clonePlan)}
+          onOpenChange={(open) => !open && setClonePlan(null)}
+          initialPlan={clonePlan}
+          mode="clone"
+          onSubmit={async (dto: PlanFormSubmission) => { await createPlan({ data: { ...dto, effectiveTo: dto.effectiveTo ?? undefined } as CreateCommissionPlanDto }); }}
+          isSubmitting={isCreating}
+        />
+      )}
+
+      <Dialog open={Boolean(viewPlan)} onOpenChange={(open) => !open && setViewPlan(null)}>
+        <DialogContent className="max-h-[88vh] overflow-y-auto sm:max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>{viewPlan?.name} · v{viewPlan?.version ?? 1}</DialogTitle>
+            <DialogDescription>{viewPlan?.description || "Chi tiết điều kiện, công thức và người nhận của từng rule."}</DialogDescription>
+          </DialogHeader>
+          {viewPlan && <div className="flex flex-col gap-4">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-foreground-muted">
+              <Badge variant={statusConfig[viewPlan.status]?.variant ?? "default"}>{getPlanStatusLabel(viewPlan.status)}</Badge>
+              <span>Hiệu lực: {formatDate(viewPlan.effectiveFrom)} → {formatDate(viewPlan.effectiveTo)}</span>
+              <span>Ưu tiên: {viewPlan.priority ?? 0}</span>
+              <span>{viewPlan._count?.dealCommissions ?? 0} khoản đã tham chiếu</span>
+            </div>
+            {(viewPlan.rules ?? []).map((rule, index) => {
+              const label = (items: Array<{ value: string; label: string }> | undefined, value?: string | null) => value ? items?.find((item) => item.value === value)?.label ?? value : "Mọi giá trị";
+              const zoneName = options?.zones.find((item) => item.id === rule.zoneId)?.name ?? (rule.zoneId ? "Khu vực đã lưu" : undefined);
+              const projectName = options?.projects.find((item) => item.id === rule.projectId)?.name ?? (rule.projectId ? "Dự án đã lưu" : undefined);
+              const propertyTypeName = options?.propertyTypes.find((item) => item.id === rule.propertyTypeId)?.name ?? (rule.propertyTypeId ? "Loại BĐS đã lưu" : undefined);
+              return <section key={rule.id ?? index} className="rounded-lg border border-border p-4">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div><h3 className="font-medium">{index + 1}. {rule.name}</h3><p className="mt-1 text-xs text-foreground-muted">Ưu tiên rule: {rule.priority ?? 0}</p></div>
+                  <Badge variant="outline">{label(options?.commissionTypes, rule.commissionType)}</Badge>
+                </div>
+                <div className="mt-4 grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-3">
+                  <div><p className="text-xs text-foreground-muted">Loại giao dịch</p><p>{label(options?.dealTypes, rule.dealType)}</p></div>
+                  <div><p className="text-xs text-foreground-muted">Loại bất động sản</p><p>{propertyTypeName ?? "Mọi loại"}</p></div>
+                  <div><p className="text-xs text-foreground-muted">Hình thức bán</p><p>{label(options?.sellingModes, rule.sellingMode)}</p></div>
+                  <div><p className="text-xs text-foreground-muted">Khu vực</p><p>{zoneName ?? "Mọi khu vực"}</p></div>
+                  <div><p className="text-xs text-foreground-muted">Dự án</p><p>{projectName ?? "Mọi dự án"}</p></div>
+                  <div><p className="text-xs text-foreground-muted">Nguồn lead</p><p>{rule.leadSource ? getLeadSourceLabel(rule.leadSource) : "Mọi nguồn"}</p></div>
+                  <div><p className="text-xs text-foreground-muted">Cách tính / cơ sở</p><p>{label(options?.calculationTypes, rule.calculationType)} · {label(options?.calculationBases, rule.calculationBase)}</p></div>
+                  <div><p className="text-xs text-foreground-muted">Giá trị / tỷ lệ</p><p className="tabular-nums">{rule.calculationValue}{rule.calculationType === "PERCENT" ? "%" : " ₫"}</p></div>
+                  <div><p className="text-xs text-foreground-muted">Giới hạn tối thiểu / tối đa</p><p className="tabular-nums">{rule.minCommissionAmount ?? "—"} / {rule.maxCommissionAmount ?? "—"}</p></div>
+                </div>
+                <div className="mt-4 border-t border-border pt-3">
+                  <p className="mb-2 text-xs font-medium uppercase tracking-wide text-foreground-muted">Người nhận / tỷ lệ chia</p>
+                  <div className="flex flex-col gap-2">
+                    {(rule.splits ?? []).map((split, splitIndex) => {
+                      const recipient = split.receiverName || (split.receiverUserId ? "Người dùng được chọn" : label(options?.receiverRoles, split.receiverRole) !== "Mọi giá trị" ? label(options?.receiverRoles, split.receiverRole) : label(options?.receiverTypes, split.receiverType));
+                      const splitKind = label(options?.splitTypes, split.splitType);
+                      const value = split.splitType === "PERCENT" ? `${split.splitValue}%` : `${Number(split.splitValue).toLocaleString("vi-VN")} ₫`;
+                      return <div key={split.id ?? splitIndex} className="flex items-center justify-between gap-3 text-sm"><span>{recipient} <span className="text-xs text-foreground-muted">· {splitKind}</span></span><span className="tabular-nums font-medium">{value}</span></div>;
+                    })}
+                  </div>
+                </div>
+              </section>;
+            })}
+            {canCreate && <div className="flex justify-end"><Button variant="secondary" onClick={() => { setViewPlan(null); setClonePlan(viewPlan); }}>Sao chép thành bản nháp</Button></div>}
+          </div>}
+        </DialogContent>
+      </Dialog>
 
       {/* Status change confirm */}
       <StatusConfirmDialog

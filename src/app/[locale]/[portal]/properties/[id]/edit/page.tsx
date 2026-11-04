@@ -25,6 +25,8 @@ import { toast } from "sonner";
 import { useGetApiLocations } from "@/lib/api/endpoints/locations";
 import { Property } from "@/lib/api/types/properties";
 import { GetProjectsResponse } from "@/lib/api/types/projects";
+import { useApiZoneOptions } from "@/lib/api/endpoints/zones";
+import { useApiPropertySellingModes } from "@/lib/api/endpoints/property-meta";
 import { useQueryClient } from "@tanstack/react-query";
 import type { Location } from "@/lib/api/types/locations";
 import { DynamicFieldsSection } from "@/components/shared/dynamic-fields-section";
@@ -45,11 +47,6 @@ const transactionTypeLabels: Record<string, string> = {
   INVESTMENT: "Đầu tư",
 };
 
-const sellingModeLabels: Record<string, string> = {
-  SELF_SELL: "Tự bán",
-  SALES_DISTRIBUTION: "Sale bán hộ",
-};
-
 const priceUnitLabels: Record<string, string> = {
   VND: "VND",
   USD: "USD",
@@ -61,7 +58,7 @@ const propertySchema = z.object({
   slug: z.string().optional(),
   propertyTypeId: z.string().min(1, "Vui lòng chọn loại BĐS"),
   transactionType: z.enum(["SALE", "RENT", "TRANSFER", "INVESTMENT"]),
-  sellingMode: z.enum(["SELF_SELL", "SALES_DISTRIBUTION", "HYBRID", "INTERNAL_ONLY", "MARKETPLACE_PUBLIC"]),
+  sellingMode: z.string().min(1, "Vui lòng chọn hình thức khai thác"),
   provinceId: z.string().optional(),
   districtId: z.string().optional(),
   price: z.number().min(0, "Giá phải lớn hơn 0"),
@@ -71,6 +68,7 @@ const propertySchema = z.object({
   latitude: z.number().optional(),
   longitude: z.number().optional(),
   projectId: z.string().optional(),
+  zoneId: z.string().optional(),
 });
 
 type PropertyFormData = z.infer<typeof propertySchema>;
@@ -98,10 +96,19 @@ export default function PropertyEditPage() {
   const propertyTypes = (propertyTypesData as unknown as { data: PropertyType[] })?.data || [];
   const propertyTypeItems = Object.fromEntries(propertyTypes.map((t) => [t.id, t.name]));
 
+  const { data: sellingModesEnvelope, isLoading: sellingModesLoading, isError: sellingModesError } = useApiPropertySellingModes();
+  const sellingModes = sellingModesEnvelope?.data ?? [];
+  const sellingModeItems = Object.fromEntries(sellingModes.map((option) => [option.value, option.label]));
+
   // projects
   const { data: projectsData } = useGetApiProjects();
   const projects = ((projectsData as unknown as GetProjectsResponse)?.data) || [];
   const projectItems = Object.fromEntries(projects.map((p) => [p.id, p.name]));
+
+  // Zones are tenant-owned commission contexts and are loaded from the API.
+  const { data: zonesEnvelope, isLoading: zonesLoading } = useApiZoneOptions();
+  const zones = zonesEnvelope?.data ?? [];
+  const zoneItems = Object.fromEntries(zones.map((zone) => [zone.id, `${zone.name} (${zone.code})`]));
 
   // locations
   const { data: provincesData, isLoading: provincesLoading } = useGetApiLocations({ type: "PROVINCE", limit: 100 });
@@ -125,7 +132,7 @@ export default function PropertyEditPage() {
     resolver: zodResolver(propertySchema),
     defaultValues: {
       transactionType: "SALE",
-      sellingMode: "SELF_SELL",
+      sellingMode: "",
       priceUnit: "VND",
       areaUnit: "SQM",
     },
@@ -154,7 +161,7 @@ export default function PropertyEditPage() {
         slug: property.slug || "",
         propertyTypeId: property.propertyType?.id || "",
         transactionType: (property.transactionType as PropertyFormData["transactionType"]) || "SALE",
-        sellingMode: (property.sellingMode as PropertyFormData["sellingMode"]) || "SELF_SELL",
+        sellingMode: property.sellingMode || "",
         provinceId,
         districtId,
         price: Number(property.price) || 0,
@@ -162,16 +169,21 @@ export default function PropertyEditPage() {
         area: property.area || 0,
         areaUnit: property.areaUnit || "SQM",
         projectId: property.project?.id || "",
+        zoneId: (property as any).zone?.id || (property as any).zoneId || "",
       });
       setDynamicValues((property as any).dynamicValuesJson || {});
     }
   }, [property, reset]);
 
   const onSubmit = async (data: PropertyFormData) => {
+    if (!sellingModes.some((option) => option.value === data.sellingMode)) {
+      toast.error("Vui lòng tải và chọn hình thức khai thác hợp lệ từ hệ thống.");
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
-      await updateProperty({ id, data: { ...data, dynamicValuesJson: Object.keys(dynamicValues).length > 0 ? dynamicValues : undefined } as any });
+      await updateProperty({ id, data: { ...data, zoneId: data.zoneId || "", dynamicValuesJson: Object.keys(dynamicValues).length > 0 ? dynamicValues : undefined } as any });
       await queryClient.invalidateQueries({ queryKey: getGetApiPropertyIdQueryKey(id) });
       void queryClient.invalidateQueries({ queryKey: getGetApiPropertiesAdminQueryKey() });
       toast.success("Cập nhật bất động sản thành công");
@@ -285,18 +297,19 @@ export default function PropertyEditPage() {
                 </SelectContent>
               </Select>
             </FormField>
-            <FormField label="Hình thức bán" required>
+            <FormField label="Hình thức khai thác" required error={errors.sellingMode?.message || (sellingModesError ? "Không tải được danh sách hình thức khai thác." : undefined)}>
               <Select
-                value={watch("sellingMode")}
-                items={sellingModeLabels}
+                value={watch("sellingMode") || ""}
+                items={sellingModeItems}
                 onValueChange={(v) => setValue("sellingMode", v as PropertyFormData["sellingMode"])}
               >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Chọn hình thức bán" />
+                <SelectTrigger className="w-full" disabled={sellingModesLoading || sellingModes.length === 0}>
+                  <SelectValue placeholder={sellingModesLoading ? "Đang tải lựa chọn..." : "Chọn hình thức khai thác"} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="SELF_SELL" label="Tự bán">Tự bán</SelectItem>
-                  <SelectItem value="SALES_DISTRIBUTION" label="Sales bán hộ">Sales bán hộ</SelectItem>
+                  {sellingModes.map((option) => (
+                    <SelectItem key={option.value} value={option.value} label={option.label}>{option.label}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </FormField>
@@ -353,6 +366,25 @@ export default function PropertyEditPage() {
                   {projects.map((p) => (
                     <SelectItem key={p.id} value={p.id} label={p.name}>
                       {p.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </FormField>
+            <FormField label="Khu vực kinh doanh" helper="Dùng để áp dụng chính sách hoa hồng theo khu vực.">
+              <Select
+                value={watch("zoneId") || "__NONE__"}
+                items={{ __NONE__: "Chưa gán khu vực", ...zoneItems }}
+                onValueChange={(value) => setValue("zoneId", value === "__NONE__" ? "" : String(value))}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder={zonesLoading ? "Đang tải khu vực…" : "Chọn khu vực (không bắt buộc)"} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__NONE__" label="Chưa gán khu vực">Chưa gán khu vực</SelectItem>
+                  {zones.map((zone) => (
+                    <SelectItem key={zone.id} value={zone.id} label={`${zone.name} (${zone.code})`}>
+                      {zone.name} <span className="text-xs text-foreground-muted">({zone.code})</span>
                     </SelectItem>
                   ))}
                 </SelectContent>
