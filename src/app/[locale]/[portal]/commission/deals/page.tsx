@@ -1,66 +1,43 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
-import { Plus, MoreVertical, Eye, Trash2, Loader2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Eye, FilterX, Plus, Percent, RefreshCw, Settings2 } from "lucide-react";
 import { Can } from "@casl/react";
-import { ability } from "@/config/casl/ability";
+import type { ColumnDef } from "@tanstack/react-table";
 import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DataTable } from "@/components/shared/data-table";
-import { EmptyState } from "@/components/shared/empty-state";
-import {
-  useGetApiDealCommissions,
-  useDeleteApiDealCommissionId,
-  getGetApiDealCommissionsQueryKey,
-} from "@/lib/api/endpoints/commission";
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-} from "@/components/ui/dropdown-menu";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogPortal,
-  DialogOverlay,
-} from "@/components/ui/dialog";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { usePortalPath } from "@/lib/hooks/use-portal";
-import type { ColumnDef } from "@tanstack/react-table";
+import { useApiCommissionDeals, useApiCommissionOptions } from "@/lib/api/endpoints/commission-meta";
+import { getLeadSourceLabel } from "@/utils/lead-source-labels";
+import { CommissionListFilters } from "./_components/commission-list-filters";
+import { CommissionWorkflowGuide } from "./_components/commission-workflow-guide";
 
 interface DealCommissionRow {
   id: string;
   status: string;
+  commissionType: string;
+  zoneId?: string | null;
+  projectId?: string | null;
+  leadSource?: string | null;
   transactionValueEstimated: string | null;
   transactionValueConfirmed: string | null;
   totalCommissionEstimated: string | null;
   totalCommissionConfirmed: string | null;
+  calculationSnapshotJson?: { context?: { zoneName?: string | null; projectName?: string | null } } | null;
   createdAt: string;
-  plan?: { id: string; name: string };
+  plan?: { id: string; name: string } | null;
   deal?: {
     id: string;
     dealCode: string;
     status: string;
-    transactionType: string;
-    expectedValue: string | null;
-    finalValue: string | null;
-    customer?: { id: string; fullName: string; phone: string };
-    salesUser?: { id: string; fullName: string };
-  };
-  property?: {
-    id: string;
-    propertyCode: string;
-    title: string;
-    price: string | null;
-    transactionType: string;
-  };
+    customer?: { id: string; fullName: string } | null;
+    salesUser?: { id: string; fullName: string } | null;
+  } | null;
+  property?: { id: string; propertyCode: string; title: string; price: string | null } | null;
 }
 
 const statusVariant: Record<string, "default" | "green" | "yellow" | "blue" | "red"> = {
@@ -73,50 +50,84 @@ const statusVariant: Record<string, "default" | "green" | "yellow" | "blue" | "r
   CANCELLED: "default",
 };
 
-const statusLabel: Record<string, string> = {
-  DRAFT: "Nháp",
-  ESTIMATED: "Đã ước tính",
-  CONFIRMED: "Đã xác nhận",
-  APPROVED: "Đã duyệt",
-  PAID: "Đã thanh toán",
-  DISPUTED: "Tranh chấp",
-  CANCELLED: "Đã hủy",
+const formatVnd = (value?: string | null) => {
+  if (value == null || value === "") return "—";
+  const amount = Number(value);
+  return Number.isFinite(amount) ? `${amount.toLocaleString("vi-VN")} ₫` : value;
 };
 
-const formatVnd = (v: string | null | undefined) => {
-  if (!v) return "—";
-  const n = Number(v);
-  if (isNaN(n)) return v;
-  return n.toLocaleString("vi-VN") + " ₫";
-};
+const ALL = "ALL";
+const PAGE_SIZE = 20;
 
 export default function DealCommissionsPage() {
   const router = useRouter();
   const portalPath = usePortalPath();
-  const queryClient = useQueryClient();
-  const [deleteTarget, setDeleteTarget] = useState<DealCommissionRow | null>(null);
+  const [status, setStatus] = useState(ALL);
+  const [commissionType, setCommissionType] = useState(ALL);
+  const [zoneId, setZoneId] = useState(ALL);
+  const [projectId, setProjectId] = useState(ALL);
+  const [teamId, setTeamId] = useState(ALL);
+  const [leadSource, setLeadSource] = useState(ALL);
+  const [offset, setOffset] = useState(0);
 
-  const canApprove = ability.can("APPROVE", "COMMISSION");
+  const filters = useMemo(() => ({
+    status: status === ALL ? undefined : status,
+    commissionType: commissionType === ALL ? undefined : commissionType,
+    zoneId: zoneId === ALL ? undefined : zoneId,
+    projectId: projectId === ALL ? undefined : projectId,
+    teamId: teamId === ALL ? undefined : teamId,
+    leadSource: leadSource === ALL ? undefined : leadSource,
+    limit: PAGE_SIZE,
+    offset,
+  }), [status, commissionType, zoneId, projectId, teamId, leadSource, offset]);
+  const {
+    data: optionsEnvelope,
+    isError: optionsError,
+    isLoading: optionsLoading,
+    refetch: refetchOptions,
+  } = useApiCommissionOptions();
+  const options = optionsEnvelope?.data;
+  const { data, isLoading, isError, refetch } = useApiCommissionDeals<DealCommissionRow>(filters);
+  const commissions = data?.data ?? [];
+  const totalMeta = data?.meta?.total;
+  const totalCount = typeof totalMeta === "number" && Number.isFinite(totalMeta)
+    ? totalMeta
+    : undefined;
+  const hasNextPage = totalCount === undefined
+    ? commissions.length === PAGE_SIZE
+    : offset + commissions.length < totalCount;
+  const showPagination = offset > 0 || hasNextPage || (totalCount !== undefined && totalCount > PAGE_SIZE);
+  const resultCountLabel = totalCount === undefined
+    ? `${commissions.length} khoản trong trang hiện tại`
+    : `${totalCount.toLocaleString("vi-VN")} kết quả theo bộ lọc hiện tại`;
+  const paginationLabel = commissions.length === 0
+    ? "0 khoản ở trang này"
+    : totalCount !== undefined
+      ? `${offset + 1}–${Math.min(offset + commissions.length, totalCount)} / ${totalCount.toLocaleString("vi-VN")}`
+      : `${offset + 1}–${offset + commissions.length} khoản`;
+  const statuses = options?.commissionStatuses ?? [];
 
-  const { data: dcsData, isLoading } = useGetApiDealCommissions({
-    dealId: undefined,
-    status: undefined,
-  });
-  const dcs = ((dcsData as unknown as { data: DealCommissionRow[] })?.data) || [];
-
-  const { mutateAsync: deleteDc, isPending: isDeleting } = useDeleteApiDealCommissionId({
-    mutation: {
-      onSuccess: () => {
-        toast.success("Đã xóa hoa hồng");
-        queryClient.invalidateQueries({ queryKey: getGetApiDealCommissionsQueryKey() });
-        setDeleteTarget(null);
-      },
-      onError: (err: any) => {
-        const msg = err?.response?.data?.message?.[0] || "Không thể xóa";
-        toast.error(msg);
-      },
-    },
-  });
+  const setFilter = (setter: (value: string) => void) => (value: string | null) => {
+    setter(value ?? ALL);
+    setOffset(0);
+  };
+  const hasActiveFilters = [status, commissionType, zoneId, projectId, teamId, leadSource].some((value) => value !== ALL);
+  const clearFilters = () => {
+    setStatus(ALL);
+    setCommissionType(ALL);
+    setZoneId(ALL);
+    setProjectId(ALL);
+    setTeamId(ALL);
+    setLeadSource(ALL);
+    setOffset(0);
+  };
+  const statusLabel = (value: string) => statuses.find((item) => item.value === value)?.label ?? value;
+  const commissionTypeLabel = (value: string) => options?.commissionTypes.find((item) => item.value === value)?.label ?? value;
+  const dimensionName = (kind: "zone" | "project", id?: string | null, snapshotName?: string | null) => {
+    if (!id) return "—";
+    const values = kind === "zone" ? options?.zones : options?.projects;
+    return values?.find((item) => item.id === id)?.name ?? snapshotName ?? "—";
+  };
 
   const columns: ColumnDef<DealCommissionRow>[] = [
     {
@@ -125,95 +136,46 @@ export default function DealCommissionsPage() {
       cell: ({ row }) => (
         <div className="flex flex-col">
           <span className="font-medium">{row.original.deal?.dealCode ?? "—"}</span>
-          {row.original.deal?.customer?.fullName && (
-            <span className="text-xs text-foreground-muted">{row.original.deal.customer.fullName}</span>
-          )}
+          {row.original.deal?.customer?.fullName && <span className="text-xs text-foreground-muted">{row.original.deal.customer.fullName}</span>}
         </div>
       ),
     },
     {
       accessorKey: "property.title",
       header: "Bất động sản",
+      cell: ({ row }) => <span className="line-clamp-1 max-w-[220px] font-medium">{row.original.property?.title ?? "—"}</span>,
+    },
+    {
+      id: "commissionType",
+      header: "Loại khoản",
+      cell: ({ row }) => <span className="text-sm">{commissionTypeLabel(row.original.commissionType)}</span>,
+    },
+    {
+      id: "attribution",
+      header: "Phạm vi áp dụng",
       cell: ({ row }) => (
-        <div className="flex flex-col">
-          <span className="font-medium line-clamp-1 max-w-[220px]">{row.original.property?.title ?? "—"}</span>
-          <span className="text-xs text-foreground-muted tabular-nums">
-            {row.original.property?.price ? formatVnd(row.original.property.price) : "—"}
-          </span>
+        <div className="flex flex-col text-xs">
+          <span>{dimensionName("zone", row.original.zoneId, row.original.calculationSnapshotJson?.context?.zoneName)}</span>
+          <span className="text-foreground-muted">{dimensionName("project", row.original.projectId, row.original.calculationSnapshotJson?.context?.projectName)} · {getLeadSourceLabel(row.original.leadSource)}</span>
         </div>
       ),
     },
-    {
-      accessorKey: "plan.name",
-      header: "Kế hoạch",
-      cell: ({ row }) => <span className="font-medium">{row.original.plan?.name ?? "—"}</span>,
-    },
-    {
-      accessorKey: "totalCommissionEstimated",
-      header: "Hoa hồng ước tính",
-      cell: ({ row }) => <span className="tabular-nums text-sm">{formatVnd(row.original.totalCommissionEstimated)}</span>,
-    },
-    {
-      accessorKey: "totalCommissionConfirmed",
-      header: "Hoa hồng thực tế",
-      cell: ({ row }) => <span className="tabular-nums text-sm font-medium text-primary">{formatVnd(row.original.totalCommissionConfirmed)}</span>,
-    },
+    { accessorKey: "plan.name", header: "Kế hoạch", cell: ({ row }) => <span className="font-medium">{row.original.plan?.name ?? "—"}</span> },
+    { accessorKey: "totalCommissionEstimated", header: "Ước tính", cell: ({ row }) => <span className="tabular-nums text-sm">{formatVnd(row.original.totalCommissionEstimated)}</span> },
+    { accessorKey: "totalCommissionConfirmed", header: "Đã xác nhận", cell: ({ row }) => <span className="tabular-nums text-sm font-medium text-primary">{formatVnd(row.original.totalCommissionConfirmed)}</span> },
     {
       accessorKey: "status",
       header: "Trạng thái",
-      cell: ({ row }) => <Badge variant={statusVariant[row.original.status] ?? "default"}>{statusLabel[row.original.status] ?? row.original.status}</Badge>,
-    },
-    {
-      accessorKey: "createdAt",
-      header: "Ngày tạo",
-      cell: ({ row }) => <span className="tabular-nums text-xs text-foreground-muted">{new Date(row.original.createdAt).toLocaleDateString("vi-VN")}</span>,
+      cell: ({ row }) => <Badge variant={statusVariant[row.original.status] ?? "default"}>{statusLabel(row.original.status)}</Badge>,
     },
     {
       id: "actions",
       header: "",
-      cell: ({ row }) => {
-        const dc = row.original;
-        // BE chỉ cho xóa khi không phải APPROVED/PAID
-        const canDelete = canApprove && dc.status !== "APPROVED" && dc.status !== "PAID";
-        if (!canDelete) return null;
-
-        return (
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              render={
-                <button
-                  className="rounded-md p-1.5 text-foreground-muted transition-colors hover:bg-surface-muted"
-                  aria-label="Thao tác"
-                  onClick={(e: any) => e.stopPropagation()}
-                />
-              }
-            >
-              <MoreVertical size={14} />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                onClick={(e: any) => {
-                  e.stopPropagation();
-                  router.push(portalPath(`/commission/deals/${dc.id}`));
-                }}
-              >
-                <Eye size={14} />
-                Xem chi tiết
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className="text-destructive"
-                onClick={(e: any) => {
-                  e.stopPropagation();
-                  setDeleteTarget(dc);
-                }}
-              >
-                <Trash2 size={14} />
-                Xóa
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        );
-      },
+      cell: ({ row }) => (
+        <Button variant="ghost" size="sm" onClick={(event) => { event.stopPropagation(); router.push(portalPath(`/commission/deals/${row.original.id}`)); }}>
+          <Eye size={14} /> Xem
+        </Button>
+      ),
     },
   ];
 
@@ -221,88 +183,99 @@ export default function DealCommissionsPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         eyebrow="Hoa hồng"
-        title="Ước tính hoa hồng"
-        description="Danh sách ước tính hoa hồng theo giao dịch"
-        actions={
-          <Can I="CREATE" a="COMMISSION">
-            <Button onClick={() => router.push(portalPath("/commission/deals/new"))}>
-              <Plus size={16} />
-              Tạo ước tính
-            </Button>
-          </Can>
-        }
+        title="Hoa hồng giao dịch"
+        description="Theo dõi từ lúc tính ước lượng đến lúc duyệt và đối soát thanh toán."
+        actions={<div className="flex flex-wrap gap-2">
+          {options?.capabilities.canManagePlans && <Button variant="outline" onClick={() => router.push(portalPath("/settings/commissions"))}><Settings2 size={16} />Chính sách</Button>}
+          <Can I="CREATE" a="COMMISSION"><Button onClick={() => router.push(portalPath("/commission/deals/new"))}><Plus size={16} />Tạo ước tính</Button></Can>
+        </div>}
       />
 
-      {isLoading ? (
-        <div className="h-96 animate-pulse rounded-lg bg-surface-muted" />
-      ) : dcs.length > 0 ? (
-        <DataTable
-          columns={columns}
-          data={dcs}
-          onRowClick={(row) => router.push(portalPath(`/commission/deals/${row.id}`))}
-          emptyMessage="Không có hoa hồng nào"
-        />
-      ) : (
-        <EmptyState
-          icon={<Plus size={24} />}
-          title="Chưa có ước tính hoa hồng"
-          description="Tạo ước tính hoa hồng cho giao dịch để theo dõi và duyệt"
-          action={
-            <Can I="CREATE" a="COMMISSION">
-              <Button onClick={() => router.push(portalPath("/commission/deals/new"))}>
-                <Plus size={16} />
-                Tạo ước tính
-              </Button>
-            </Can>
-          }
-        />
+      <CommissionWorkflowGuide
+        statuses={options?.commissionStatuses ?? []}
+        actions={options?.commissionActions ?? {}}
+        isLoading={optionsLoading}
+        isError={optionsError}
+      />
+
+      {optionsError && <Alert variant="destructive">
+        <RefreshCw />
+        <AlertTitle>Không tải được tùy chọn lọc</AlertTitle>
+        <AlertDescription className="flex flex-wrap items-center justify-between gap-3">
+          <span>Danh sách hoa hồng vẫn có thể xem; hãy thử tải lại metadata nếu bộ lọc chưa đầy đủ.</span>
+          <Button variant="outline" size="sm" onClick={() => refetchOptions()}>Thử lại</Button>
+        </AlertDescription>
+      </Alert>}
+
+      <CommissionListFilters
+        options={options}
+        optionsError={optionsError}
+        optionsLoading={optionsLoading}
+        status={status}
+        commissionType={commissionType}
+        zoneId={zoneId}
+        projectId={projectId}
+        teamId={teamId}
+        leadSource={leadSource}
+        hasActiveFilters={hasActiveFilters}
+        onStatusChange={setFilter(setStatus)}
+        onCommissionTypeChange={setFilter(setCommissionType)}
+        onZoneChange={setFilter(setZoneId)}
+        onProjectChange={setFilter(setProjectId)}
+        onTeamChange={setFilter(setTeamId)}
+        onLeadSourceChange={setFilter(setLeadSource)}
+        onClear={clearFilters}
+      />
+
+      {isLoading && !data ? <div aria-busy="true" aria-label="Đang tải danh sách hoa hồng" className="overflow-hidden rounded-lg border border-border bg-surface">
+        <div className="border-b border-border px-5 py-4"><div className="h-4 w-40 animate-pulse rounded bg-surface-muted" /><div className="mt-2 h-3 w-64 max-w-full animate-pulse rounded bg-surface-muted" /></div>
+        <div className="divide-y divide-border">{[0, 1, 2, 3].map((row) => <div key={row} className="grid grid-cols-2 gap-4 px-5 py-5 sm:grid-cols-4"><div className="h-4 w-32 animate-pulse rounded bg-surface-muted" /><div className="h-4 w-40 animate-pulse rounded bg-surface-muted" /><div className="h-4 w-24 animate-pulse rounded bg-surface-muted" /><div className="h-4 w-20 animate-pulse rounded bg-surface-muted" /></div>)}</div>
+      </div> : (
+        <section aria-labelledby="commission-list-title" className="flex flex-col gap-4">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <h2 id="commission-list-title" className="text-base font-semibold">Khoản hoa hồng</h2>
+              <p className="mt-1 text-sm text-foreground-muted">{data ? resultCountLabel : "Các khoản được tạo từ giao dịch và chính sách của tenant."}</p>
+            </div>
+            {data && <span className="rounded-md border border-border bg-surface px-2.5 py-1 text-xs tabular-nums text-foreground-muted">Trang {Math.floor(offset / PAGE_SIZE) + 1} · {commissions.length} khoản</span>}
+          </div>
+          {isError && <Alert variant="destructive">
+            <RefreshCw />
+            <AlertTitle>Không tải được danh sách hoa hồng</AlertTitle>
+            <AlertDescription className="flex flex-wrap items-center justify-between gap-3">
+              <span>API đang gặp lỗi hoặc chưa kết nối được. Lỗi này không được trình bày nhầm thành danh sách trống.</span>
+              <Button variant="outline" size="sm" onClick={() => refetch()}>Thử lại</Button>
+            </AlertDescription>
+          </Alert>}
+          {commissions.length ? (
+            <DataTable columns={columns} data={commissions} onRowClick={(row) => router.push(portalPath(`/commission/deals/${row.id}`))} emptyMessage="Không có hoa hồng nào phù hợp" />
+          ) : isError && !data ? null : (
+            <div role="status" className="flex flex-col items-center rounded-lg border border-dashed border-border bg-surface px-6 py-12 text-center">
+              <span className="flex size-12 items-center justify-center rounded-lg bg-surface-muted text-foreground-muted"><Percent size={22} /></span>
+              <h3 className="mt-4 text-base font-semibold">{hasActiveFilters ? "Không có kết quả phù hợp" : "Chưa có khoản hoa hồng"}</h3>
+              <p className="mt-2 max-w-xl text-sm leading-6 text-foreground-muted">
+                {hasActiveFilters
+                  ? "Thử đổi điều kiện lọc hoặc xóa bộ lọc."
+                  : "Chọn một giao dịch để tạo ước tính. Hệ thống sẽ tự tìm kế hoạch và rule đang hiệu lực, rồi lưu lại cách tính cùng phần chia cho từng người nhận."}
+              </p>
+              <div className="mt-5 flex flex-wrap justify-center gap-2">
+                {hasActiveFilters ? <Button variant="outline" onClick={clearFilters}><FilterX size={16} />Xóa bộ lọc</Button> : <Can I="CREATE" a="COMMISSION"><Button onClick={() => router.push(portalPath("/commission/deals/new"))}><Plus size={16} />Tạo ước tính từ giao dịch</Button></Can>}
+                {!hasActiveFilters && options?.capabilities.canManagePlans && <Button variant="outline" onClick={() => router.push(portalPath("/settings/commissions"))}><Settings2 size={16} />Kiểm tra chính sách</Button>}
+              </div>
+            </div>
+          )}
+        </section>
       )}
 
-      {/* Delete confirm */}
-      <Dialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
-        <DialogPortal>
-          <DialogOverlay />
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>Xóa ước tính hoa hồng</DialogTitle>
-              <DialogDescription>Hành động này không thể hoàn tác.</DialogDescription>
-            </DialogHeader>
-            {deleteTarget && (
-              <div className="rounded-lg border border-border bg-surface-muted/40 p-4 text-sm">
-                <p className="font-medium">{deleteTarget.property?.title ?? deleteTarget.deal?.dealCode ?? "Hoa hồng"}</p>
-                <p className="mt-1 text-xs text-foreground-muted">
-                  {deleteTarget.deal?.dealCode} · {statusLabel[deleteTarget.status] ?? deleteTarget.status} · {formatVnd(deleteTarget.totalCommissionEstimated)}
-                </p>
-              </div>
-            )}
-            <div className="rounded-lg bg-accent-red/20 px-4 py-3 text-sm text-accent-red-text">
-              Chỉ xóa được hoa hồng chưa duyệt/chưa thanh toán. Bạn có chắc muốn xóa?
-            </div>
-            <div className="flex items-center justify-end gap-2">
-              <Button variant="outline" onClick={() => setDeleteTarget(null)} disabled={isDeleting}>
-                Hủy
-              </Button>
-              <Button
-                variant="destructive"
-                onClick={async () => {
-                  if (!deleteTarget) return;
-                  await deleteDc({ id: deleteTarget.id });
-                }}
-                disabled={isDeleting}
-              >
-                {isDeleting ? (
-                  <>
-                    <Loader2 size={14} className="animate-spin" />
-                    Đang xóa...
-                  </>
-                ) : (
-                  "Xóa"
-                )}
-              </Button>
-            </div>
-          </DialogContent>
-        </DialogPortal>
-      </Dialog>
+      {data && showPagination && (
+        <div className="flex items-center justify-between text-sm text-foreground-muted">
+          <span>{paginationLabel}</span>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" disabled={offset === 0} onClick={() => setOffset(Math.max(0, offset - PAGE_SIZE))}><ArrowLeft size={14} />Trước</Button>
+            <Button variant="outline" size="sm" disabled={!hasNextPage} onClick={() => setOffset(offset + PAGE_SIZE)}>Tiếp<ArrowRight size={14} /></Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

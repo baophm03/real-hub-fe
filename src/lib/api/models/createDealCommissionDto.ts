@@ -10,6 +10,5 @@ export interface CreateDealCommissionDto {
   dealId: string;
   propertyId: string;
   leadId?: string;
-  /** Giá ước tính. Nếu bỏ trống, BE tự lấy từ deal.finalValue → deal.expectedValue → property.price. */
-  transactionValueEstimated?: number;
+  commissionType?: string;
 }

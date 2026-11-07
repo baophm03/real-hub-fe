@@ -53,7 +53,8 @@ export default function DealFormPage() {
   const leadItems = useMemo(() => {
     const map: Record<string, string> = { __none__: "— Không chọn —" };
     for (const l of leads) {
-      const parts = [l.leadCode, l.customer?.fullName, l.property?.title].filter(Boolean);
+      const customerName = l.customer?.fullName?.trim() || l.customer?.user?.fullName?.trim();
+      const parts = [l.leadCode, customerName, l.property?.title].filter(Boolean);
       map[l.id] = parts.join(" · ");
     }
     return map;
@@ -70,6 +71,13 @@ export default function DealFormPage() {
     setValue("leadId", val);
     const lead = leads.find((l) => l.id === val) ?? null;
     setSelectedLead(lead);
+    // The current property price is the deal's initial expected value. Store it as
+    // form state (rather than showing it as a placeholder that is not submitted)
+    // so the commission worker receives the value the user can see and edit.
+    setValue("expectedValue", lead?.property?.price == null ? "" : String(lead.property.price), {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
   };
 
   const onSubmit = async (data: DealFormData) => {
@@ -151,7 +159,17 @@ export default function DealFormPage() {
               </Select>
             </FormField>
             <FormField label="Giá trị dự kiến (VND)" htmlFor="expectedValue">
-              <Input id="expectedValue" placeholder="5000000000" {...register("expectedValue")} />
+              <Input
+                id="expectedValue"
+                type="number"
+                min="0"
+                step="1"
+                placeholder="Nhập giá trị dự kiến"
+                {...register("expectedValue")}
+              />
+              <p className="mt-1 text-xs text-foreground-muted">
+                Khi chọn nguồn khách hàng, hệ thống điền giá niêm yết của bất động sản làm giá dự kiến. Hãy điều chỉnh theo giá đang đàm phán.
+              </p>
             </FormField>
           </div>
           <FormField label="Nguồn khách hàng" required error={errors.leadId?.message}>
@@ -166,7 +184,8 @@ export default function DealFormPage() {
               <SelectContent>
                 <SelectItem value="__none__" label="— Không chọn —">— Không chọn —</SelectItem>
                 {leads.map((l) => {
-                  const parts = [l.leadCode, l.customer?.fullName, l.property?.title].filter(Boolean);
+                  const customerName = l.customer?.fullName?.trim() || l.customer?.user?.fullName?.trim();
+                  const parts = [l.leadCode, customerName, l.property?.title].filter(Boolean);
                   const label = parts.join(" · ");
                   return (
                     <SelectItem key={l.id} value={l.id} label={label}>
@@ -189,10 +208,12 @@ export default function DealFormPage() {
                 </div>
                 <div className="mt-2 flex flex-col gap-1">
                   <p className="text-sm font-medium">
-                    {selectedLead.customer?.fullName ?? "—"}
+                    {selectedLead.customer?.fullName?.trim() || selectedLead.customer?.user?.fullName?.trim() || "—"}
                   </p>
-                  {selectedLead.customer?.phone && (
-                    <p className="text-xs text-foreground-muted">{selectedLead.customer.phone}</p>
+                  {(selectedLead.customer?.phone || selectedLead.customer?.user?.phone) && (
+                    <p className="text-xs text-foreground-muted">
+                      {selectedLead.customer.phone || selectedLead.customer.user?.phone}
+                    </p>
                   )}
                 </div>
               </div>

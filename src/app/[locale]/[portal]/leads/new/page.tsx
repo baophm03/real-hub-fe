@@ -31,6 +31,15 @@ const leadSchema = z.object({
 
 type LeadFormData = z.infer<typeof leadSchema>;
 
+function getCustomerOptionLabel(customer: Customer): string {
+  const rawName = typeof customer.fullName === "string" ? customer.fullName.trim() : "";
+  const fullName = rawName && !["null", "undefined"].includes(rawName.toLowerCase())
+    ? rawName
+    : "Khách chưa có tên";
+  const phone = customer.phone?.trim();
+  return phone ? `${fullName} · ${phone}` : fullName;
+}
+
 export default function LeadFormPage() {
   const router = useRouter();
   const portalPath = usePortalPath();
@@ -80,7 +89,7 @@ export default function LeadFormPage() {
   const customerItems = useMemo(() => {
     const map: Record<string, string> = { __none__: "— Không chọn —" };
     for (const c of customers) {
-      map[c.id] = `${c.fullName}${c.phone ? ` · ${c.phone}` : ""}`;
+      map[c.id] = getCustomerOptionLabel(c);
     }
     return map;
   }, [customers]);
@@ -163,7 +172,7 @@ export default function LeadFormPage() {
                 <SelectContent>
                   <SelectItem value="__none__" label="— Không chọn —">— Không chọn —</SelectItem>
                   {customers.map((c) => {
-                    const label = `${c.fullName}${c.phone ? ` · ${c.phone}` : ""}`;
+                    const label = getCustomerOptionLabel(c);
                     return (
                       <SelectItem key={c.id} value={c.id} label={label}>
                         {label}

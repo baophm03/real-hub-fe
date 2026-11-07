@@ -67,6 +67,6 @@ export interface Lead {
       phone?: string | null;
     } | null;
   } | null;
-  property: { id: string; title: string; propertyCode: string } | null;
+  property: { id: string; title: string; propertyCode: string; price?: string | number | null } | null;
   activities?: LeadActivity[];
 }

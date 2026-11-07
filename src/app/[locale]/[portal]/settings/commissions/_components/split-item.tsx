@@ -1,6 +1,7 @@
 "use client";
 
 import { X } from "lucide-react";
+import { useState } from "react";
 import { FormField } from "@/components/shared/form-section";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,14 +13,13 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import {
-  receiverRoleOptions,
-  receiverTypeOptions,
-  splitTypeOptions,
   type Split,
 } from "./types";
+import { useApiCommissionRecipients, type CommissionOptions } from "@/lib/api/endpoints/commission-meta";
 
 interface SplitItemProps {
   split: Split;
+  options?: CommissionOptions;
   splitsCount: number;
   totalPercent: number;
   isLast: boolean;
@@ -29,12 +29,20 @@ interface SplitItemProps {
 
 export function SplitItem({
   split,
+  options,
   splitsCount,
   totalPercent,
   isLast,
   onChange,
   onRemove,
 }: SplitItemProps) {
+  const [recipientSearch, setRecipientSearch] = useState("");
+  const recipientsQuery = useApiCommissionRecipients(recipientSearch, split.receiverType === "USER");
+  const recipients = recipientsQuery.data?.data ?? [];
+  const receiverTypeOptions = options?.receiverTypes ?? [];
+  const receiverRoleOptions = options?.receiverRoles ?? [];
+  const splitTypeOptions = options?.splitTypes ?? [];
+
   return (
     <div className="relative flex flex-col gap-2 rounded-md border border-border bg-surface p-3">
       {splitsCount > 1 && (
@@ -55,11 +63,13 @@ export function SplitItem({
           <Select
             value={split.receiverType}
             onValueChange={(v) => {
-              const rt = (v as string) ?? "ROLE";
+              if (!v) return;
+              const rt = v as string;
               onChange({
                 receiverType: rt,
-                receiverRole: rt === "ROLE" ? "SALES" : undefined,
+                receiverRole: rt === "ROLE" ? receiverRoleOptions[0]?.value : undefined,
                 receiverUserId: rt === "USER" ? "" : undefined,
+                receiverName: rt === "EXTERNAL" ? "" : undefined,
               });
             }}
           >
@@ -83,10 +93,8 @@ export function SplitItem({
         {split.receiverType === "ROLE" && (
           <FormField label="Vai trò" className="col-span-7">
             <Select
-              value={split.receiverRole ?? "SALES"}
-              onValueChange={(v) =>
-                onChange({ receiverRole: (v as string) ?? "SALES" })
-              }
+              value={split.receiverRole ?? receiverRoleOptions[0]?.value ?? ""}
+              onValueChange={(v) => v && onChange({ receiverRole: v as string })}
             >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Role">
@@ -107,17 +115,38 @@ export function SplitItem({
         )}
 
         {split.receiverType === "USER" && (
-          <FormField label="User ID" className="col-span-7">
+          <FormField label="Thành viên nhận" className="col-span-7">
             <Input
-              placeholder="uuid"
-              value={split.receiverUserId ?? ""}
-              onChange={(e) => onChange({ receiverUserId: e.target.value })}
+              className="mb-1"
+              placeholder="Tìm theo tên thành viên"
+              value={recipientSearch}
+              onChange={(e) => setRecipientSearch(e.target.value)}
             />
+            <Select
+              value={split.receiverUserId || null}
+              onValueChange={(value) => onChange({ receiverUserId: value as string })}
+            >
+              <SelectTrigger className="w-full"><SelectValue placeholder="Chọn thành viên" /></SelectTrigger>
+              <SelectContent>
+                {recipients.map((recipient) => (
+                  <SelectItem key={recipient.id} value={recipient.id} label={recipient.fullName}>
+                    {recipient.fullName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {recipientsQuery.isLoading && <span className="text-xs text-foreground-muted">Đang tải thành viên…</span>}
           </FormField>
         )}
 
         {split.receiverType === "EXTERNAL" && (
-          <div className="col-span-7" />
+          <FormField label="Tên bên nhận" className="col-span-7" required>
+            <Input
+              placeholder="Tên cá nhân hoặc tổ chức nhận"
+              value={split.receiverName ?? ""}
+              onChange={(e) => onChange({ receiverName: e.target.value })}
+            />
+          </FormField>
         )}
       </div>
 
@@ -126,9 +155,7 @@ export function SplitItem({
         <FormField label="Loại" className="col-span-5">
           <Select
             value={split.splitType}
-            onValueChange={(v) =>
-              onChange({ splitType: (v as string) ?? "PERCENT" })
-            }
+            onValueChange={(v) => v && onChange({ splitType: v as string })}
           >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Loại">
@@ -153,17 +180,16 @@ export function SplitItem({
         >
           <Input
             type="number"
-            placeholder={split.splitType === "PERCENT" ? "70" : "5000000"}
+            min="0"
+            step="0.01"
             value={split.splitValue}
             onChange={(e) => onChange({ splitValue: Number(e.target.value) })}
           />
         </FormField>
       </div>
 
-      {isLast && split.splitType === "PERCENT" && totalPercent !== 100 && (
-        <p className="text-[10px] text-foreground-muted">
-          Tổng % các split PERCENT = {totalPercent}% (khuyến nghị 100%)
-        </p>
+      {isLast && split.splitType === "PERCENT" && totalPercent > 100 && (
+        <p className="text-[10px] text-accent-red-text">Tổng tỷ lệ đang vượt quá 100%; API sẽ từ chối cấu hình này.</p>
       )}
     </div>
   );
