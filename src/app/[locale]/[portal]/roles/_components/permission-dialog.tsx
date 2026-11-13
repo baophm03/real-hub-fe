@@ -47,6 +47,8 @@ import type {
   PermissionsResponse,
 } from "./types";
 
+const COMMISSION_READ_SCOPE_ACTIONS = ["READ", "READ_OWN", "READ_ALL"] as const;
+
 interface PermissionDialogProps {
   roleId: string | null;
   open: boolean;
@@ -83,7 +85,7 @@ export function PermissionDialog({ roleId, open, onOpenChange }: PermissionDialo
       );
       setSearch("");
     }
-  }, [role?.id, role?.permissions.length]);
+  }, [role?.id, role?.permissions]);
 
   const { mutateAsync: updatePermissions } = usePutApiRoleIdPermissions();
 
@@ -99,7 +101,20 @@ export function PermissionDialog({ roleId, open, onOpenChange }: PermissionDialo
 
   const handleToggle = useCallback(
     (module: string, action: string) => {
-      setPermissionSet((prev) => togglePermissionInSet(prev, module, action));
+      setPermissionSet((prev) => {
+        const next = togglePermissionInSet(prev, module, action);
+        const isCommissionReadScope =
+          module === "COMMISSION" &&
+          COMMISSION_READ_SCOPE_ACTIONS.some((scopeAction) => scopeAction === action);
+        if (!isCommissionReadScope || !hasPermissionInSet(next, module, action)) {
+          return next;
+        }
+
+        for (const scopeAction of COMMISSION_READ_SCOPE_ACTIONS) {
+          if (scopeAction !== action) next.delete(`${module}:${scopeAction}`);
+        }
+        return next;
+      });
     },
     [],
   );
@@ -108,13 +123,27 @@ export function PermissionDialog({ roleId, open, onOpenChange }: PermissionDialo
     (moduleActions: PermissionActionDef[], module: string) => {
       setPermissionSet((prev) => {
         const next = new Set(prev);
-        const allChecked = moduleActions.every((a) =>
-          hasPermissionInSet(next, module, a.action),
+        const scopedReadActions = module === "COMMISSION"
+          ? COMMISSION_READ_SCOPE_ACTIONS
+          : [];
+        const nonScopeActions = moduleActions.filter(
+          (a) => !scopedReadActions.some((scopeAction) => scopeAction === a.action),
         );
+        const hasReadScope = scopedReadActions.some((action) =>
+          hasPermissionInSet(next, module, action),
+        );
+        const allChecked = nonScopeActions.every((a) =>
+          hasPermissionInSet(next, module, a.action),
+        ) && (!scopedReadActions.length || hasReadScope);
         for (const a of moduleActions) {
           const key = `${module}:${a.action}`;
           if (allChecked) next.delete(key);
           else next.add(key);
+        }
+        if (!allChecked && scopedReadActions.length) {
+          for (const action of scopedReadActions) {
+            if (action !== "READ_ALL") next.delete(`${module}:${action}`);
+          }
         }
         return next;
       });
