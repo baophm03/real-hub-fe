@@ -19,6 +19,7 @@ const SCOPED_MODULES = new Set([
   "NOTIFICATION",
   "NEWS",
 ]);
+const COMMISSION_READ_SCOPE_ACTIONS = new Set(["READ", "READ_OWN", "READ_ALL"]);
 
 interface ModuleRowProps {
   mod: PermissionModuleDef;
@@ -35,9 +36,13 @@ export const ModuleRow = memo(function ModuleRow({
 }: ModuleRowProps) {
   const isScoped = SCOPED_MODULES.has(mod.module);
 
-  const allChecked = mod.actions.every((a) =>
+  const allChecked = mod.actions
+    .filter((action) => mod.module !== "COMMISSION" || !COMMISSION_READ_SCOPE_ACTIONS.has(action.action))
+    .every((a) =>
     hasPermissionInSet(permissionSet, mod.module, a.action),
-  );
+  ) && (mod.module !== "COMMISSION" || [...COMMISSION_READ_SCOPE_ACTIONS].some((action) =>
+    hasPermissionInSet(permissionSet, mod.module, action),
+  ));
   const someChecked = mod.actions.some((a) =>
     hasPermissionInSet(permissionSet, mod.module, a.action),
   );
