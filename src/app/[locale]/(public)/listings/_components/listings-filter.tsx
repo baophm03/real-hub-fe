@@ -218,7 +218,7 @@ export function ListingsFilter({
   };
 
   return (
-    <div className="flex flex-col gap-6 lg:sticky lg:top-24 lg:self-start">
+    <div className="flex flex-col gap-6 lg:sticky lg:top-24 lg:max-h-[calc(100dvh-7rem)] lg:self-start lg:overflow-y-auto">
       <div className="bg-surface rounded-xl border border-border p-4 flex flex-col gap-4">
         <div className="flex justify-between items-center">
           <h2 className="font-serif text-xl font-medium text-[#072707] flex items-center gap-2">
